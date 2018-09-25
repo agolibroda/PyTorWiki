@@ -1,0 +1,39 @@
+<!-- articles_list.html -->
+
+<div class="article">
+ 
+   {% if len(parameters.groupArticlesList) > 0 %}
+ 
+	 <table class="table table-hover table-bordered">
+	     <thead>
+	     <tr>
+	         <th>Название</th>
+	         <th>Кратке содержание</th>
+	         <th>Редактировать</th>
+	         <th>Видимость</th>
+	         <th>Status</th>
+	     </tr>
+	     </thead>
+	     <tbody>
+                                    
+  {% for article in parameters.groupArticlesList %}
+			
+			 <tr>
+			     <td><a href="/{{ article.article_link }}">{{ article.article_title }}</a></td>
+			     <td>{% raw article.article_annotation %}</td>
+			     <td> <span class="badge badge-blue"><a style="color: #ffffff;" href="/compose/{{ article.article_link }}">{{ _("Edit this wiki") }}</a></span></td>
+			     <td><span class="label label-sm label-success">Approved</span></td>
+			     <td><span class="label label-sm label-success">Approved</span></td>
+			 </tr>
+			
+  {% end %}
+ 
+  {% else %} 
+  	{{ _("Аrticles yet") }}  &nbsp;&nbsp;&nbsp;&nbsp; <a href="/compose?gidp={{group}}"><i class="fa fa-edit fa-fw"></i><span class="menu-title">{{ _("Create new wiki") }}</span></a>
+  {% end %}
+ 
+                                    
+	     </tbody>
+	 </table>
+
+ <!-- / articles_list.html -->
