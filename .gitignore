@@ -1,0 +1,23 @@
+### Python template
+# Logs
+logs
+*.log
+*.log~
+log.txt
+nocommit.txt
+
+#python executing
+*.pyc 
+
+
+# global sensitive config data
+config/base.conf
+config/main.conf
+_host_configs/** 
+
+# Uploaded files
+/static/filestorage/**
+
+
+/start.sh
+/stop.sh
