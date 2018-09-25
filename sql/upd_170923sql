@@ -1,7 +1,14 @@
 
 -- поменяем тип столбца, что бы в нем хранить статьи без обработки бейс-64.
+
 ALTER TABLE articles
-	ALTER COLUMN article_source TYPE bytea USING article_source::bytea; 
+	ADD COLUMN article_source_tmp bytea;
+
+update articles SET 
+	article_source_tmp = decode(article_source, 'base64') ;
+
+ ALTER TABLE articles
+	ALTER COLUMN article_source TYPE bytea USING article_source_tmp::bytea; 
 	
 	
 -- вводим понятие "рабочий стол" как таковой  
@@ -12,12 +19,16 @@ ALTER TABLE articles
 DROP SEQUENCE IF EXISTS dt_header_id_seq CASCADE;
 CREATE SEQUENCE IF NOT EXISTS dt_header_id_seq;
 
+DROP TYPE IF EXISTS dt_type CASCADE;
+CREATE TYPE dt_type AS enum('author','group');
+
 
 DROP TABLE IF EXISTS dt_header CASCADE;
 CREATE TABLE IF NOT EXISTS dt_header (
   dt_header_id int PRIMARY KEY not null,
-  dt_header_type bytea NOT NULL
-  
+  dt_header_type dt_type  NOT NULL DEFAULT 'author',
+  public_key bytea NOT NULL,
+  private_key bytea NOT NULL
 );
 	
 	
@@ -39,6 +50,9 @@ CREATE TRIGGER dt_header_bi
 
 CREATE INDEX dt_header_id_ind ON dt_header (dt_header_id);
 CREATE INDEX dt_header_type_ind ON dt_header (dt_header_type);
+
+INSERT INTO  dt_header (dt_header_id, dt_header_type, public_key, private_key) VALUES 
+(1,	'author',	'12345',	'12345');
 
 DROP SEQUENCE IF EXISTS authors_author_id_seq CASCADE;
 DROP TRIGGER IF EXISTS author_bi ON authors CASCADE;
@@ -67,6 +81,31 @@ ALTER TABLE IF EXISTS groups
 ALTER TABLE IF EXISTS groups
 	ADD CONSTRAINT groups_dt_header
 	FOREIGN KEY ( dt_header_id ) REFERENCES dt_header ( dt_header_id ); 
+	
+	
+DROP TABLE IF EXISTS dt_working_keys CASCADE;
+CREATE TABLE IF NOT EXISTS dt_working_keys (
+  owner_dt_id int not null, -- COMMENTS 'рабочий стол Автора', 
+  worker_dt_id int not null, -- COMMENTS 'Рабочий стол, на котором будет работать owner_dt_id', 
+  worker_private_key bytea NOT NULL -- COMMENTS 'приватный ключ от worker_dt_id - рабочего стола '
+);
+	
+CREATE INDEX owner_dt_id_ind ON dt_working_keys (owner_dt_id);
+CREATE INDEX worker_dt_id_ind ON dt_working_keys (worker_dt_id);
+
+CREATE UNIQUE INDEX owner_dt_id_worker_dt_id_ind ON dt_working_keys (owner_dt_id, worker_dt_id);
+	
+ALTER TABLE IF EXISTS dt_working_keys
+	ADD CONSTRAINT owner_dt_id_dt_header
+	FOREIGN KEY ( owner_dt_id ) REFERENCES dt_header ( dt_header_id ); 
+
+ALTER TABLE IF EXISTS dt_working_keys
+	ADD CONSTRAINT worker_dt_id_dt_header
+	FOREIGN KEY ( worker_dt_id ) REFERENCES dt_header ( dt_header_id ); 
+	
+INSERT INTO  dt_working_keys (owner_dt_id, worker_dt_id, worker_private_key) VALUES 
+(1,	1, '12345');
+	
 	
 	
 	
