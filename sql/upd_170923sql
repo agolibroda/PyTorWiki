@@ -1,0 +1,72 @@
+
+-- поменяем тип столбца, что бы в нем хранить статьи без обработки бейс-64.
+ALTER TABLE articles
+	ALTER COLUMN article_source TYPE bytea USING article_source::bytea; 
+	
+	
+-- вводим понятие "рабочий стол" как таковой  
+-- в нем будет ИД, публичный ключ для возможного шифрования данных,
+-- и тип стола - или персональный стол автора, или групповой   
+
+
+DROP SEQUENCE IF EXISTS dt_header_id_seq CASCADE;
+CREATE SEQUENCE IF NOT EXISTS dt_header_id_seq;
+
+
+DROP TABLE IF EXISTS dt_header CASCADE;
+CREATE TABLE IF NOT EXISTS dt_header (
+  dt_header_id int PRIMARY KEY not null,
+  dt_header_type bytea NOT NULL
+  
+);
+	
+	
+CREATE OR REPLACE FUNCTION trigger_dt_header_lns () RETURNS trigger AS $$ 
+BEGIN 
+      If  NEW.dt_header_id = 0 OR NEW.dt_header_id IS NULL then 
+      NEW.dt_header_id = nextval('dt_header_id_seq');
+      end if;
+
+return NEW;
+END; 
+$$ LANGUAGE  plpgsql;
+
+-- Создание триггера
+CREATE TRIGGER dt_header_bi 
+	BEFORE INSERT ON files FOR EACH ROW 
+	EXECUTE PROCEDURE trigger_dt_header_lns ();
+
+
+CREATE INDEX dt_header_id_ind ON dt_header (dt_header_id);
+CREATE INDEX dt_header_type_ind ON dt_header (dt_header_type);
+
+DROP SEQUENCE IF EXISTS authors_author_id_seq CASCADE;
+DROP TRIGGER IF EXISTS author_bi ON authors CASCADE;
+
+DROP FUNCTION IF EXISTS  trigger_authors_before_lns ();
+
+ALTER TABLE IF EXISTS authors
+    RENAME COLUMN author_id TO dt_header_id;
+    
+ALTER TABLE IF EXISTS authors
+	ADD CONSTRAINT authors_dt_header
+	FOREIGN KEY ( dt_header_id ) REFERENCES dt_header ( dt_header_id ); 
+	
+--
+--	
+DROP SEQUENCE IF EXISTS groups_group_id_seq CASCADE;
+	
+DROP TRIGGER IF EXISTS groups_bi ON groups CASCADE;
+
+
+DROP FUNCTION IF EXISTS trigger_groups_before_lns ();
+
+ALTER TABLE IF EXISTS groups
+    RENAME COLUMN group_id TO dt_header_id;
+    
+ALTER TABLE IF EXISTS groups
+	ADD CONSTRAINT groups_dt_header
+	FOREIGN KEY ( dt_header_id ) REFERENCES dt_header ( dt_header_id ); 
+	
+	
+	
