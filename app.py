@@ -104,6 +104,10 @@ class Application(tornado.web.Application):
 
 
 def main():
+#     logging.basicConfig(filename='torViki.log', level=logging.INFO)
+    FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
+    logging.basicConfig(format=FORMAT)
+
     logging.info('config.options.main_port = ' + str(config.options.main_port))
     
     http_server = tornado.httpserver.HTTPServer(Application())

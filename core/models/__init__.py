@@ -10,6 +10,7 @@
 
 from __future__ import print_function
 
+# import sys, os, 
 
 import hashlib
 import base64
@@ -17,6 +18,7 @@ from datetime import datetime
 
 
 import logging
+
 
 import json
 
@@ -37,17 +39,23 @@ from psycopg2.extras import DictCursor
 
 
 from _ast import Try
+from json.decoder import NaN
 
 
 #############
+
+# import config
+# sys.path.append(os.path.dirname("./../../config"))
 import config
-# from .. import err
-# from .. import WikiException 
+# sys.path.pop()
+
+# sys.path.append(os.path.dirname('./../../core'))
 
 from core.Helpers      import *
 from core.WikiException import *
-
 from core.Helpers      import *
+
+# sys.path.pop()
 
 
 
@@ -67,11 +75,11 @@ class Connector:
         """
         # Connect to an existing database
         """
-        logging.info('Connector postgreBase = ' + str(config.options.postgreBase))
-        logging.info('Connector postgreHost = ' + str(config.options.postgreHost))
-        logging.info('Connector postgrePort = ' + str(config.options.postgrePort))
-        logging.info('Connector postgreUser = ' + str(config.options.postgreUser))
-        logging.info('Connector postgrePwd = ' + str(config.options.postgrePwd))
+#         logging.info('Connector postgreBase = ' + str(config.options.postgreBase))
+#         logging.info('Connector postgreHost = ' + str(config.options.postgreHost))
+#         logging.info('Connector postgrePort = ' + str(config.options.postgrePort))
+#         logging.info('Connector postgreUser = ' + str(config.options.postgreUser))
+#         logging.info('Connector postgrePwd = ' + str(config.options.postgrePwd))
         
         self._connectInstans = psycopg2.connect(
                                                 database= config.options.postgreBase, 
@@ -99,15 +107,89 @@ class Model: #Connector:
 
     """
 
+
+#         mainPrimaryList = {'dt_header_id': self.dt_header_id } - стоит отправить в инициализвцию!!!!
+#         sha_hash_sou =  self.author_login + self.author_name + self.author_surname + self.author_role +self.author_phon + self.author_email  
+#
+#         mainPrimaryList = {'primaryName': 'article_id', 'primaryValue': 123 }
+#         requestParamName
+#
+#         
+#         
+# #             mainPrimaryList = {'article_id': self.article_id }
+# #             self.article_id = Model.save(self, authorId, operationFlag, mainPrimaryList, sha_hash_sou, 'article_id')
+    
+    
+    class TableDef:
+        """
+        Описание каждой  таблицы данных в модели - это объект класса TableDef 
+        Содержит:
+        _tableName - название таблицы;
+        _idFieldName - Если из таблицы надо что - либо 
+        _mainPrimaryList
+        
+        _listAttrNames - список полей таблицы;
+        со списком будем сравнивать список свойств наследника класа Model 
+        и из оставшегося списка будем мастырить инсерты с абдейтами. (или только инсетты, т.к. абдейтов у нас нету)
+        
+            self._tableName = tabName  # Название таблицы, куда будемписать данные
+            self._idFieldName = idFieldName
+            self._mainPrimaryList = mainPrimaryList
+            self._listAttrNames = listAttrNames # Список наименований полей таблицы. 
+
+         
+        """
+
+        def __init__ (self, tabName=None, idFieldName=None, mainPrimaryList =None, listAttrNames=None ):
+            """
+            принимаем параметры: 
+            tabName - имя таблицы хранения данных
+            idFieldName - имя поля ИД в таблице - Строковое наименование индексного поля - его будем возвращать при инсертах
+            
+            mainPrimaryList = ['dt_header_id', ... ] - по этому писку мы выбираем поля,  мы абдейтим устаревшие данные (Это пример для автоов).
+            
+            listAttrNames - список атрибутов класса, наследника модели, -он же - список полей таблицы данных.
+            """    
+            self._tableName = tabName  # Название таблицы, куда будемписать данные
+            self._idFieldName = idFieldName
+            self._mainPrimaryList = mainPrimaryList
+            self._listAttrNames = listAttrNames # Список наименований полей таблицы. 
+
+        def getTableName(self):
+            return self._tableName
+
+        def getIdFieldName(self):
+            return self._idFieldName
+
+        def getMainPrimaryList(self):
+            return self._mainPrimaryList
+        
+        def getLisAttr(self):
+            return self._listAttrNames        
+        
+        
+
 #     @property
-    def __init__ (self, tabName ):    
+    def __init__ (self):    
+        """
+        dataStruct - описание структуры данных;  
+        headStruct - описание "заголовка" данных общая часть рабочего стола (таблица "dt_header") - может быть для "Авторов" и "Групп" 
+        Для спска статей этот параметр отсутствует.
+        
+        """
         connector = Connector()
-        self._cursor = connector.getCursor()
-        self._tabName = tabName 
+        self._cursor = connector.getCursor() # служебные параметры (те, которые не будут отбражаться в )
 
 #     def __del__(self):
 #         self._cursor.close()
     
+    def setDataStruct(self, dataStruct):
+        self._dataStruct = dataStruct
+        
+    def setHeadStruct(self, headStruct):
+        self._headStruct = headStruct 
+            
+
     
 #     @property
     def cursor(self):
@@ -155,137 +237,174 @@ class Model: #Connector:
 
 
                 
-    def insert(self, requestParamName = ''):
-        """
-        добавить в таблицу "tabName"  атрибуты класса, 
-        вернуть максимальный ИД, если requestParamName не пустой. 
-        
-        """
-        try:
-            logging.info(' insert:: requestParamName = ' + str(requestParamName))
-            lCurs = self.cursor()
-            if requestParamName != '':
-                del self.__dict__[requestParamName]
-            paramsObj = self.splitAttributes()
-            
-            
-            if requestParamName != '':
-                sqlStr = "INSERT INTO " + self._tabName +" ( " + paramsObj.strListAttrNames + " ) VALUES ( " + paramsObj.strListAttrValues + " )  returning " + requestParamName
-                logging.info(' insert:: sqlStr = ' + sqlStr)
-                lCurs.execute(sqlStr)
-                sourse = lCurs.fetchone()
-                logging.info(' insert:: sourse = ' + str(sourse))
-                logging.info(' insert:: sourse[requestParamName] = ' + str(sourse[requestParamName]))
-                self.__dict__[requestParamName] = sourse[requestParamName]
-                return  sourse[requestParamName]
-            else:
-                sqlStr = "INSERT INTO " + self._tabName +" ( " + paramsObj.strListAttrNames + " ) VALUES ( " + paramsObj.strListAttrValues + " )"
-                logging.info(' insert:: sqlStr = ' + sqlStr)
-                lCurs.execute(sqlStr)
-            
-        except psycopg2.Error as error:
-            
-            logging.error (' insert exception:: ' + str (error) )
-            logging.error(' insert exception:: sqlStr = ' + sqlStr )
-            lCurs.rollback()
-            raise WikiException(error)
+#     def insert(self, requestParamName = ''):
+#         """
+#         добавить в таблицу "tabName"  атрибуты класса, 
+#         вернуть максимальный ИД, если requestParamName не пустой. 
+#         
+#         """
+#         try:
+# #             logging.info(' insert:: requestParamName = ' + str(requestParamName))
+#             lCurs = self.cursor()
+#             if requestParamName != '':
+#                 del self.__dict__[requestParamName]
+#             paramsObj = self.splitAttributes()
+#             
+#             
+#             if requestParamName != '':
+#                 sqlStr = "INSERT INTO " + self._tabName +" ( " + paramsObj.strListAttrNames + " ) VALUES ( " + paramsObj.strListAttrValues + " )  returning " + requestParamName
+# #                 logging.info(' insert:: sqlStr = ' + sqlStr)
+#                 lCurs.execute(sqlStr)
+#                 sourse = lCurs.fetchone()
+# #                 logging.info(' insert:: sourse = ' + str(sourse))
+# #                 logging.info(' insert:: sourse[requestParamName] = ' + str(sourse[requestParamName]))
+#                 self.__dict__[requestParamName] = sourse[requestParamName]
+#                 return  sourse[requestParamName]
+#             else:
+#                 sqlStr = "INSERT INTO " + self._tabName +" ( " + paramsObj.strListAttrNames + " ) VALUES ( " + paramsObj.strListAttrValues + " )"
+# #                 logging.info(' insert:: sqlStr = ' + sqlStr)
+#                 lCurs.execute(sqlStr)
+#             
+#         except psycopg2.Error as error:
+#             
+#             logging.error (' insert exception:: ' + str (error) )
+#             logging.error(' insert exception:: sqlStr = ' + sqlStr )
+#             lCurs.rollback()
+#             raise WikiException(error)
 
 
-    def update(self, whereSection):
-        """
-        изменить данные в таблицу "tabName"  атрибуты класса, 
-        вернуть максимальный ИД, если requestParamName не нудЁвый. 
-        """
-        try:
-            
-            lCurs = self._cursor #.cursor()
-            paramsObj = self.splitAttributes()
-            listSet = map(lambda x, y: str(x) + " = '" + str(y) + "'", paramsObj.listAttrNames, paramsObj.listAttrValues)
-            strSet =  ", ".join(listSet)
-            sqlStr = "UPDATE "+ self._tabName +" SET " + strSet + " WHERE " + whereSection
-            logging.info(' update:: sqlStr = ' + sqlStr)
-            lCurs.execute(sqlStr)
+#     def update(self, whereSection):
+#         """
+#         изменить данные в таблицу "tabName"  атрибуты класса, 
+#         вернуть максимальный ИД, если requestParamName не нудЁвый. 
+#         """
+#         try:
+#             
+#             lCurs = self._cursor #.cursor()
+#             paramsObj = self.splitAttributes()
+#             listSet = map(lambda x, y: str(x) + " = '" + str(y) + "'", paramsObj.listAttrNames, paramsObj.listAttrValues)
+#             strSet =  ", ".join(listSet)
+#             sqlStr = "UPDATE "+ self._tabName +" SET " + strSet + " WHERE " + whereSection
+# #             logging.info(' update:: sqlStr = ' + sqlStr)
+#             lCurs.execute(sqlStr)
+# 
+# #             self.commit()
+#         except psycopg2.Error as error:
+#             logging.error(' update exception:: ' + str (error) )
+#             logging.error(' update exception:: sqlStr = ' + sqlStr )
+#             lCurs.rollback()
+#             raise WikiException(error)
 
-#             self.commit()
-        except psycopg2.Error as error:
-            logging.error(' update exception:: ' + str (error) )
-            logging.error(' update exception:: sqlStr = ' + sqlStr )
-            lCurs.rollback()
-            raise WikiException(error)
-
-    def save(self, autorId, operationFlag, mainPrimaryObj, revisions_sha_hash_source, requestParamName = ''):
+    def save(self, autorId, operationFlag, revisions_sha_hash_source):
         """
         сохранение ревизии для данных.
         при сохранении ревизии стоит (наверное) делать так:
         - сказать всем ревизиям, что они устарели (сделать флаг "О")
         - попытаться добавить ревизию (с флагом "А") 
-        - если не получилось, то на ревизии с тем, актуальным ХЕШЕМ поставить фла "А"
+        - если не получилось, то на ревизии с тем, актуальным ХЕШЕМ, поставить фла "А"
         
-        mainPrimaryObj = {'primaryName': 'article_id', 'primaryValue': 123 }
+        operationFlag - Флаг операции - оно или "добавить" или, "поменять" ('I' или 'U')
+
+        revisions_sha_hash_source - Хеш по данным - это то, что определяет, мы вообще, должны сохранять, или как...
+
+        Несколько параметров, которые имеем в атрибутах класса 
+        
+        self._dataStruct - описание основной таблицы даных, 
+        self._headStruct - описание "заголовочной" таблицы 
+        
+         getTableName(self): - получить название таблицы данных
+             ('author')
+         getIdFieldName(self): - получить название поля ИД, которое является автоинкрементным
+             ('dt_header_id')
+         getMainPrimaryList(self): - получить структуру данных для правильной команды  - "старения данных"
+             ({'primaryName': 'article_id', 'primaryValue': 123 } )
+         getLisAttr(self): -  список всех полей таблицы - что бы этот список можно было дополнить реальными данными.
+             (['dt_header_id', 'author_login','author_name','author_surname','author_role','author_phon','author_email'])
          
         INSERT INTO distributors (did, dname)
         VALUES (5, 'Gizmo Transglobal')
         ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname;
+
+        Что и как делаем:
+        
             
         """
-        paramsObj = self.splitAttributes()
- 
+        headParamsObj = None
+        if self._headStruct != None:
+            headParamsObj = self.splitAttributes(self._headStruct.getLisAttr())
+        
         try:
             _loDb = self.cursor()
-#             _loDb.begin()
+            self.begin()
 
-            logging.info(' save::Before Save self = ' + toStr(self))
-            logging.info(' save::Before Save mainPrimaryObj = ' + toStr(mainPrimaryObj))
-     
-            list = []
-#             if mainPrimaryObj != NULL:
-            if mainPrimaryObj != None:
-                for primaryName, primaryValue in mainPrimaryObj.items():
-                    logging.info(' save::Before Save primaryName = ' + toStr(primaryName))
-                    logging.info(' save::Before Save primaryValue = ' + toStr(primaryValue))
-                    if int(primaryValue) > 0: 
-                        list.append(primaryName + ' = ' + str(primaryValue))
-            
-            logging.info('save::Before Save  list = ' + str(list))
-
-            if len(list) > 0:    
-                whtreStr  = ' AND '.join(list)    
-                logging.info(' save::Before Save whtreStr = ' + toStr(whtreStr))
+            if headParamsObj != None and ( self.__dict__[self._headStruct.getIdFieldName()] == 0 or self.__dict__[self._headStruct.getIdFieldName()] == None ) :
+                # сохраним заголовок, если он определен для ЭТОГО класса объектов.
+                sqlStr = "INSERT INTO " + self._headStruct.getTableName() +" ( " + headParamsObj.strListAttrNames + ") VALUES " +\
+                    "( " + headParamsObj.strListAttrValues + " ) returning " + self._headStruct.getIdFieldName() + "; "
+                headValue = self.getToInsertValue( self._headStruct.getLisAttr())    
+                _loDb.execute(sqlStr, tuple(headValue) ) # 'dt_header_type','public_key'
+                sourse = _loDb.fetchone()
+                self.__dict__[self._headStruct.getIdFieldName()] = sourse[self._headStruct.getIdFieldName()]
+            else :
+                list = []
+                logging.info(' SAVE:: UPDATE self._dataStruct.getMainPrimaryList() = ' + str(self._dataStruct.getMainPrimaryList()))  
+                if self._dataStruct.getMainPrimaryList() != None:
                     
-                # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
-                sqlStr = "UPDATE " + self._tabName + " SET actual_flag = 'O' WHERE " + whtreStr
-                logging.info(' save:: sqlStr = ' + sqlStr)
-                _loDb.execute(sqlStr)
+#                     Надо построить слварь из всех полей, записанных в mainPrimaryList
+                    list = self.getWhereList2Update (self._dataStruct.getMainPrimaryList()) 
+
+                logging.info(' SAVE:: UPDATE list = ' + str(list))  
+                            
+                if len(list) > 0:    
+                    whtreStr  = ' AND '.join(list)    
+                        
+                    # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
+                    sqlStr = "UPDATE " + self._dataStruct.getTableName() + " SET actual_flag = 'O' WHERE " + whtreStr
+                    
+                    logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
+
+                    _loDb.execute(sqlStr)
             
             operation_timestamp = datetime.now() 
             sha_hash =  hashlib.sha256(
                         tornado.escape.utf8(revisions_sha_hash_source + str(operation_timestamp) )
                                                 ).hexdigest()
-                                                 
+            
             returningStr = ''
-            if requestParamName != '':
-                returningStr = " returning " + requestParamName
+            if self._dataStruct.getIdFieldName() != None:
+                returningStr = " returning " + self._dataStruct.getIdFieldName()
             # Теперь можно записать новые данные  в ревизии.    
             
-            paramsObj.strListAttrNames += ', actual_flag, revision_author_id,  operation_flag, sha_hash, operation_timestamp '
-            paramsObj.strListAttrValues += ", 'A', " +  str(autorId) + ", '" + operationFlag + "',  '" + sha_hash + "', '" + str(operation_timestamp) + "' "
-     
-            sqlStr = "INSERT INTO " + self._tabName +" ( " + paramsObj.strListAttrNames + ") VALUES " +\
-                    "( " + paramsObj.strListAttrValues + " ) "  + \
-                    " ON CONFLICT (sha_hash) DO UPDATE SET actual_flag = 'A' "  + returningStr + ' ;'
-            logging.info(' save:: sqlStr = ' + sqlStr)
-            _loDb.execute(sqlStr)
-            if requestParamName != '':
+            dataParamseObj = self.splitAttributes(self._dataStruct.getLisAttr())
+            
+            dataParamseObj.strListAttrNames += ', actual_flag, revision_author_id,  operation_flag, sha_hash, operation_timestamp '
+            dataParamseObj.strListAttrValues += ", %s, %s, %s,  %s, %s "
+            
+            sqlStr = "INSERT INTO " + self._dataStruct.getTableName() +" ( " + dataParamseObj.strListAttrNames + ") VALUES " +\
+                    "( " + dataParamseObj.strListAttrValues + " ) "  +\
+                    " ON CONFLICT (sha_hash) DO UPDATE SET actual_flag = 'A' "  + returningStr +  ' ;'
+            
+            dataValue = self.getToInsertValue( self._dataStruct.getLisAttr())
+
+            logging.info(' SAVE:: dataParamseObj.strListAttrNames 1 = ' + str(dataParamseObj.strListAttrNames))  
+            logging.info(' SAVE:: dataValue 1 = ' + str(dataValue))  
+
+            dataValue += ['A', autorId, operationFlag, sha_hash, operation_timestamp]
+
+            logging.info(' SAVE:: dataValue 2 = ' + str(dataValue))  
+            
+            _loDb.execute(sqlStr, tuple(dataValue))
+            # если Это статьи, тогда нам нужнео сохранить статью, и получить ее ИД!
+            if returningStr != '':
                 sourse = _loDb.fetchone()
-                logging.info(' save:: sourse = ' + str(sourse))
-                logging.info(' save:: sourse[requestParamName] = ' + str(sourse[requestParamName]))
                 self.__dict__[requestParamName] = sourse[requestParamName]
                 self.commit()
                 return  sourse[requestParamName]
-#             self.commit()
+            self.commit()
         except psycopg2.Error as error:
             logging.error(' save exception:: ' + str (error) )
             logging.error(' save exception:: sqlStr = ' + sqlStr )
+            logging.error("Exception occurred", exc_info=True)
 #             _loDb.rollback()
             self.rollback()
             raise WikiException(error)
@@ -336,11 +455,11 @@ class Model: #Connector:
             _loDb = self.cursor()
             sqlStr = 'SELECT '+ selectStr
             if addTables != None:
-                sqlStr += ' FROM ' + self._tabName 
+                sqlStr += ' FROM ' + self._dataStruct.getTableName() 
                 if addTables  != '':  sqlStr += ', ' + str(addTables)
             
 #             if addTables == '':
-#                 sqlStr += ' FROM ' + self._tabName 
+#                 sqlStr += ' FROM ' + self._dataStruct.getTableName() 
                 
                 
             if str(anyParams.get('joinStr', ''))     != '':  sqlStr += ' ' + str(anyParams.get('joinStr'))
@@ -352,11 +471,11 @@ class Model: #Connector:
 
             _loDb.execute(sqlStr)
             sourse = _loDb.fetchall()
-            for one in sourse:
-                logging.info('select:: list:: sourse = ' + str (one) )
+#             for one in sourse:
+#                 logging.info('select:: list:: sourse = ' + str (one) )
             outListObj = self.dict2obj(sourse)    
-            for one in outListObj:
-                logging.info('select:: list:: outListObj = ' + str (one) )
+#             for one in outListObj:
+#                 logging.info('select:: list:: outListObj = ' + str (one) )
  
             return outListObj
 
@@ -388,8 +507,95 @@ class Model: #Connector:
             self.rollback()
             raise WikiException(error)
 
+    def getToInsertValue(self, listTableFields):
+        """
+        получить списокреальных значений атрибутов класса  
+        в момент исполнения метода
+        отдать кортежем
+        
+        """
+        objValuesNameList = list(self.__dict__.keys())
+        listAttrValues = []        
+        for objValue in objValuesNameList:
+            if objValue.find('_') != 0 and (objValue) in listTableFields :
+                listAttrValues.append(self.__getattribute__(objValue))
+        
+        return listAttrValues
 
-    def splitAttributes(self):
+    def getWhereList2Update(self, mainPrimaryList):
+        """
+        получить набор параметров для абдейтов значений
+        
+        """
+        listAttrValues = []        
+        for objValue in mainPrimaryList:
+                listAttrValues.append(objValue + ' = ' + str(self.__getattribute__(objValue)) )
+        
+        return listAttrValues
+
+
+    def splitAttributes(self, listTableFields):
+        """
+        разделить собственные параметры (без параметров с подчеркиваниями ) на 2 списка - 
+        1 - список имен параметров
+        2 - значений параметров 
+        это нужно для того, что бы использовать все параметры в операции 
+        добавления или изменения данных в базе данных.
+        На входе - список полей таблицы, 
+            и мы из полного набора всех атрибутов в объкте, выберем только те, что есть во входном списке. 
+        
+        На выходе получим словарь из двух списков  
+        """ 
+#         objDict = self.__dict__
+        objValuesNameList = list(self.__dict__.keys())
+        listAttrNames = []
+        listAttrValues = []        
+        for objValue in objValuesNameList:
+            if objValue.find('_') != 0 and (objValue) in listTableFields :
+                listAttrNames.append(objValue)
+                listAttrValues.append(self.__getattribute__(objValue))
+
+        logging.info('splitAttributes:: listAttrNames = ' + str (listAttrNames) )
+        
+        class Out: pass   
+        out = Out()
+        out.listAttrNames = listAttrNames
+        out.listAttrValues = listAttrValues    
+        out.strListAttrNames = ", ".join(listAttrNames)
+        out.strListAttrValues = ", ".join([ '%s' for row in listAttrNames]) # "'" + "', '".join(map(str,listAttrValues)) + "'"  
+        
+        
+        
+#                     dataParamseObj.strListAttrNames += ', actual_flag, revision_author_id,  operation_flag, sha_hash, operation_timestamp '
+#             dataParamseObj.strListAttrValues += ", 'A', %d, %s,  %s, %s "
+#             dataParamseObj.strParams += (autorId, operationFlag, sha_hash, operation_timestamp, )
+
+#          вот тут: out.strListAttrValues - заменить все 'None' на NULL !!!!!
+#         out.strListAttrValues = "'" + "', '".join(listAttrValues) + "'"   
+        return out
+
+
+ 
+    def dict2obj(self, dictSou):
+        """
+        преобразовать словарь (допустим, кортеж данных из селекта) в объект  
+        """ 
+        oList = []
+        if len(dictSou) == 0: return oList
+        for row in dictSou:
+#             logging.info(' dict2obj:: row = ' + str(row))
+#             logging.info(' dict2obj:: type(row) = ' + str(type(row)))
+            rowDict = dict(row)
+#             logging.info(' dict2obj:: rowDict = ' + str(rowDict))
+            oneObj = self.__class__()
+            for key in rowDict.items(): #.__getattribute__(name):
+#                 logging.info(' dict2obj:: key = ' + str(key))
+                oneObj.__setattr__(key[0], key[1])
+            oList.append(oneObj)
+                
+        return oList
+
+    def splitAttributes2Str(self):
         """
         разделить собственные параметры (без параметров с подчеркиваниями ) на 2 списка - 
         1 - список имен параметров
@@ -419,30 +625,8 @@ class Model: #Connector:
         return out
 
 
- 
-    def dict2obj(self, dictSou):
-        """
-        преобразовать словарь (допустим, кортеж данных из селекта) в объект  
-        """ 
-        oList = []
-        if len(dictSou) == 0: return oList
-        for row in dictSou:
-#             logging.info(' dict2obj:: row = ' + str(row))
-#             logging.info(' dict2obj:: type(row) = ' + str(type(row)))
-            rowDict = dict(row)
-#             logging.info(' dict2obj:: rowDict = ' + str(rowDict))
-            oneObj = self.__class__()
-            for key in rowDict.items(): #.__getattribute__(name):
-#                 logging.info(' dict2obj:: key = ' + str(key))
-                oneObj.__setattr__(key[0], key[1])
-            oList.append(oneObj)
-                
-        return oList
-
-
-
     def __str__(self): 
-        attribList = self.splitAttributes()
+        attribList = self.splitAttributes2Str()
         className = str(self.__class__)
         itemsList = map(lambda x, y: ' "' + str(x) + '"' + ': "' + str(y) + '" ', attribList.listAttrNames, attribList.listAttrValues) 
         objValuesNameList = '\n'+ className + ': { \n\t' + ', \n\t'.join(itemsList) + '\n}'

@@ -26,10 +26,10 @@
                         <div class="row mtl">
                             <div class="col-md-3">
                                 <div class="form-group">
-    {% if parameters.autor.author_id > 0 %}
+    {% if parameters.autor.dt_header_id > 0 %}
                                     <div class="text-center mbl"><img src="/static/images/rolls.gif" alt="" class="img-responsive"/></div>
                                     <div class="text-center mbl">
-                                    <a href="/upload/{{ parameters.autor.author_id  if parameters.autor else 0 }}" class="btn btn-green"><i class="fa fa-upload"></i>&nbsp;
+                                    <a href="/upload/{{ parameters.autor.dt_header_id  if parameters.autor else 0 }}" class="btn btn-green"><i class="fa fa-upload"></i>&nbsp;
                                          {{_("Upload")}}</a></div>
     {% end %}
                                 </div>

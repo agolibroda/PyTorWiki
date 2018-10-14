@@ -73,26 +73,39 @@ class PersonalDeskTop(BaseHandler):
         try:
             author = self.get_current_user() 
     
+            logging.info( 'PersonalDeskTop get:: author = ' + str(author))
+    
             tplControl = TemplateParams()
             tplControl.make(author)
 
             tplControl.page_name = 'Рабочий стол ' + author.author_name
             tplControl.link='personal_desk_top'
 
+            # Выбрать все Статьи одного автора.
             artHelper = HelperArticle()
-            tplControl.personalArticlesList = yield executor.submit( artHelper.getListArticlesByAutorId, author.author_id, 0 )
+            tplControl.personalArticlesList = yield executor.submit( artHelper.getListArticlesByAutorId, author.dt_header_id, 0 )
+
+#             logging.info( 'PersonalDeskTop get:: tplControl.personalArticlesList = ' + toStr(tplControl.personalArticlesList))
+
+            # Выбрать все статьи в системе. 
+            tplControl.allArticlesList = yield executor.submit( artHelper.getListArticlesAll, author.dt_header_id )
+
+#             logging.info( 'PersonalDeskTop get:: tplControl.allArticlesList = ' + toStr(tplControl.allArticlesList))
+
+            # выберем все группы в Автора.
             groupModel = Group()
-            tplControl.autorGroupList = yield executor.submit( groupModel.grouplistForAutor, author.author_id )
-            artHelper = HelperArticle()
-            articles = yield executor.submit( artHelper.getListArticlesByAutorId, author.author_id )
-            tplControl.articlesList = articles
-            articlesAll = yield executor.submit( artHelper.getListArticlesAll, author.author_id )
-            tplControl.allArticlesList = articlesAll
-            groupList = yield executor.submit( groupModel.list )
-            tplControl.allGroupsList = groupList
+            tplControl.autorGroupList = yield executor.submit( groupModel.grouplistForAutor, author.dt_header_id )
+            tplControl.allGroupsList = yield executor.submit( groupModel.list )
+
+#             logging.info( 'PersonalDeskTop get:: tplControl.autorGroupList = ' + toStr(tplControl.autorGroupList))
+#             logging.info( 'PersonalDeskTop get:: tplControl.allGroupsList = ' + toStr(tplControl.allGroupsList))
+
+            # Выьерем всех Авторов в системе.
             authorModel = Author()
-            authorList = yield executor.submit( authorModel.list )
-            tplControl.allAuthorsList = authorList
+            tplControl.allAuthorsList = yield executor.submit( authorModel.list )
+
+#             logging.info( 'PersonalDeskTop get:: tplControl.allAuthorsList = ' + toStr(tplControl.allAuthorsList))
+            logging.info( 'PersonalDeskTop get:: tplControl = ' + toStr(tplControl))
 
             self.render("personal_dt.html", parameters= tplControl ) 
 
@@ -122,7 +135,7 @@ class GroupDeskTop(BaseHandler):
 
             author = self.get_current_user() 
 
-            if not author.author_id: return None
+            if not author.dt_header_id: return None
 
             groupModel = Group()
     
@@ -173,7 +186,7 @@ class GroupDeskTop(BaseHandler):
             groupModel.group_annotation = self.get_argument("annotation")
             groupModel.group_status = self.get_argument("status", 'pbl')                                
             
-            rez = yield executor.submit( groupModel.save, author.author_id )
+            rez = yield executor.submit( groupModel.save, author.dt_header_id )
             
             self.redirect("/group_desk_top/" + str(groupModel.group_id))
         except Exception as e:

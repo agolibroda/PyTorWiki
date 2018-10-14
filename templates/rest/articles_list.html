@@ -1,6 +1,7 @@
 <!-- articles_list.html -->
+<!--  Спиок всех статей одного автора -->
 
-   {% if len(parameters.articlesList) > 0 %}
+   {% if len(parameters.personalArticlesList) > 0 %}
  
 	 <table class="table table-hover table-bordered">
 	     <thead>
@@ -16,7 +17,7 @@
 	     </thead>
 	     <tbody>
                                     
-  {% for article in parameters.articlesList %}
+  {% for article in parameters.personalArticlesList %}
 			
 			 <tr>
 			     <td><a href="/{{ article.article_link }}">{{ article.article_title }}</a></td>

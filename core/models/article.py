@@ -126,8 +126,10 @@ class Article(Model):
 
         
 
-    def save(self, author_id, templateDir):
+    def save(self, authorId, templateDir):
         """
+        Обязательно:
+        - Автора
         сохранить данные.
         2.1 поменятся могут:
             - название статьи
@@ -147,7 +149,7 @@ class Article(Model):
 # вот такие категрии (служебные?) 'inf','trm','nvg','tpl'
 
 
-#         self.author_id = author_id
+#         self.author_id = authorId
        
         if int(self.article_category_id) == int(config.options.tpl_categofy_id):
             htmlTextOut = self.article_source
@@ -156,7 +158,7 @@ class Article(Model):
         article_link = article_title.lower().replace(' ','_')
         self.article_link = article_link.replace('__','_')
 
-        logging.info( 'article Before Save 1 self.article_id = ' + str(self) )
+#         logging.info( 'article Before Save 1 self.article_id = ' + str(self) )
         
         del self.article_permission_code 
         
@@ -175,7 +177,7 @@ class Article(Model):
 #             self.rollback()
 
 
-        logging.info( 'article Before Save 2 self.article_id = ' + str(self) )
+#         logging.info( 'article Before Save 2 self.article_id = ' + str(self) )
         
         try:
         
@@ -186,12 +188,12 @@ class Article(Model):
 
             sha_hash_sou =  self.article_title + self.article_link + self.article_annotation + self.article_source
             
-            logging.info( 'save:: sha_hash_sout = '  + str(sha_hash_sou))
+#             logging.info( 'save:: sha_hash_sout = '  + str(sha_hash_sou))
 
             mainPrimaryObj = {'article_id': self.article_id }
-            self.article_id = Model.save(self, author_id, operationFlag, mainPrimaryObj, sha_hash_sou, 'article_id')
+            self.article_id = Model.save(self, authorId, operationFlag, mainPrimaryObj, sha_hash_sou, 'article_id')
 
-            logging.info( 'save:: After SAVE = '  + str(self))
+#             logging.info( 'save:: After SAVE = '  + str(self))
         
             if int(self.article_category_id) == int(config.options.tpl_categofy_id):
                 wrkTpl = Template()
@@ -202,7 +204,7 @@ class Article(Model):
             logging.info( 'Save:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
             self.rollback()
              
-        logging.info( 'save:: save self.article_link! = ' + self.article_link )
+#         logging.info( 'save:: save self.article_link! = ' + self.article_link )
                 
         return self 
 
@@ -214,11 +216,15 @@ class Article(Model):
 #         article_title = base64.b64encode(tornado.escape.utf8(self.article_title)).decode(encoding='UTF-8')
 #         article_link = base64.b64encode(tornado.escape.utf8(self.article_link)).decode(encoding='UTF-8')
 #         article_annotation = base64.b64encode(tornado.escape.utf8(self.article_annotation)).decode(encoding='UTF-8')    
-        article_source = base64.b64encode(
-                                    zlib.compress(
+#         article_source = base64.b64encode(
+#                                     zlib.compress(
+#                                         tornado.escape.utf8(self.article_source)
+#                                                 )
+#                                                     ).decode(encoding='UTF-8')
+        article_source = zlib.compress(
                                         tornado.escape.utf8(self.article_source)
                                                 )
-                                                    ).decode(encoding='UTF-8')
+
 #         self.article_title = article_title
 #         sef.article_link = article_link
 #         self.article_annotation = article_annotation  
@@ -229,7 +235,7 @@ class Article(Model):
         нормальный декодирований нормальной статьи!!!!!
         
         """
-        logging.info( 'articleDecode art_source.article_source = ' + str(art_source.article_source))
+#         logging.info( 'articleDecode art_source.article_source = ' + str(art_source.article_source))
         
         outArt = art_source
         
@@ -245,7 +251,8 @@ class Article(Model):
     #         outArt.article_title = base64.b64decode(outArt.article_title).decode(encoding='UTF-8')
     #         outArt.article_link = base64.b64decode(outArt.article_link).decode(encoding='UTF-8')
     #         outArt.article_annotation = base64.b64decode(outArt.article_annotation).decode(encoding='UTF-8')
-            decodeText =  base64.b64decode(outArt.article_source) #.decode(encoding='UTF-8')
+#             decodeText =  base64.b64decode(outArt.article_source) #.decode(encoding='UTF-8')
+            decodeText =  outArt.article_source
             outArt.article_source = zlib.decompress(decodeText).decode("utf-8")  #.decode('UTF-8')    
     #         logging.info( 'articleDecode outArt = ' + str(outArt))
 
@@ -264,8 +271,8 @@ class Article(Model):
          Кстати, статьи бывают не только "публичными" а и групповыми и ЛИЧНЫМИ!!!
          
          """
-        logging.info( 'Article ::: get articleLink  = ' + str(articleLink))
-        logging.info( 'Article ::: get spectatorId  = ' + str(spectatorId))
+#         logging.info( 'Article ::: get articleLink  = ' + str(articleLink))
+#         logging.info( 'Article ::: get spectatorId  = ' + str(spectatorId))
     
 #         article_link = base64.b64encode(tornado.escape.utf8(articleLink)).decode(encoding='UTF-8')
         article_link = articleLink
@@ -319,7 +326,7 @@ class Article(Model):
                        WHERE  articles.actual_flag = 'A' 
                        AND groups.revision_author_id = articles.revision_author_id
                        AND groups.revision_author_id = $sId
-                       AND groups.group_id = librarys.group_id
+                       AND groups.dt_header_id = librarys.group_id
                        AND librarys.article_id = articles.article_id
                        AND articles.article_id = lfind.article_id 
                        AND lfind.article_link = '${aLink}'                       
@@ -329,7 +336,7 @@ class Article(Model):
                     #   article_id 
             tplWrk = string.Template(strTpl) # strTpl
             strSelect = tplWrk.substitute(sId=str(spectatorId), aLink=article_link)
-            logging.info( 'Article ::: get strSelect  = ' + str(strSelect))
+#             logging.info( 'Article ::: get strSelect  = ' + str(strSelect))
             getRez = self.rowSelect(str(strSelect)) 
 
     
@@ -346,7 +353,7 @@ class Article(Model):
          получить ОЛЬКО опубликованный текст  (активную статью) - для редактирования получаем статью иным образом! 
     
          """
-         logging.info( 'Article ::: getById articleId  = ' + str(articleId))
+#          logging.info( 'Article ::: getById articleId  = ' + str(articleId))
     
          getRez = self.select(
                                 'articles.article_id, articles.article_title, articles.article_link, '+
@@ -376,7 +383,7 @@ class Article(Model):
         ну, походу, все, из ТОЙ версии, которую заказал пользователь!!! 
     
         """
-        logging.info( 'Article ::: getByUsingHash hash  = ' + str(hash))
+#         logging.info( 'Article ::: getByUsingHash hash  = ' + str(hash))
     
  
         strTpl = """
@@ -401,14 +408,14 @@ class Article(Model):
                WHERE  lfind.article_permissions = 'grp'
                AND groups.revision_author_id = lfind.revision_author_id
                AND groups.revision_author_id = $sId
-               AND groups.group_id = librarys.group_id
+               AND groups.dt_header_id = librarys.group_id
                AND librarys.article_id = lfind.article_id
                AND lfind.sha_hash = '${aHash}'        
                 """
                 #   article_id 
         tplWrk = string.Template(strTpl) # strTpl
         strSelect = tplWrk.substitute(sId=str(spectatorId), aHash=hash)
-        logging.info( 'Article ::: getByUsingHash strSelect  = ' + str(strSelect))
+#         logging.info( 'Article ::: getByUsingHash strSelect  = ' + str(strSelect))
         getRez = self.rowSelect(str(strSelect)) 
     
         if len(getRez) == 0:
@@ -450,7 +457,7 @@ class Article(Model):
                                  }
                                 )
     
-         logging.info( 'list:: getRez = ' + str(getRez))
+#          logging.info( 'list:: getRez = ' + str(getRez))
          if len(getRez) == 0:
 #             raise WikiException( ARTICLE_NOT_FOUND )
             return []
@@ -496,10 +503,10 @@ class Article(Model):
                    articles.article_id, articles.article_title, articles.article_link, articles.article_annotation, 
                    articles.article_category_id, 
                    articles.revision_author_id,  articles.article_template_id, articles.article_permissions,
-                   groups.group_title, groups.group_annotation, groups.group_id 
+                   groups.group_title, groups.group_annotation, groups.dt_header_id AS group_id 
                    FROM articles 
                    LEFT JOIN librarys ON  librarys.article_id = articles.article_id
-                   LEFT JOIN groups ON groups.group_id = librarys.group_id 
+                   LEFT JOIN groups ON groups.dt_header_id = librarys.group_id 
                    WHERE articles.article_id  IN  
                            (SELECT DISTINCT articles.article_id FROM articles WHERE articles.revision_author_id  =  $aId) 
                    AND articles.actual_flag = 'A' 
@@ -512,7 +519,7 @@ class Article(Model):
                     #   article_id 
             tplWrk = string.Template(strTpl) # strTpl
             strSelect = tplWrk.substitute(aId=str(authorId), sId=str(spectatorId))
-            logging.info('listByAutorId:: strSelect = ' + str (strSelect) )            
+#             logging.info('listByAutorId:: strSelect = ' + str (strSelect) )            
             getRez = self.rowSelect(str(strSelect)) 
         else:
             autorIdStr = '';
@@ -529,10 +536,10 @@ class Article(Model):
                    " articles.article_id, articles.article_title, articles.article_link, " +
                    " articles.article_annotation, articles.article_category_id, articles.revision_author_id, "+
                    " articles.article_template_id, articles.article_permissions, " +
-                   " groups.group_title, groups.group_annotation, groups.group_id " ,
+                   " groups.group_title, groups.group_annotation, groups.dt_header_id AS group_id " ,
                    "",
                        {
-                   "joinStr": "LEFT JOIN librarys ON librarys.article_id = articles.article_id LEFT JOIN groups ON groups.group_id = librarys.group_id",
+                   "joinStr": "LEFT JOIN librarys ON librarys.article_id = articles.article_id LEFT JOIN groups ON groups.dt_header_id = librarys.group_id",
                    "whereStr": autorIdStr , # строка набор условий для выбора строк
                    "orderStr": " 2 ", #  articles.article_id строка порядок строк
         #                                "orderStr": "FROM_BASE64( articles.article_title )", # строка порядок строк
@@ -540,7 +547,7 @@ class Article(Model):
                    )
         
                 
-        logging.info( 'listByAutorId:: getRez = ' + str(getRez))
+#         logging.info( 'listByAutorId:: getRez = ' + str(getRez))
         if len(getRez) == 0:
         #             raise WikiException( ARTICLE_NOT_FOUND )
            return []
@@ -559,11 +566,11 @@ class Article(Model):
                    articles.article_id, articles.article_title, articles.article_link, articles.article_annotation, 
                    articles.article_category_id, 
                    articles.revision_author_id,  articles.article_template_id, articles.article_permissions,
-                   groups.group_title, groups.group_annotation, groups.group_id 
+                   groups.group_title, groups.group_annotation, groups.dt_header_id AS group_id 
                    FROM articles 
                        LEFT JOIN librarys ON librarys.article_id = articles.article_id
                        LEFT JOIN groups ON groups.revision_author_id = articles.revision_author_id
-                                AND groups.group_id = librarys.group_id
+                                AND groups.dt_header_id = librarys.group_id
                    WHERE articles.actual_flag = 'A'
                    AND  ( articles.article_permissions != 'sol' OR  
                    articles.article_id IN 
@@ -575,7 +582,7 @@ class Article(Model):
                     #   article_id 
             tplWrk = string.Template(strTpl) # strTpl
             strSelect = tplWrk.substitute( sId=str(spectatorId))
-            logging.info( 'getListArticlesAll::  strSelect = ' + str(strSelect))
+#             logging.info( 'getListArticlesAll::  strSelect = ' + str(strSelect))
             getRez = self.rowSelect(str(strSelect)) 
         else:
             autorIdStr = " articles.article_permissions != 'sol' AND articles.actual_flag = 'A' ";
@@ -585,18 +592,18 @@ class Article(Model):
                    " articles.article_id, articles.article_title, articles.article_link, " +
                    " articles.article_annotation, articles.article_category_id,  "+
                    " articles.article_template_id, articles.article_permissions, " +
-                   " groups.group_title, groups.group_annotation, groups.group_id " ,
+                   " groups.group_title, groups.group_annotation, groups. group_id " ,
                    "",
                        {
                    "joinStr": "LEFT JOIN librarys ON librarys.article_id = articles.article_id " + 
-                              " LEFT JOIN groups ON groups.group_id = librarys.group_id",
+                              " LEFT JOIN groups ON groups.dt_header_id AS group_id = librarys.group_id",
                    "whereStr": autorIdStr , # строка набор условий для выбора строк
                    "orderStr": " 2 ", #  articles.article_id строка порядок строк
         #                                "orderStr": "FROM_BASE64( articles.article_title )", # строка порядок строк
                     }
                    )
                 
-        logging.info( 'listByAutorId:: getRez = ' + str(getRez))
+#         logging.info( 'listByAutorId:: getRez = ' + str(getRez))
         if len(getRez) == 0:
            return []
  
@@ -658,7 +665,7 @@ class Article(Model):
                                ' authors ',
                                
                                    {
-                               'whereStr': ' articles.revision_author_id =  authors.author_id '  +\
+                               'whereStr': ' articles.revision_author_id =  authors.dt_header_id '  +\
                                         ' AND articles.article_id =  ' + str(articleId) ,  # строка набор условий для выбора строк
                                'orderStr': ' articles.operation_timestamp DESC ', # строка порядок строк
 #                                'orderStr': 'FROM_BASE64( articles.article_title )', # строка порядок строк

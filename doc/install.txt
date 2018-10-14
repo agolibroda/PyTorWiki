@@ -49,6 +49,10 @@
  	
  	pip install py-postgresql
  	
+ 	pip install rsa
+ 	pip install pycryptodomex
+ 	
+ 	
  	
  проверить, (и создать, если нет) директорию "filestorage" в "static" - туда будут складываться загружаемые файлы
  

@@ -61,7 +61,7 @@ class Group(Model):
     def __init__(self, group_title = '', group_annotation = '', group_status = 'pbl'):
         Model.__init__(self, 'groups')   
 
-        self.group_id = 0
+        self.dt_header_id = 0
 #         self.author_id = 0
         self.group_title = group_title
         self.group_annotation = group_annotation
@@ -76,14 +76,14 @@ class Group(Model):
             self.author_id = 0
             self.member_role_type = 'M'
             
-        def save(self, author_id ):
+        def save(self, authorId ):
 
             operationFlag = 'I'
 
             mainPrimaryObj = {'group_id': self.group_id, 'author_id': self.author_id }
             revisions_sha_hash_sou =  str(self.group_id) + str(self.author_id) + self.member_role_type 
             logging.info(' Member save:: self = ' + str(self))
-            Model.save(self, author_id, operationFlag, mainPrimaryObj, revisions_sha_hash_sou)
+            Model.save(self, authorId, operationFlag, mainPrimaryObj, revisions_sha_hash_sou)
 
 
         def getGroupMembersleList(self, groupId):
@@ -93,19 +93,19 @@ class Group(Model):
             """
 
             getRez = self.select(
-                    'authors.author_id,  author_login, author_name, author_surname, author_role, author_phon, author_email ',
-                    'authors',
+                    'dt_header.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email ',
+                    'authors, dt_header',
                         {
-                    'whereStr': " members.author_id = authors.author_id  AND " +\
+                    'whereStr': " members.dt_header_id = authors.dt_header_id AND dt_header.dt_header_id = authors.dt_header_id AND " +\
                     " members.actual_flag = 'A' AND authors.actual_flag = 'A' AND "
-                    " members.group_id = " + str(groupId) , # строка набор условий для выбора строк
+                    " members.dt_header_id = " + str(groupId) , # строка набор условий для выбора строк
                     'orderStr': ' author_name, author_surname ', # строка порядок строк
                                      }
                                     )
 
 # 'whereStr': " groups.author_id = authors.author_id AND  groups.group_id = " + str(group_id)            
         
-            logging.info( 'getGroupMembersleList:: getRez = ' + str(getRez))
+#             logging.info( 'getGroupMembersleList:: getRez = ' + str(getRez))
             if len(getRez) == 0:
     #             raise WikiException( ARTICLE_NOT_FOUND )
                return []
@@ -123,20 +123,20 @@ class Group(Model):
 
     class Library(Model):
         
-        def __init__(self, group_id = 0, article_id=0, library_permission_type = 'W' ):        
+        def __init__(self, groupId = 0, articleId=0, libraryPermissionType = 'W' ):        
             Model.__init__(self, 'librarys')   
-            self.group_id = group_id
-            self.article_id = article_id
-            self.library_permission_type = library_permission_type
+            self.group_id = groupId
+            self.article_id = articleId
+            self.library_permission_type = libraryPermissionType
 
-        def save(self, author_id):
+        def save(self, autorId):
 
             operationFlag = 'I'
 
             mainPrimaryObj = {'group_id': self.group_id, 'article_id': self.article_id }
-            revisions_sha_hash_sou =  str(self.group_id) + str(self.article_id) + self.library_permission_type 
-            logging.info(' Library save:: self = ' + str(self))
-            Model.save(self, author_id, operationFlag, mainPrimaryObj, revisions_sha_hash_sou)
+            revisionsShaHashSou =  str(self.group_id) + str(self.article_id) + self.library_permission_type 
+#             logging.info(' Library save:: self = ' + str(self))
+            Model.save(self, autorId, operationFlag, mainPrimaryObj, revisionsShaHashSou)
 
 
         def getGroupArticleList(self, groupId):
@@ -153,15 +153,15 @@ class Group(Model):
                     'articles',
                         {
                     'whereStr': " librarys.article_id = articles.article_id AND " +\
-                    " articles.actual_flag = 'A' AND librarys.actual_flag = 'A' AND "
+                    " articles.actual_flag = 'A' AND librarys.actual_flag = 'A' AND " +\
                     " librarys.group_id = " + str(groupId) , # строка набор условий для выбора строк
                     'orderStr': ' articles.article_id ', # строка порядок строк
                                      }
                                     )
 
-# 'whereStr': " groups.author_id = authors.author_id AND  groups.group_id = " + str(group_id)            
-            for item in getRez:
-                logging.info( 'getGroupArticleList:: getRez = ' + str(item))
+# 'whereStr': " groups.dt_header_id = authors.dt_header_id AND  groups.group_id = " + str(group_id)            
+#             for item in getRez:
+#                 logging.info( 'getGroupArticleList:: getRez = ' + str(item))
             
             if len(getRez) == 0:
     #             raise WikiException( ARTICLE_NOT_FOUND )
@@ -171,19 +171,20 @@ class Group(Model):
     
 
 
-    def get(self, group_id):
+    def get(self, groupId):
         """
         загрузить ОДНО значение - по ИД группы
         """
+        
         resList = self.select(
-                    'group_id,  group_title, group_annotation ' , # строка - чего хотим получить из селекта
-                    '', #'authors',  # строка - список таблиц 
+                    'dt_header.dt_header_id,  group_title, group_annotation ' , # строка - чего хотим получить из селекта
+                    'dt_header', #'authors',  # строка - список таблиц 
                     {
-                     'whereStr': " groups.actual_flag = 'A' AND  groups.group_id = " + str(group_id)
+                     'whereStr': " groups.actual_flag = 'A' AND  groups.dt_header_id = dt_header.dt_header_id AND  dt_header.dt_header_id = " + str(groupId)
                      } #  все остальные секции селекта
                     )
-        for item in resList:
-            logging.info('Author:: get:: resList = ' + str(item))
+#         for item in resList:
+#             logging.info('Author:: get:: resList = ' + str(item))
             
         if len(resList) == 1:
 #             return resList[0]
@@ -196,14 +197,14 @@ class Group(Model):
         else:
             raise WikiException(LOAD_ONE_VALUE_ERROR)
 
-    def list(self ):
+    def list(self):
         """
         загрузить список всех групп
         
         """
         resList = self.select(
-                    'group_id,  group_title, group_annotation,  group_status  ' , # строка - чего хотим получить из селекта
-                    '', #'authors',  # строка - список таблиц 
+                    'dt_header.dt_header_id,  group_title, group_annotation,  group_status  ' , # строка - чего хотим получить из селекта
+                    'dt_header', #'authors',  # строка - список таблиц 
                     {
                      'whereStr': " groups.actual_flag = 'A' "
                      } #  все остальные секции селекта
@@ -214,7 +215,7 @@ class Group(Model):
         
 
         
-    def grouplistForAutor(self, author_id):
+    def grouplistForAutor(self, authorId):
         """
         Получить список групп для одного автора - все руппы, которые АВТОР создал, 
         и в которых АВТОР является участником
@@ -226,12 +227,13 @@ class Group(Model):
         """
         try:
             resList = self.select(
-                        ' DISTINCT groups.group_id,  groups.group_title, groups.group_annotation,  groups.group_status, ' + 
+                        ' DISTINCT dt_header.dt_header_id,  groups.group_title, groups.group_annotation,  groups.group_status, ' + 
                         ' members.member_role_type ' , # строка - чего хотим получить из селекта
-                        '  members', #'authors',  # строка - список таблиц 
+                        '  members, dt_header ', #'authors',  # строка - список таблиц 
                         {
-                         'whereStr': " groups.actual_flag = 'A' AND members.author_id = " + str(author_id) + \
-                         " AND  members.group_id = groups.group_id ",
+                         'whereStr': " groups.actual_flag = 'A' AND groups.dt_header_id = dt_header.dt_header_id AND " +  
+                             " members.author_id = " + str(authorId) + 
+                             " AND  members.group_id = groups.dt_header_id ",
                          'orderStr': '  groups.group_title ' 
                          } #  все остальные секции селекта
                         )
@@ -264,7 +266,7 @@ class Group(Model):
         return memberControl.getGroupMembersleList( groupId)
 
     
-    def save(self, author_id ):
+    def save(self, authorId ):
         """
         сщхранить группу, 
         пользователя, который создал группу надо воткнуть не только в авторы группы,
@@ -274,37 +276,37 @@ class Group(Model):
 
         logging.info(' save:: before SAVE = ' + str(self)) 
                
-        if self.group_id == 0:
+        if self.dt_header_id == 0:
 #             self.group_create_date = datetime.now()
             operationFlag = 'I'
         else:
             operationFlag = 'U'
         
         self.begin()    
-        mainPrimaryObj = {'group_id': self.group_id }
+        mainPrimaryObj = {'dt_header_id': self.dt_header_id }
         revisions_sha_hash_sou = self.group_title + self.group_annotation + self.group_status
         
         logging.info(' save:: mainPrimaryObj = ' + str(mainPrimaryObj))
-        self.group_id =  Model.save(self, author_id, operationFlag, mainPrimaryObj, revisions_sha_hash_sou, 'group_id')
+        self.dt_header_id =  Model.save(self, dt_header_id, operationFlag, mainPrimaryObj, revisions_sha_hash_sou, 'dt_header_id')
         # теперь сохранить автора группы как ее админа.
 
         if operationFlag == 'I':
             memberControl = self.Member()
-            memberControl.author_id = author_id
-            memberControl.group_id = self.group_id
+            memberControl.autor_id = authorId
+            memberControl.group_id = self.dt_header_id
             memberControl.member_role_type = 'A'
-            memberControl.save(author_id)
+            memberControl.save(authorId)
         
         self.commit()
         return True
 
 
-    def librarySave(self, author_id = 0, group_id = 0, article_id=0, library_permission_type = 'W'):
+    def librarySave(self, authorId = 0, groupId = 0, article_id=0, library_permission_type = 'W'):
         """
         Добавить статью к группе 
         
         """
-        libControl = self.Library (group_id, article_id, library_permission_type)
-        libControl.save(author_id)
+        libControl = self.Library (groupId, authorId, library_permission_type)
+        libControl.save(authorId)
 
     

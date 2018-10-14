@@ -145,7 +145,7 @@ class HelperArticle():
         return (article, fileList)
 
 
-    def сomposeArticleSave(self, author_id, templateDir, article_pgroipId):
+    def сomposeArticleSave(self, authorId, templateDir, article_pgroipId):
         """
         сохранить статью
         
@@ -153,14 +153,14 @@ class HelperArticle():
         try:
             self.artModel.begin()
 
-            article = self.artModel.save(author_id, templateDir)
-            logging.info( 'сomposeArticleSave:: author_id = ' + str(author_id))
+            article = self.artModel.save(authorId, templateDir)
+            logging.info( 'сomposeArticleSave:: authorId = ' + str(authorId))
             logging.info( 'сomposeArticleSave:: article_pgroipId = ' + str(article_pgroipId))
             logging.info( 'сomposeArticleSave:: article.article_id = ' + str(article.article_id))
       
             if int(article_pgroipId) > 0 :
                 groupModel = Group()
-                groupModel.librarySave(int(author_id), int(article_pgroipId), int(article.article_id), 'W')
+                groupModel.librarySave(int(authorId), int(article_pgroipId), int(article.article_id), 'W')
                 
             self.artModel.commit()                
             return True

@@ -91,7 +91,7 @@ class AuthCreateHandler(BaseHandler):
             rez = yield executor.submit( authorLoc.save )
             logging.info( 'AuthCreateHandler  post rez = ' + str(rez))
             
-            self.set_secure_cookie("wiki_author", str(authorLoc.author_id))
+            self.set_secure_cookie("wiki_author", str(authorLoc.dt_header_id))
             self.redirect(self.get_argument("next", "/personal_desk_top"))
         except Exception as e:
             logging.info( 'Save:: Exception as et = ' + str(e))
@@ -127,7 +127,7 @@ class AuthLoginHandler(BaseHandler):
     
             rezult = yield executor.submit( authorloginLoad.login, self.get_argument("login"), self.get_argument("password") )
             if rezult:
-                self.set_secure_cookie("wiki_author", str(authorloginLoad.author_id))
+                self.set_secure_cookie("wiki_author", str(authorloginLoad.dt_header_id))
                 self.redirect(self.get_argument("next", "/personal_desk_top"))
             else:
                 raise WikiException( 'incorrect login/password' )
@@ -171,7 +171,7 @@ class MyProfileHandler(BaseHandler):
             curentAuthor = yield executor.submit(self.get_current_user ) 
             logging.info( 'MyProfileHandler GET :: curentAuthor = ' + str(curentAuthor))
 
-            if not curentAuthor.author_id: raise tornado.web.HTTPError(404, "author not found")
+            if not curentAuthor.dt_header_id: raise tornado.web.HTTPError(404, "author not found")
 
             tplControl = TemplateParams()
             tplControl.make(curentAuthor)
@@ -199,13 +199,13 @@ class MyProfileHandler(BaseHandler):
 #             if self.any_author_exists():
 #                 raise tornado.web.HTTPError(400, "author already created")
  
-            logging.info( 'MyProfileHandler  post pass !!!! = ' + str(self.get_argument("pass")))
-            logging.info( 'MyProfileHandler  post pass_conf !!!! = ' + str(self.get_argument("pass_conf")))
-            logging.info( 'MyProfileHandler  post login !!!! = ' + str(self.get_argument("login")))
-            logging.info( 'MyProfileHandler  post email !!!! = ' + str(self.get_argument("email")))
-            logging.info( 'MyProfileHandler  post name !!!! = ' + str(self.get_argument("name")))
-            logging.info( 'MyProfileHandler  post surname !!!! = ' + str(self.get_argument("surname")))
-            logging.info( 'MyProfileHandler  post phon !!!! = ' + str(self.get_argument("phon")))
+#             logging.info( 'MyProfileHandler  post pass !!!! = ' + str(self.get_argument("pass")))
+#             logging.info( 'MyProfileHandler  post pass_conf !!!! = ' + str(self.get_argument("pass_conf")))
+#             logging.info( 'MyProfileHandler  post login !!!! = ' + str(self.get_argument("login")))
+#             logging.info( 'MyProfileHandler  post email !!!! = ' + str(self.get_argument("email")))
+#             logging.info( 'MyProfileHandler  post name !!!! = ' + str(self.get_argument("name")))
+#             logging.info( 'MyProfileHandler  post surname !!!! = ' + str(self.get_argument("surname")))
+#             logging.info( 'MyProfileHandler  post phon !!!! = ' + str(self.get_argument("phon")))
 
             authorLoc = yield executor.submit(self.get_current_user )
              
@@ -221,7 +221,7 @@ class MyProfileHandler(BaseHandler):
       
 #             authorLoc =  Author()
             
-#             authorLoc.author_id = self.get_current_user
+#             authorLoc.dt_header_id = self.get_current_user
 #             authorLoc.author_role = 'volunteer'
             
             authorLoc.author_login = self.get_argument("login")
@@ -238,7 +238,7 @@ class MyProfileHandler(BaseHandler):
             rez = yield executor.submit( authorLoc.save )
             logging.info( 'MyProfileHandler  post rez = ' + str(rez))
             
-            self.set_secure_cookie("wiki_author", str(authorLoc.author_id))
+            self.set_secure_cookie("wiki_author", str(authorLoc.dt_header_id))
             
     #         tplControl.make(self.autor)
             tplControl.page_name = authorLoc.author_name + ' '+ authorLoc.author_surname
@@ -280,7 +280,7 @@ class AuthorProfile(BaseHandler):
     #         logging.info( 'ComposeHandler:: post rezult = ' + str(rezult))
     #         curentAuthor = rezult.result()
             
-            if not spectatorAuthor.author_id: return None
+            if not spectatorAuthor.dt_header_id: return None
             
             logging.info( 'AdminHomeHandler:: get ')
             logging.info( 'AdminHomeHandler:: get presentAuthorId = ' + str (presentAuthorId))
@@ -293,7 +293,7 @@ class AuthorProfile(BaseHandler):
             tplControl.make(spectatorAuthor)
             tplControl.autor = yield executor.submit( authorControl.get, int(presentAuthorId) )
             artControl = Article()
-            articles = yield executor.submit( artControl.listByAutorId, int(presentAuthorId), spectatorAuthor.author_id )
+            articles = yield executor.submit( artControl.listByAutorId, int(presentAuthorId), spectatorAuthor.dt_header_id )
             tplControl.articlesList = articles
             groupModel = Group()
             tplControl.allGroupsList = yield executor.submit( groupModel.list )
