@@ -12,29 +12,31 @@
 # import sys, os, 
 
 import logging
-import json
 
-# import pymysql
-import bcrypt
-from Crypto.Cipher import AES
-from Crypto.PublicKey import RSA
-
-import hashlib
 import base64
 from datetime import datetime
 
-import tornado.options
-import tornado.escape
+import hashlib
+import bcrypt
 
-##########################################
+import json
+import pickle
+
+from Crypto.Cipher import AES
+from Crypto.PublicKey import RSA
+
+import tornado.escape
+import tornado.options
 
 import config
-from ..constants.data_base import *
-
-from . import Model
 from core.WikiException import *
 
+from . import Model
+from ..constants.data_base import *
 
+
+# import pymysql
+##########################################
 class Author(Model):
     """
     Автор - сложный объект, который должен состоять из 2-х объектов, и данных "верхнего аровя"
@@ -84,8 +86,14 @@ class Author(Model):
         self.private_key = None
         self.private_key_hash = None
         
-        Model.__init__(self)   
+        ########################
+        # -сюда приходит пароль из формы, или, после логина - именно с ним и работаем - делаем сначала из него байты,
+        # потом  - превращаес в ХКШ, и кладем на место (self.author_pass)
+        # и раскрываем приватный ключ, который лежит закрытый н пароле!!!!!
+        self._pass_source = '' 
+        self._old_pass = ''  # - старе значение пароля - нужно при смене 
         
+        Model.__init__(self)  
         self.setDataStruct(Model.TableDef( tabName='authors', 
                                       idFieldName=None,
                                       mainPrimaryList =['dt_header_id'],
@@ -98,6 +106,9 @@ class Author(Model):
 
         logging.info(' __init__:: After self = ' + str(self))
         
+        
+        #####################
+        # END
       
 
     def save(self):
@@ -108,33 +119,81 @@ class Author(Model):
         """
         
         logging.info(' save:: BEFORE work self = ' + str(self))
+        logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
+        logging.info(' save:: 1 self._old_pass = ' + str(self._old_pass))
+
+        logging.info(' save:: 1 self.public_key = ' + str(self.public_key))
+        logging.info(' save:: 1 self.private_key = ' + str(self.private_key))
+        logging.info(' save:: 1 self.private_key_hash = ' + str(self.private_key_hash))
 
         bbsalt =  config.options.salt.encode()
          
-        if self.author_pass != '':
-            bytePass = tornado.escape.utf8(self.author_pass) #  превратим пароль, введенный пользователем в последовательность байтов.
-            self.author_pass = bcrypt.hashpw( bytePass, bbsalt ).decode('utf-8') 
+        if self._pass_source != '' and (self.dt_header_id == 0 or self.dt_header_id == None):
+            #  это новый пользователь, для него просто делаем ХЕШ
+            self._pass_source = tornado.escape.utf8(self._pass_source) #  превратим пароль, введенный пользователем в последовательность байтов.
+            self.author_pass = bcrypt.hashpw( self._pass_source, bbsalt ).decode('utf-8') 
 
-            logging.info(' save:: bytePass = ' + str(bytePass))
+#         logging.info(' save:: self._pass_source = ' + str(self._pass_source))
 
-            if ( self.dt_header_id == 0 or self.dt_header_id == None  or self.public_key == None  ):
-                key = RSA.generate(2048)
-                self.public_key = key.publickey().export_key() 
-                pKey = key.export_key() # поучить незакрытый приватный ключ
-                logging.info(' save:: pKey = ' + str(pKey))
-                self.private_key_hash = bcrypt.hashpw( pKey, bbsalt ).decode('utf-8') # получим ХЕш приватного ключа - для последуюей проверки при восстановлении пароля
-                logging.info(' save:: bytePass+bbsalt = ' + str(bytePass+bbsalt))
-                bbWrk = (bytePass+bbsalt)[0:32]
-                
-                logging.info(' save:: bbWrk = ' + str(bbWrk))
-                
-                cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
-                self.private_key, tag = cipher_aes.encrypt_and_digest(pKey)
-                self.private_key = tornado.escape.utf8(self.private_key)
+        # здать новую приватно-публичую парочку, если ее не было раньше.
+        if ( (self.dt_header_id == 0 or self.dt_header_id == None) and self._pass_source != '' and self.public_key == None  ):
+            bytePass = tornado.escape.utf8(self._pass_source)
+            key = RSA.generate(2048)
+            self.public_key = key.publickey().export_key() 
+            pKey = key.export_key() # поучить незакрытый приватный ключ
+            logging.info(' save:: PrivateKey ::: pKey = ' + str(pKey))
+            self.private_key_hash = bcrypt.hashpw( pKey, bbsalt ).decode('utf-8') # получим ХЕш приватного ключа - для последуюей проверки при восстановлении пароля
+            bbWrk = (bytePass+bbsalt)[0:32]
+            cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
+            ciphertext = cipher_aes.encrypt(pKey)
+            self.private_key = pickle.dumps({'cipherKey': ciphertext, 'nonce': cipher_aes.nonce})
 
-                logging.info(' save:: bbWrk = ' + str(bbWrk))
+# new_reader = pickle.loads(pickle.dumps(reader))
+
+        logging.info(' save:: self.private_key = ' + str(self.private_key))
+
+        logging.info(' save:: self._pass_source = ' + str(self._pass_source))
+        logging.info(' save:: self._old_pass = ' + str(self._old_pass))
+        
+        # если мы поменяли пароль, значит, я должен из формы получить 2 значения - старый пароль и новый пароль - и оба в тесте.    
+        # потом я проверю, что старый пароль - совпадает ХЕШЕМ,
+        # еслиДА, тогда 
+        # 1 - декодировать приватный ключ старым паролем,
+        # 2 закодировать - новым, сделать новый ХЕШ, и - УРА!!!!
+        if self._pass_source != '' and self._old_pass != '':
+            bbOldPAss = tornado.escape.utf8(self._old_pass)
+            newPassbb = tornado.escape.utf8(self._pass_source)
+            hashOldPass = bcrypt.hashpw( bbOldPAss, bbsalt ).decode('utf-8')
+            logging.info(' save:: hashOldPass = ' + str(hashOldPass))
+            logging.info(' save:: self.author_pass = ' + str(self.author_pass))
+            if hashOldPass == self.author_pass:
+                #  все норм, старый пароль - верный, можно заняться сменой пароля.
+                bbWrk = (bbOldPAss+bbsalt)[0:32]
+                tmpPrivateKey = pickle.loads(self.private_key)
+                cipher_aes = AES.new(bbWrk, AES.MODE_EAX, tmpPrivateKey['nonce']) # закроем приватный ключ на пароль пользователя.
+
+                logging.info(' save:: self.private_key = ' + str(tmpPrivateKey))
+
+                tmpPrivate_key = cipher_aes.decrypt(tmpPrivateKey['cipherKey'])
+
+                logging.info(' save:: tmpPrivate_key = ' + str(tmpPrivate_key))
+
+                tmpHash = bcrypt.hashpw( tmpPrivate_key, bbsalt ).decode('utf-8') 
+                logging.info(' save:: tmpHash = ' + str(tmpHash))
+                logging.info(' save:: self.private_key_hash = ' + str(self.private_key_hash))
+                if tmpHash == self.private_key_hash:
+                    # все орм, мы нормально открыли приватный ключ, теперб его можно закрытьна новый пароль!
+                    bbWrk = (newPassbb+bbsalt)[0:32]
+                    cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
+                    cipherKey = cipher_aes.encrypt(tmpPrivate_key)
+                    self.private_key = pickle.dumps({'cipherKey': cipherKey, 'nonce': cipher_aes.nonce})
+                    
+        #             self.private_key = tornado.escape.utf8(self.private_key)
+                    # на и запомним новый Хеш!!!!!
+                    self.author_pass = bcrypt.hashpw( newPassbb, bbsalt ).decode('utf-8') 
+
             
-            
+                    
         if self.dt_header_id == 0:
             self.author_create = datetime.now()
             operationFlag = 'I'
@@ -145,6 +204,10 @@ class Author(Model):
         sha_hash_sou =  str(self.author_login) + str(self.author_name) + str(self.author_surname) + str(self.author_role) + str(self.author_phon) + str(self.author_email)  
             
         logging.info(' save:: Before-Before self = ' + str(self))
+
+        logging.info(' save:: self.public_key = ' + str(self.public_key))
+        logging.info(' save:: self.private_key = ' + str(self.private_key))
+        logging.info(' save:: self.private_key_hash = ' + str(self.private_key_hash))
         
         self.dt_header_id = Model.save(self, self.dt_header_id, operationFlag, sha_hash_sou)
         return True
