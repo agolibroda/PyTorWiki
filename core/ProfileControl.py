@@ -64,6 +64,10 @@ class AuthCreateHandler(BaseHandler):
 
     @gen.coroutine
     def post(self):
+        """
+        Обработка формы создания нового пользователя.
+        
+        """
         try:
 #             if self.any_author_exists():
 #                 raise tornado.web.HTTPError(400, "author already created")
@@ -90,6 +94,7 @@ class AuthCreateHandler(BaseHandler):
             
             rez = yield executor.submit( authorLoc.save )
             logging.info( 'AuthCreateHandler  post rez = ' + str(rez))
+            logging.info( 'AuthCreateHandler  post authorLoc = ' + str(authorLoc))
             
             self.set_secure_cookie("wiki_author", str(authorLoc.dt_header_id))
             self.redirect(self.get_argument("next", "/personal_desk_top"))
@@ -125,8 +130,9 @@ class AuthLoginHandler(BaseHandler):
         try:
             authorloginLoad =  Author()
     
-            rezult = yield executor.submit( authorloginLoad.login, self.get_argument("login"), self.get_argument("password") )
+            rezult = yield executor.submit( AuthLoginHandler.login, self.get_argument("login"), self.get_argument("password") )
             if rezult:
+                logging.info( 'AuthCreateHandler  post authorloginLoad = ' + str(authorloginLoad))
                 self.set_secure_cookie("wiki_author", str(authorloginLoad.dt_header_id))
                 self.redirect(self.get_argument("next", "/personal_desk_top"))
             else:

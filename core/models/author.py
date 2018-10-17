@@ -118,13 +118,13 @@ class Author(Model):
         пароль (новый,старый) перешифровывается 
         """
         
-        logging.info(' save:: BEFORE work self = ' + str(self))
-        logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
-        logging.info(' save:: 1 self._old_pass = ' + str(self._old_pass))
-
-        logging.info(' save:: 1 self.public_key = ' + str(self.public_key))
-        logging.info(' save:: 1 self.private_key = ' + str(self.private_key))
-        logging.info(' save:: 1 self.private_key_hash = ' + str(self.private_key_hash))
+#         logging.info(' save:: BEFORE work self = ' + str(self))
+#         logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
+#         logging.info(' save:: 1 self._old_pass = ' + str(self._old_pass))
+# 
+#         logging.info(' save:: 1 self.public_key = ' + str(self.public_key))
+#         logging.info(' save:: 1 self.private_key = ' + str(self.private_key))
+#         logging.info(' save:: 1 self.private_key_hash = ' + str(self.private_key_hash))
 
         bbsalt =  config.options.salt.encode()
          
@@ -132,8 +132,6 @@ class Author(Model):
             #  это новый пользователь, для него просто делаем ХЕШ
             self._pass_source = tornado.escape.utf8(self._pass_source) #  превратим пароль, введенный пользователем в последовательность байтов.
             self.author_pass = bcrypt.hashpw( self._pass_source, bbsalt ).decode('utf-8') 
-
-#         logging.info(' save:: self._pass_source = ' + str(self._pass_source))
 
         # здать новую приватно-публичую парочку, если ее не было раньше.
         if ( (self.dt_header_id == 0 or self.dt_header_id == None) and self._pass_source != '' and self.public_key == None  ):
@@ -147,13 +145,6 @@ class Author(Model):
             cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
             ciphertext = cipher_aes.encrypt(pKey)
             self.private_key = pickle.dumps({'cipherKey': ciphertext, 'nonce': cipher_aes.nonce})
-
-# new_reader = pickle.loads(pickle.dumps(reader))
-
-        logging.info(' save:: self.private_key = ' + str(self.private_key))
-
-        logging.info(' save:: self._pass_source = ' + str(self._pass_source))
-        logging.info(' save:: self._old_pass = ' + str(self._old_pass))
         
         # если мы поменяли пароль, значит, я должен из формы получить 2 значения - старый пароль и новый пароль - и оба в тесте.    
         # потом я проверю, что старый пароль - совпадает ХЕШЕМ,
@@ -164,31 +155,19 @@ class Author(Model):
             bbOldPAss = tornado.escape.utf8(self._old_pass)
             newPassbb = tornado.escape.utf8(self._pass_source)
             hashOldPass = bcrypt.hashpw( bbOldPAss, bbsalt ).decode('utf-8')
-            logging.info(' save:: hashOldPass = ' + str(hashOldPass))
-            logging.info(' save:: self.author_pass = ' + str(self.author_pass))
             if hashOldPass == self.author_pass:
                 #  все норм, старый пароль - верный, можно заняться сменой пароля.
                 bbWrk = (bbOldPAss+bbsalt)[0:32]
                 tmpPrivateKey = pickle.loads(self.private_key)
                 cipher_aes = AES.new(bbWrk, AES.MODE_EAX, tmpPrivateKey['nonce']) # закроем приватный ключ на пароль пользователя.
-
-                logging.info(' save:: self.private_key = ' + str(tmpPrivateKey))
-
                 tmpPrivate_key = cipher_aes.decrypt(tmpPrivateKey['cipherKey'])
-
-                logging.info(' save:: tmpPrivate_key = ' + str(tmpPrivate_key))
-
                 tmpHash = bcrypt.hashpw( tmpPrivate_key, bbsalt ).decode('utf-8') 
-                logging.info(' save:: tmpHash = ' + str(tmpHash))
-                logging.info(' save:: self.private_key_hash = ' + str(self.private_key_hash))
                 if tmpHash == self.private_key_hash:
                     # все орм, мы нормально открыли приватный ключ, теперб его можно закрытьна новый пароль!
                     bbWrk = (newPassbb+bbsalt)[0:32]
                     cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
                     cipherKey = cipher_aes.encrypt(tmpPrivate_key)
                     self.private_key = pickle.dumps({'cipherKey': cipherKey, 'nonce': cipher_aes.nonce})
-                    
-        #             self.private_key = tornado.escape.utf8(self.private_key)
                     # на и запомним новый Хеш!!!!!
                     self.author_pass = bcrypt.hashpw( newPassbb, bbsalt ).decode('utf-8') 
 
@@ -203,12 +182,6 @@ class Author(Model):
             
         sha_hash_sou =  str(self.author_login) + str(self.author_name) + str(self.author_surname) + str(self.author_role) + str(self.author_phon) + str(self.author_email)  
             
-        logging.info(' save:: Before-Before self = ' + str(self))
-
-        logging.info(' save:: self.public_key = ' + str(self.public_key))
-        logging.info(' save:: self.private_key = ' + str(self.private_key))
-        logging.info(' save:: self.private_key_hash = ' + str(self.private_key_hash))
-        
         self.dt_header_id = Model.save(self, self.dt_header_id, operationFlag, sha_hash_sou)
         return True
         
@@ -229,21 +202,35 @@ class Author(Model):
             raise WikiException(PASSWD_IS_ENPTY)
 
 #         cur = self.db().cursor()
-        selectStr = 'dt_header.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email, dt_header.public_key, authors.private_key, authors.private_key_hash'
-        fromStr = 'dt_header' #'authors'
+        selectStr = 'dt_headers.dt_header_id, author_login, author_name,  author_surname, author_pass, author_role, author_phon, author_email, author_create, dt_headers.public_key, authors.private_key, authors.private_key_hash' # строка - чего хотим получить из селекта
+        fromStr = 'dt_headers' #'authors'
         anyParams = {
-                    'whereStr': " dt_header.dt_header_id = authors.dt_header_id  AND " + 
+                    'whereStr': " dt_headers.dt_header_id = authors.dt_header_id  AND " + 
                     " (author_login =  '" + loginMailStr + "' OR author_email =  '" + loginMailStr + "' )  AND author_pass =  '"  + test_pass + "' " , 
                      }
         resList = self.select(selectStr, fromStr, anyParams)
         
 #         logging.info(' login:: resList = ' + str(resList))
         
+#                 #  все норм, старый пароль - верный, можно заняться сменой пароля.
+#                 bbWrk = (bbOldPAss+bbsalt)[0:32]
+#                 tmpPrivateKey = pickle.loads(self.private_key)
+#                 cipher_aes = AES.new(bbWrk, AES.MODE_EAX, tmpPrivateKey['nonce']) # закроем приватный ключ на пароль пользователя.
+#                 tmpPrivate_key = cipher_aes.decrypt(tmpPrivateKey['cipherKey'])
+#                 tmpHash = bcrypt.hashpw( tmpPrivate_key, bbsalt ).decode('utf-8') 
+        
         if len(resList) == 1:
             objValuesNameList = list(resList[0].__dict__.keys())
             for objValue in objValuesNameList:
                 if objValue.find('_') != 0:
                     self.__setattr__(objValue,resList[0].__getattribute__(objValue) )
+            #  вот тут надо посмотреть - что у нс с данными пользователя происходит - и посмотреть - что ложится в сесию. :-) 
+            
+            logging.info(' login:: self = ' + str(self))        
+            logging.info(' login:: self = ' + str(self.public_key))        
+            logging.info(' login:: self = ' + str(self.private_key))        
+            logging.info(' login:: self = ' + str(self.private_key_hash))     
+   
             return self
         else:
             raise WikiException(LOGIN_ERROR)

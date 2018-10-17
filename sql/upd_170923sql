@@ -1,3 +1,4 @@
+-- накатываем первые изменения структуры.
 
 -- поменяем тип столбца, что бы в нем хранить статьи без обработки бейс-64.
 
@@ -91,25 +92,18 @@ ALTER TABLE IF EXISTS groups
 -- нужна табличка для хранения всез приватных ключей для  всех групп и всех авторов - участников. 
 -- ключ (всяий ключ закыт публичным ключем автора. )
 
-DROP TABLE IF EXISTS grups_keys CASCADE;
-CREATE TABLE IF NOT EXISTS grups_keys (
-  author_id int not null, -- ID Автора
-  group_id int  NOT NULL,  -- ID Группы
-  private_key bytea NOT NULL -- приватный ключ группы - он закодирован на открытый ключ АВТОРА!!! -  
-);
 
-CREATE INDEX author_id_id_ind ON grups_keys (author_id);
-CREATE INDEX group_id ON grups_keys (group_id);
+ALTER TABLE IF EXISTS members
+	ADD COLUMN private_key bytea NOT NULL, -- приватный ключ надо добавить в профиль Автора в руппе - для каждого автора группы - его личная версия приватного ключа!
 
-CREATE UNIQUE INDEX author_id_group_id_ind ON grups_keys (author_id, group_id);
-	
-ALTER TABLE IF EXISTS grups_keys
-	ADD CONSTRAINT author_id_dt_header
-	FOREIGN KEY ( author_id ) REFERENCES dt_headers ( dt_header_id ); 
-
-ALTER TABLE IF EXISTS grups_keys
-	ADD CONSTRAINT group_id_dt_header
+	ADD CONSTRAINT members_author_id_fk
+	FOREIGN KEY ( author_id ) REFERENCES dt_headers ( dt_header_id ),
+	 
+	ADD CONSTRAINT members_group_id_fk
 	FOREIGN KEY ( group_id ) REFERENCES dt_headers ( dt_header_id ); 
+ 
+CREATE UNIQUE INDEX members_author_id_group_id_ind ON members (author_id, group_id);
+
 
  
 -- приватный ключ надо добавить в профиль Автора - 
