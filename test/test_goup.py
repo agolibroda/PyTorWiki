@@ -1,3 +1,4 @@
+# test_roup.py
 
 
 import logging
@@ -22,7 +23,7 @@ sys.path.append(os.path.dirname('./../'))
 import config
 import core.models
 
-from core.models.author         import Author
+from core.models.group         import Group
 
 sys.path.pop()
 
@@ -32,51 +33,34 @@ class TestAutors(unittest.TestCase):
     autor= None
 
     def setUp(self): 
-        self.autor = Author()
-        self.autor.author_login = 'log_'+ str(time.time())
-        self.autor.author_pass = ''
-        self.autor.author_name  = 'Name001' 
-        self.autor.author_surname = 'SurName001'
-        self.autor.author_role = 'admin'
-        self.autor.author_phon = '12345' 
-        self.autor.author_email = '12345@qwerty.com'
-        self._pass_source = '123123' 
-        self._old_pass = ''  # - старе значение пароля - нужно при смене 
-
-
-#         self.autor.public_key = ''
-#         self.autor.private_key = ''
+        self.group = Group()
         
+#     def __init__(self, group_title = '', group_annotation = '', group_status = 'pbl'):
+#         Model.__init__(self, 'groups')   
+# 
+        self.group.dt_header_id = 0
+        self.group.public_key = ''
+        self.group.private_key = ''
+
+        self.group.group_title = 'Group_'+ str(time.time())
+        self.group.group_annotation = 'Group_annotation_'+ str(time.time())
+        self.group.group_status = 'pbl'
+
 #         print( 'setUp 11 autor = ' + str(self.autor) )
 
-    
 #     def test_autor_001(self):
 # #         autor = core.models.Author()
 #         self.assertEqual(self.autor.author_name, 'Name0012' )
 
 
-    def test_autor_save(self):
+    def test_group_save(self):
 #         autor = core.models.Author()
-
-        self.autor._pass_source = '123123' 
  
-        print( 'setUp 12 autor = ' + str(self.autor) )
+        authorId = 1
+        print( 'setUp 12 group = ' + str(self.group) )
  
-        self.autor.save()
-        print( 'setUp autor = ' + str(self.autor) )
-#         self.assertEqual(self.autor.author_name, 'Name0012' )
-
-
-    def test_autor_list(self):
-#         autor = core.models.Author()
-
- 
-        print( 'setUp 12 autor = ' + str(self.autor) )
- 
-        list = self.autor.list()
-        
-        for oneAuthor in list:
-            print( 'oneAuthor = ' + str(oneAuthor) )
+        self.group.save(authorId)
+        print( 'setUp group = ' + str(self.group) )
 #         self.assertEqual(self.autor.author_name, 'Name0012' )
 
 

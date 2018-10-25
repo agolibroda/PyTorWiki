@@ -10,7 +10,7 @@
 
 from __future__ import print_function
 
-# import sys, os, 
+import sys, os
 
 import hashlib
 import base64
@@ -21,6 +21,8 @@ import logging
 
 
 import json
+import pickle
+
 
 from tornado import gen
 
@@ -36,10 +38,20 @@ import collections
 from psycopg2.extras import DictCursor
 # NamedTupleCursor
 
+from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+from cryptography.hazmat.primitives import serialization
 
 
 from _ast import Try
-from json.decoder import NaN
+# from json.decoder import NaN
 
 
 #############
@@ -179,6 +191,11 @@ class Model: #Connector:
         """
         connector = Connector()
         self._cursor = connector.getCursor() # служебные параметры (те, которые не будут отбражаться в )
+        
+        self._dataStruct = None
+        self._headStruct = None
+        self._isHeaderEdit = False
+        
 
 #     def __del__(self):
 #         self._cursor.close()
@@ -325,8 +342,22 @@ class Model: #Connector:
         VALUES (5, 'Gizmo Transglobal')
         ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname;
 
-        Что и как делаем:
+        Немного про транзакции:
+        db.xact('SERIALIZABLE')  It will be interpolated directly into the START TRANSACTION statement. Normally, ‘SERIALIZABLE’ or ‘READ COMMITTED’:
+        >>> x = db.xact(...)
+            x.start()
+            Start the transaction.
+            x.commit()
+            Commit the transaction.
+            x.rollback()
+            Abort the transaction.
         
+        или так: 
+        >>> with db.xact():
+        ...  try:
+        ...   ...
+        ...  except postgresql.exceptions.UniqueError:
+        ...   pass
             
         """
         headParamsObj = None
@@ -337,33 +368,45 @@ class Model: #Connector:
             _loDb = self.cursor()
             self.begin()
 
-            if headParamsObj != None and ( self.__dict__[self._headStruct.getIdFieldName()] == 0 or self.__dict__[self._headStruct.getIdFieldName()] == None ) :
-                # сохраним заголовок, если он определен для ЭТОГО класса объектов.
-                sqlStr = "INSERT INTO " + self._headStruct.getTableName() +" ( " + headParamsObj.strListAttrNames + ") VALUES " +\
-                    "( " + headParamsObj.strListAttrValues + " ) returning " + self._headStruct.getIdFieldName() + "; "
-                headValue = self.getToInsertValue( self._headStruct.getLisAttr())    
-                _loDb.execute(sqlStr, tuple(headValue) ) # 'dt_header_type','public_key'
-                sourse = _loDb.fetchone()
-                self.__dict__[self._headStruct.getIdFieldName()] = sourse[self._headStruct.getIdFieldName()]
-            else :
+            if headParamsObj != None :
+                if ( self.__dict__[self._headStruct.getIdFieldName()] == 0 or self.__dict__[self._headStruct.getIdFieldName()] == None ) :
+                    # сохраним заголовок, если он определен для ЭТОГО класса объектов.
+                    sqlStr = "INSERT INTO " + self._headStruct.getTableName() +" ( " + headParamsObj.strListAttrNames + ") VALUES " +\
+                        "( " + headParamsObj.strListAttrValues + " ) returning " + self._headStruct.getIdFieldName() + "; "
+                    headValue = self.getToInsertValue( self._headStruct.getLisAttr())    
+                    _loDb.execute(sqlStr, tuple(headValue) ) # 'dt_header_type','public_key'
+                    sourse = _loDb.fetchone()
+                    self.__dict__[self._headStruct.getIdFieldName()] = sourse[self._headStruct.getIdFieldName()]
+                    
+                if self._isHeaderEdit and self.__dict__[self._headStruct.getIdFieldName()] > 0 :
+                    # Заголовок Объекта поменялся! - его надо сохранить!
+                    if self._headStruct.getLisAttr() != None:
+                        listSet = self.splitAttributes2Update (self._headStruct.getLisAttr()) 
+                        listWhere = self.splitAttributes2Update (self._headStruct.getMainPrimaryList()) # mainPrimaryList
+                        if len(listSet.listAttrValues) > 0 and len(listWhere.listAttrValues) > 0:  
+                            whereStr  = ' AND '.join(listWhere.listSetAttrNames) 
+                            strSet = ' , '.join(listSet.listSetAttrNames)
+                            sqlStr = "UPDATE " + self._headStruct.getTableName() + " SET " + strSet + " WHERE " + whereStr
+                            toValueList = [] 
+                            toValueList.extend(listSet.listAttrValues)
+                            toValueList.extend(listWhere.listAttrValues)
+                            _loDb.execute(sqlStr, tuple(toValueList))
+            if self.__dict__[self._headStruct.getIdFieldName()] > 0 :
                 list = []
                 logging.info(' SAVE:: UPDATE self._dataStruct.getMainPrimaryList() = ' + str(self._dataStruct.getMainPrimaryList()))  
                 if self._dataStruct.getMainPrimaryList() != None:
-                    
 #                     Надо построить слварь из всех полей, записанных в mainPrimaryList
-                    list = self.getWhereList2Update (self._dataStruct.getMainPrimaryList()) 
-
-                logging.info(' SAVE:: UPDATE list = ' + str(list))  
-                            
-                if len(list) > 0:    
-                    whtreStr  = ' AND '.join(list)    
-                        
-                    # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
-                    sqlStr = "UPDATE " + self._dataStruct.getTableName() + " SET actual_flag = 'O' WHERE " + whtreStr
+                    list = self.getList2Update (self._dataStruct.getMainPrimaryList()) 
+                    logging.info(' SAVE:: UPDATE list = ' + str(list))  
                     
-                    logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
-
-                    _loDb.execute(sqlStr)
+                    dataParamseObj = self.splitAttributes(self._dataStruct.getLisAttr())
+                    
+                    if len(list) > 0:    
+                        whtreStr  = ' AND '.join(list)    
+                        # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
+                        sqlStr = "UPDATE " + self._dataStruct.getTableName() + " SET actual_flag = 'O' WHERE " + whtreStr
+                        logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
+                        _loDb.execute(sqlStr)
             
             operation_timestamp = datetime.now() 
             sha_hash =  hashlib.sha256(
@@ -522,7 +565,7 @@ class Model: #Connector:
         
         return listAttrValues
 
-    def getWhereList2Update(self, mainPrimaryList):
+    def getList2Update(self, mainPrimaryList):
         """
         получить набор параметров для абдейтов значений
         
@@ -548,30 +591,41 @@ class Model: #Connector:
         """ 
 #         objDict = self.__dict__
         objValuesNameList = list(self.__dict__.keys())
-        listAttrNames = []
-        listAttrValues = []        
-        for objValue in objValuesNameList:
-            if objValue.find('_') != 0 and (objValue) in listTableFields :
-                listAttrNames.append(objValue)
-                listAttrValues.append(self.__getattribute__(objValue))
-
-        logging.info('splitAttributes:: listAttrNames = ' + str (listAttrNames) )
-        
         class Out: pass   
         out = Out()
-        out.listAttrNames = listAttrNames
-        out.listAttrValues = listAttrValues    
-        out.strListAttrNames = ", ".join(listAttrNames)
-        out.strListAttrValues = ", ".join([ '%s' for row in listAttrNames]) # "'" + "', '".join(map(str,listAttrValues)) + "'"  
-        
-        
-        
-#                     dataParamseObj.strListAttrNames += ', actual_flag, revision_author_id,  operation_flag, sha_hash, operation_timestamp '
-#             dataParamseObj.strListAttrValues += ", 'A', %d, %s,  %s, %s "
-#             dataParamseObj.strParams += (autorId, operationFlag, sha_hash, operation_timestamp, )
+        out.listAttrNames = []
+        out.listAttrValues = []    
+        for objValue in objValuesNameList:
+            if objValue.find('_') != 0 and (objValue) in listTableFields :
+                out.listAttrNames.append(objValue)
+                out.listAttrValues.append(self.__getattribute__(objValue))
+        out.strListAttrNames = ", ".join(out.listAttrNames)
+        out.strListAttrValues = ", ".join([ '%s' for row in out.listAttrNames]) # "'" + "', '".join(map(str,listAttrValues)) + "'"  
+        return out
 
-#          вот тут: out.strListAttrValues - заменить все 'None' на NULL !!!!!
-#         out.strListAttrValues = "'" + "', '".join(listAttrValues) + "'"   
+
+    def splitAttributes2Update(self, listTableFields):
+        """
+        Для генерации Апдейта  
+        разделить собственные параметры (без параметров с подчеркиваниями ) на 2 списка - 
+        1 - список имен параметров
+        2 - значений параметров 
+        это нужно для того, что бы использовать все параметры в операции 
+        добавления или изменения данных в базе данных.
+        На входе - список полей таблицы, 
+            и мы из полного набора всех атрибутов в объкте, выберем только те, что есть во входном списке. 
+        
+        На выходе получим объект из двух списков  
+        """ 
+        objValuesNameList = list(self.__dict__.keys())
+        class Out: pass   
+        out = Out()
+        out.listAttrValues = list()   
+        out.listSetAttrNames = list()
+        for objValue in objValuesNameList:
+            if objValue.find('_') != 0 and (objValue) in listTableFields :
+                out.listAttrValues.append(self.__getattribute__(objValue))
+                out.listSetAttrNames.append( ' ' + objValue + ' = %s' )
         return out
 
 
@@ -636,8 +690,207 @@ class Model: #Connector:
 
 
 
+class CipherWrapper:
+    """
+    Класс - обертка для процедур шифрования
+    
+    """
+    bbsalt =  config.options.salt.encode()
+    
+    def __init__(self):
+        self.backend = default_backend()
+    
+    def setKey(self, key):
+        self._key = (key+self.bbsalt)[0:32]
+    
+    def symmetricEncrypt(self, key, data):
+        """
+        Зашифровать текст
+        
+        :param На входе - просто текст.  
+        :Return: структуру вида {'ciphertext': ciphertext, 'iv': iv, 'tag': tag, 'associated_data': associated_data}, 
+                сериализованную. (готова к передаче или сохранению в файл) (бинарник, по - идее.)
+        """
+        self.setKey(key) # .encode('utf-8')
+        iv = os.urandom(12)
+        associated_data = os.urandom(24)
+#         logging.info(' Model:: symmetricEncrypt data = ' + str(data))
+
+        # Construct an AES-GCM Cipher object with the given key and a
+        # randomly generated IV.
+        encryptor = Cipher(
+            algorithms.AES(self._key),
+            modes.GCM(iv),
+            backend=default_backend()
+        ).encryptor()
+     
+        # associated_data will be authenticated but not encrypted,
+        # it must also be passed in on decryption.
+        encryptor.authenticate_additional_data(associated_data)
+     
+        # Encrypt the plaintext and get the associated ciphertext.
+        # GCM does not require padding.
+        ciphertext = encryptor.update(data) + encryptor.finalize()
+        return  pickle.dumps({'ciphertext': ciphertext, 
+                              'iv': iv, 
+                              'tag': encryptor.tag, 
+                              'associated_data': associated_data})
+    
+    def symmetricDecrypt(self, key, cipherPickle):
+        """
+        Расшифровать текст
+        
+        :param cipherPickle - Это сериализованная структура типа 
+                {'ciphertext': ciphertext, 'iv': iv, 'tag': tag, 'associated_data': associated_data}
+        :Return: отдаем уже готовый текст        
+        """
+        self.setKey(key)
+        cipherData = pickle.loads(cipherPickle)
+
+#         logging.info(' symmetricDecrypt:: key = ' + str(key))
+#         logging.info(' symmetricDecrypt:: self._key = ' + str(self._key))
+#         logging.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))
+        
+        # Construct a Cipher object, with the key, iv, and additionally the
+        # GCM tag used for authenticating the message.
+        decryptor = Cipher(
+            algorithms.AES(self._key),
+            modes.GCM(cipherData['iv'], cipherData['tag']),
+            backend=default_backend()
+        ).decryptor()
+     
+        # We put associated_data back in or the tag will fail to verify
+        # when we finalize the decryptor.
+        decryptor.authenticate_additional_data(cipherData['associated_data'])
+     
+        # Decryption gets us the authenticated plaintext.
+        # If the tag does not match an InvalidTag exception will be raised.
+        return decryptor.update(cipherData['ciphertext']) + decryptor.finalize()
+
+
+
+
+    def rsaInit(self):
+        """
+        Создаем пару ключей.
+        """
+
+        self.openPrivateKey = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )        
+        self.public_key = self.openPrivateKey.public_key()
+        
+
+
+    def rsaSet(self, publicKey, openPrivateKey):
+        """
+        Откуда  - то у меня ключи взлисЮ и их просто надо пережать в объект.
+        
+        """
+        self.public_key = publicKey
+        self.openPrivateKey = openPrivateKey
  
+    def getPublicKey(self):
+        return self.public_key 
+
+    def getPrivateKey(self):
+        return self.openPrivateKey 
+    
+    
+    def rsaEncrypt(self, publicKey, data):
+        """
+        Зашифровать текст по процедуре RSA
+        Все не просто - 
+        1 - делаем сессионный ключ
+        2 на ключе закрываем текст  
+        3 на publicKey закрываем сессионный ключ 
+        4 все это укладываем в некую структуру, которую ПОТОМ сериализуем, и будем щасливы!!!
+        
+        """
+        session_pwd = Fernet.generate_key()
+        ciphertext = self.symmetricEncrypt(session_pwd, data)
+
+        cipherPwd = publicKey.encrypt(
+            session_pwd,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=b'None'
+            )
+        )
+        return  pickle.dumps({'ciphertext': ciphertext, 'cipherPwd': cipherPwd})
+    
+    
+    def rsaDecrypt(self, cipherPickle):
+        """
+        Расшифровать текст по процедуре RSA
+        """
+        cipherData = pickle.loads(cipherPickle)
+ 
+        plainPwd = self.openPrivateKey.decrypt(
+            cipherData['cipherPwd'],
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=b'None'
+            )
+        )
+        return symmetricDecrypt(self, plainPwd, cipherData['ciphertext'])
+    
+    
+
+    def rsaPrivateSerialiation(self, pKey):
+        """
+        Сериализуем ключ 
+        - что бы отдать его текстом.
+        """
+        pem = pKey.private_bytes(
+           encoding=serialization.Encoding.PEM,
+           format=serialization.PrivateFormat.TraditionalOpenSSL,
+           encryption_algorithm=serialization.NoEncryption()
+        )
+        return pem # b''.join(pem.splitlines()) #[0]
+
+    def rsaPubSerialiation(self, pKey):
+        """
+        Сериализуем ключ 
+        - что бы отдать его текстом.
+        """
+        pem = pKey.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        return pem # b''.join(pem.splitlines()) #[0]
 
 
+    def rsaPrivateUnSerialiation(self, strKey):
+        """
+        Прекратить сериализованный ключ в нормальный.
+        """
+        pkey = serialization.load_pem_private_key(
+                                    strKey,
+                                    password=None,
+                                    backend=default_backend()
+                                    )
+        return pkey
 
+    def rsaPubUnSerialiation(self, strKey):
+        """
+        Прекратить сериализованный ключ в нормальный.
+        """
+#         logging.info(' rsaPubUnSerialiation :::: strKey = ' + str(strKey))
+
+        pkey = serialization.load_pem_public_key(
+                                    strKey,
+                                    backend=default_backend()
+                                    )
+#         logging.info(' rsaPubUnSerialiation :::: pkey = ' + str(pkey))
+#         logging.info(' rsaPubUnSerialiation :::: isinstance(pkey, rsa.RSAPublicKey) = ' + str(isinstance(pkey, rsa.RSAPublicKey)))
+        
+        return pkey
+    
+    def isinstance(self, pkey):
+        return isinstance(pkey, rsa.RSAPublicKey)
 

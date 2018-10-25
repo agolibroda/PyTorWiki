@@ -22,16 +22,13 @@ import bcrypt
 import json
 import pickle
 
-from Crypto.Cipher import AES
-from Crypto.PublicKey import RSA
-
 import tornado.escape
 import tornado.options
 
 import config
 from core.WikiException import *
 
-from . import Model
+from . import Model, CipherWrapper
 from ..constants.data_base import *
 
 
@@ -68,7 +65,7 @@ class Author(Model):
 
 
     def __init__ (self): 
-        logging.info('Author:: __init__')
+#         logging.info('Author:: __init__')
         
         self.dt_header_id = 0
 #         author_create = datetime.now()
@@ -85,6 +82,7 @@ class Author(Model):
         self.public_key = None
         self.private_key = None
         self.private_key_hash = None
+        
         
         ########################
         # -сюда приходит пароль из формы, или, после логина - именно с ним и работаем - делаем сначала из него байты,
@@ -104,7 +102,7 @@ class Author(Model):
                                       mainPrimaryList =['dt_header_id'],
                                       listAttrNames=['dt_header_type','public_key']))
 
-        logging.info(' __init__:: After self = ' + str(self))
+#         logging.info(' __init__:: After self = ' + str(self))
         
         
         #####################
@@ -118,7 +116,7 @@ class Author(Model):
         пароль (новый,старый) перешифровывается 
         """
         
-#         logging.info(' save:: BEFORE work self = ' + str(self))
+        logging.info(' save:: BEFORE work self = ' + str(self))
 #         logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
 #         logging.info(' save:: 1 self._old_pass = ' + str(self._old_pass))
 # 
@@ -127,51 +125,53 @@ class Author(Model):
 #         logging.info(' save:: 1 self.private_key_hash = ' + str(self.private_key_hash))
 
         bbsalt =  config.options.salt.encode()
+        cip = CipherWrapper()
+
+        self._pass_source = bytes(self._pass_source, 'utf-8')
+#             logging.info(' save:: 1 _pass_source = ' + str(_pass_source))
+        logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
+#         del self._pass_source
+#         self._pass_source = _pass_source
          
         if self._pass_source != '' and (self.dt_header_id == 0 or self.dt_header_id == None):
             #  это новый пользователь, для него просто делаем ХЕШ
-            self._pass_source = tornado.escape.utf8(self._pass_source) #  превратим пароль, введенный пользователем в последовательность байтов.
+#             self._pass_source = tornado.escape.utf8(self._pass_source) #  превратим пароль, введенный пользователем в последовательность байтов.
+#             self._pass_source = self._pass_source.decode('utf-8') #  превратим пароль, введенный пользователем в последовательность байтов.
             self.author_pass = bcrypt.hashpw( self._pass_source, bbsalt ).decode('utf-8') 
 
+        # self.dt_header_id == 0 or self.dt_header_id == None) and - когда проверим  
         # здать новую приватно-публичую парочку, если ее не было раньше.
-        if ( (self.dt_header_id == 0 or self.dt_header_id == None) and self._pass_source != '' and self.public_key == None  ):
-            bytePass = tornado.escape.utf8(self._pass_source)
-            key = RSA.generate(2048)
-            self.public_key = key.publickey().export_key() 
-            pKey = key.export_key() # поучить незакрытый приватный ключ
-            logging.info(' save:: PrivateKey ::: pKey = ' + str(pKey))
-            self.private_key_hash = bcrypt.hashpw( pKey, bbsalt ).decode('utf-8') # получим ХЕш приватного ключа - для последуюей проверки при восстановлении пароля
-            bbWrk = (bytePass+bbsalt)[0:32]
-            cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
-            ciphertext = cipher_aes.encrypt(pKey)
-            self.private_key = pickle.dumps({'cipherKey': ciphertext, 'nonce': cipher_aes.nonce})
-        
+        isNotPubKey = not cip.isinstance(self.public_key)
+        if ( self._pass_source != '' and isNotPubKey ):
+            cip.rsaInit() # сделать пару ключей 
+            self.public_key = cip.getPublicKey()
+            pKey = cip.getPrivateKey() # поучить незакрытый приватный ключ
+            bArrKey = cip.rsaPrivateSerialiation(pKey)
+            self.private_key_hash = bcrypt.hashpw( bArrKey, bbsalt ).decode('utf-8') # получим ХЕш приватного ключа - для последуюей проверки при восстановлении пароля
+            # закрыть приватный ключ на пароле автора.
+            self.private_key = cip.symmetricEncrypt(self._pass_source, bArrKey)
+            self._isHeaderEdit = True
+
         # если мы поменяли пароль, значит, я должен из формы получить 2 значения - старый пароль и новый пароль - и оба в тесте.    
         # потом я проверю, что старый пароль - совпадает ХЕШЕМ,
         # еслиДА, тогда 
         # 1 - декодировать приватный ключ старым паролем,
         # 2 закодировать - новым, сделать новый ХЕШ, и - УРА!!!!
-        if self._pass_source != '' and self._old_pass != '':
+        isPubKey = cip.isinstance(self.public_key)
+        if self._pass_source != '' and isPubKey :
             bbOldPAss = tornado.escape.utf8(self._old_pass)
-            newPassbb = tornado.escape.utf8(self._pass_source)
-            hashOldPass = bcrypt.hashpw( bbOldPAss, bbsalt ).decode('utf-8')
+            hashOldPass = bcrypt.hashpw( bbOldPAss, bbsalt ) #.decode('utf-8')
             if hashOldPass == self.author_pass:
                 #  все норм, старый пароль - верный, можно заняться сменой пароля.
-                bbWrk = (bbOldPAss+bbsalt)[0:32]
-                tmpPrivateKey = pickle.loads(self.private_key)
-                cipher_aes = AES.new(bbWrk, AES.MODE_EAX, tmpPrivateKey['nonce']) # закроем приватный ключ на пароль пользователя.
-                tmpPrivate_key = cipher_aes.decrypt(tmpPrivateKey['cipherKey'])
-                tmpHash = bcrypt.hashpw( tmpPrivate_key, bbsalt ).decode('utf-8') 
+#                 tmpPrivate_key = cip.symmetricDecrypt(self._old_pass, self.private_key)
+                bArrKey = cip.rsaPrivateSerialiation(self.openPrivateKey)
+                tmpHash = bcrypt.hashpw( bArrKey, bbsalt ).decode('utf-8') 
                 if tmpHash == self.private_key_hash:
                     # все орм, мы нормально открыли приватный ключ, теперб его можно закрытьна новый пароль!
-                    bbWrk = (newPassbb+bbsalt)[0:32]
-                    cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
-                    cipherKey = cipher_aes.encrypt(tmpPrivate_key)
-                    self.private_key = pickle.dumps({'cipherKey': cipherKey, 'nonce': cipher_aes.nonce})
-                    # на и запомним новый Хеш!!!!!
+                    cip = setKey(self._pass_source)
+                    self.private_key = cip.symmetricEncrypt(self._pass_source, bArrKey)
+                    # на и запомним новый Хеш пароля!!!!!
                     self.author_pass = bcrypt.hashpw( newPassbb, bbsalt ).decode('utf-8') 
-
-            
                     
         if self.dt_header_id == 0:
             self.author_create = datetime.now()
@@ -181,7 +181,10 @@ class Author(Model):
             operationFlag = 'U'
             
         sha_hash_sou =  str(self.author_login) + str(self.author_name) + str(self.author_surname) + str(self.author_role) + str(self.author_phon) + str(self.author_email)  
-            
+
+        self.public_key = cip.rsaPubSerialiation(self.public_key)
+        logging.info(' save:: 99 self = ' + str(self)) 
+           
         self.dt_header_id = Model.save(self, self.dt_header_id, operationFlag, sha_hash_sou)
         return True
         
@@ -210,15 +213,6 @@ class Author(Model):
                      }
         resList = self.select(selectStr, fromStr, anyParams)
         
-#         logging.info(' login:: resList = ' + str(resList))
-        
-#                 #  все норм, старый пароль - верный, можно заняться сменой пароля.
-#                 bbWrk = (bbOldPAss+bbsalt)[0:32]
-#                 tmpPrivateKey = pickle.loads(self.private_key)
-#                 cipher_aes = AES.new(bbWrk, AES.MODE_EAX, tmpPrivateKey['nonce']) # закроем приватный ключ на пароль пользователя.
-#                 tmpPrivate_key = cipher_aes.decrypt(tmpPrivateKey['cipherKey'])
-#                 tmpHash = bcrypt.hashpw( tmpPrivate_key, bbsalt ).decode('utf-8') 
-        
         if len(resList) == 1:
             objValuesNameList = list(resList[0].__dict__.keys())
             for objValue in objValuesNameList:
@@ -226,11 +220,25 @@ class Author(Model):
                     self.__setattr__(objValue,resList[0].__getattribute__(objValue) )
             #  вот тут надо посмотреть - что у нс с данными пользователя происходит - и посмотреть - что ложится в сесию. :-) 
             
-            logging.info(' login:: self = ' + str(self))        
-            logging.info(' login:: self = ' + str(self.public_key))        
-            logging.info(' login:: self = ' + str(self.private_key))        
-            logging.info(' login:: self = ' + str(self.private_key_hash))     
-   
+#             logging.info(' login:: After Load self = ' + str(self))
+            
+            _private_key = bytes(self.private_key)
+            _private_key_hash = bytes(self.private_key_hash)
+            _public_key = bytes(self.public_key)
+            del self.public_key
+            # пока мы знаем пароль, надо получить и положить в данные пользователя, в сессию, его АСКРЫТЫЙ приватный ключик!!!!
+            if _private_key != '' or _private_key != None:
+                cip = CipherWrapper()
+                # rsaUnSerialiation(self, strKey)
+                public_key = cip.rsaPubUnSerialiation(_public_key)
+                self.public_key = public_key
+                strKey = cip.symmetricDecrypt( tornado.escape.utf8(pwdStr), _private_key )
+                tmpHash = bcrypt.hashpw( strKey, bbsalt )
+                if tmpHash == _private_key_hash:
+                    self.openPrivateKey = cip.rsaPrivateUnSerialiation( strKey )
+                else:
+                    raise WikiException(LOAD_PRIVATE_KEY_ERROR)
+            
             return self
         else:
             raise WikiException(LOGIN_ERROR)
@@ -249,11 +257,14 @@ class Author(Model):
     def get(self, authorId):
         """
         загрузить ОДНО описание Автора - по его ИД
+        Это загрузка ИСКЛЮЧИТЕЛЬНО не "себя". 
+        Себя мы загружаем ТОЛЬКО при логине, и тянем в сессии!!!!!!
+        мы загружаем публичный ключ автора для возможного дальнейшего использования.
          
         """
 
         resList = self.select(
-                    'dt_headers.dt_header_id, author_login, author_name,  author_surname, author_pass, author_role, author_phon, author_email, author_create, dt_headers.public_key, authors.private_key, authors.private_key_hash', # строка - чего хотим получить из селекта
+                    'dt_headers.dt_header_id, author_login, author_name,  author_surname, author_pass, author_role, author_phon, author_email, author_create, dt_headers.public_key', # строка - чего хотим получить из селекта
                     'dt_headers', #'authors',  # строка - список таблиц 
                     {
                      'whereStr': "  dt_headers.dt_header_id = authors.dt_header_id  AND  dt_headers.dt_header_id = " + str(authorId) + \
@@ -268,6 +279,10 @@ class Author(Model):
             for objValue in objValuesNameList:
                  if objValue.find('_') != 0:
                     self.__setattr__(objValue,resList[0].__getattribute__(objValue) )
+                    
+            _public_key = bytes(self.public_key)
+            if _public_key != b'' and _public_key != None:
+                self.unserializePyblicKey(_public_key)
             return self
         else:
             raise WikiException(LOAD_ONE_VALUE_ERROR)
@@ -275,19 +290,47 @@ class Author(Model):
 
     def list(self):
         """
-        Выбрать список всех авторов в системе
+        Выбрать список всех авторов в системе 
+        мы загружаем публичный ключ авторов для возможного дальнейшего использования.
         
         """
 #         logging.info('Author:: list:: START!!! >>>> ')
 #         cur = self.db().cursor()
-        selectStr = 'dt_headers.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email, author_create '
+        selectStr = 'dt_headers.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email, author_create, dt_headers.public_key '
         fromStr = 'dt_headers' #'authors'
         anyParams = {
+                    'whereStr': "  dt_headers.dt_header_id = authors.dt_header_id  AND actual_flag = 'A' ",
                     'orderStr': ' dt_header_id', # строка порядок строк
                      }
 
-        return self.select(selectStr, fromStr, anyParams)
+        res = []
+        resList = self.select(selectStr, fromStr, anyParams)
+        for oneAuthor in resList:
+            newAuthor = Author()
+            objValuesNameList = list(oneAuthor.__dict__.keys())
+            for objValue in objValuesNameList:
+                 if objValue.find('_') != 0:
+                    newAuthor.__setattr__(objValue,oneAuthor.__getattribute__(objValue) )
+            _public_key = bytes(newAuthor.public_key)
+            logging.info('Author:: list:: 1 newAuthor = ' + str(newAuthor) )                   
+            logging.info('Author:: list:: 1 _public_key = ' + str(_public_key) )                   
+            if _public_key != b'' and _public_key != None:
+                logging.info('Author:: list:: _public_key = ' + str(_public_key) ) 
+                newAuthor.unserializePyblicKey(_public_key)                   
+            logging.info('Author:: list:: 2 newAuthor = ' + str(newAuthor) )                   
+            res.append(newAuthor)
+        
+        return res
  
+    def unserializePyblicKey(self, _public_key):
+        del self.public_key
+        try:
+            cip = CipherWrapper()
+            public_key = cip.rsaPubUnSerialiation(_public_key)
+            self.public_key = public_key
+        except :
+            self.public_key = None
+
        
     
 

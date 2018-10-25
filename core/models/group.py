@@ -59,31 +59,56 @@ class Group(Model):
     """
     
     def __init__(self, group_title = '', group_annotation = '', group_status = 'pbl'):
-        Model.__init__(self, 'groups')   
+        Model.__init__(self)   
 
         self.dt_header_id = 0
 #         self.author_id = 0
         self.group_title = group_title
         self.group_annotation = group_annotation
         self.group_status = group_status
+        self.public_key = ''
+        self.private_key = ''
+        self.private_key_hash = ''
+
 #         self.group_create_date = datetime.now()
+
+        self.setDataStruct(Model.TableDef( tabName='groups', 
+                                      idFieldName=None,
+                                      mainPrimaryList =['dt_header_id'],
+                                      listAttrNames=['dt_header_id', 'group_title', 'group_annotation', 'group_status']))
+        
+        self.setHeadStruct(Model.TableDef( tabName='dt_headers', 
+                                      idFieldName='dt_header_id',
+                                      mainPrimaryList =['dt_header_id'],
+                                      listAttrNames=['dt_header_type', 'public_key']))
         
         
     class Member(Model):
         def __init__(self):        
-            Model.__init__(self, 'members')   
+            Model.__init__(self)   
             self.group_id = 0
             self.author_id = 0
             self.member_role_type = 'M'
             
+            self.setDataStruct(Model.TableDef( tabName='members', 
+                                      idFieldName=None,
+                                      mainPrimaryList =None,
+                                      listAttrNames=['group_id', 'author_id', 'member_role_type', 'private_key']))
+
+            self.setHeadStruct(Model.TableDef( tabName='dt_headers', 
+                                          idFieldName='dt_header_id',
+                                          mainPrimaryList =['dt_header_id'],
+                                          listAttrNames=['dt_header_type','public_key']))
+        
+
+
         def save(self, authorId ):
 
             operationFlag = 'I'
 
-            mainPrimaryObj = {'group_id': self.group_id, 'author_id': self.author_id }
-            revisions_sha_hash_sou =  str(self.group_id) + str(self.author_id) + self.member_role_type 
+            revisions_sha_hash_sou = str(self.group_id) + str(self.author_id) + self.member_role_type 
             logging.info(' Member save:: self = ' + str(self))
-            Model.save(self, authorId, operationFlag, mainPrimaryObj, revisions_sha_hash_sou)
+            Model.save(self, authorId, operationFlag, revisions_sha_hash_sou)
 
 
         def getGroupMembersleList(self, groupId):
@@ -93,10 +118,10 @@ class Group(Model):
             """
 
             getRez = self.select(
-                    'dt_header.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email ',
-                    'authors, dt_header',
+                    'dt_headers.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email ',
+                    'authors, dt_headers',
                         {
-                    'whereStr': " members.dt_header_id = authors.dt_header_id AND dt_header.dt_header_id = authors.dt_header_id AND " +\
+                    'whereStr': " members.dt_header_id = authors.dt_header_id AND dt_headers.dt_header_id = authors.dt_header_id AND " +\
                     " members.actual_flag = 'A' AND authors.actual_flag = 'A' AND "
                     " members.dt_header_id = " + str(groupId) , # строка набор условий для выбора строк
                     'orderStr': ' author_name, author_surname ', # строка порядок строк
@@ -177,10 +202,10 @@ class Group(Model):
         """
         
         resList = self.select(
-                    'dt_header.dt_header_id,  group_title, group_annotation ' , # строка - чего хотим получить из селекта
-                    'dt_header', #'authors',  # строка - список таблиц 
+                    'dt_headers.dt_header_id,  group_title, group_annotation ' , # строка - чего хотим получить из селекта
+                    'dt_headers', #'authors',  # строка - список таблиц 
                     {
-                     'whereStr': " groups.actual_flag = 'A' AND  groups.dt_header_id = dt_header.dt_header_id AND  dt_header.dt_header_id = " + str(groupId)
+                     'whereStr': " groups.actual_flag = 'A' AND  groups.dt_header_id = dt_headers.dt_header_id AND  dt_headers.dt_header_id = " + str(groupId)
                      } #  все остальные секции селекта
                     )
 #         for item in resList:
@@ -203,8 +228,8 @@ class Group(Model):
         
         """
         resList = self.select(
-                    'dt_header.dt_header_id,  group_title, group_annotation,  group_status  ' , # строка - чего хотим получить из селекта
-                    'dt_header', #'authors',  # строка - список таблиц 
+                    'dt_headers.dt_header_id,  group_title, group_annotation,  group_status  ' , # строка - чего хотим получить из селекта
+                    'dt_headers', #'authors',  # строка - список таблиц 
                     {
                      'whereStr': " groups.actual_flag = 'A' "
                      } #  все остальные секции селекта
@@ -227,11 +252,11 @@ class Group(Model):
         """
         try:
             resList = self.select(
-                        ' DISTINCT dt_header.dt_header_id,  groups.group_title, groups.group_annotation,  groups.group_status, ' + 
+                        ' DISTINCT dt_headers.dt_header_id,  groups.group_title, groups.group_annotation,  groups.group_status, ' + 
                         ' members.member_role_type ' , # строка - чего хотим получить из селекта
-                        '  members, dt_header ', #'authors',  # строка - список таблиц 
+                        '  members, dt_headers ', #'authors',  # строка - список таблиц 
                         {
-                         'whereStr': " groups.actual_flag = 'A' AND groups.dt_header_id = dt_header.dt_header_id AND " +  
+                         'whereStr': " groups.actual_flag = 'A' AND groups.dt_header_id = dt_headers.dt_header_id AND " +  
                              " members.author_id = " + str(authorId) + 
                              " AND  members.group_id = groups.dt_header_id ",
                          'orderStr': '  groups.group_title ' 
@@ -276,6 +301,17 @@ class Group(Model):
 
         logging.info(' save:: before SAVE = ' + str(self)) 
                
+               
+#             key = RSA.generate(2048)
+#             self.public_key = key.publickey().export_key() 
+#             pKey = key.export_key() # поучить незакрытый приватный ключ
+#             logging.info(' save:: PrivateKey ::: pKey = ' + str(pKey))
+#             self.private_key_hash = bcrypt.hashpw( pKey, bbsalt ).decode('utf-8') # получим ХЕш приватного ключа - для последуюей проверки при восстановлении пароля
+#             bbWrk = (bytePass+bbsalt)[0:32]
+#             cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
+#             ciphertext = cipher_aes.encrypt(pKey)
+#             self.private_key = pickle.dumps({'cipherKey': ciphertext, 'nonce': cipher_aes.nonce})
+               
         if self.dt_header_id == 0:
 #             self.group_create_date = datetime.now()
             operationFlag = 'I'
@@ -283,11 +319,9 @@ class Group(Model):
             operationFlag = 'U'
         
         self.begin()    
-        mainPrimaryObj = {'dt_header_id': self.dt_header_id }
-        revisions_sha_hash_sou = self.group_title + self.group_annotation + self.group_status
+        revisions_sha_hash_sou = str(self.group_title) + str(self.group_annotation) + str(self.group_status)
         
-        logging.info(' save:: mainPrimaryObj = ' + str(mainPrimaryObj))
-        self.dt_header_id =  Model.save(self, dt_header_id, operationFlag, mainPrimaryObj, revisions_sha_hash_sou, 'dt_header_id')
+        self.dt_header_id = Model.save(self, authorId, operationFlag, revisions_sha_hash_sou )
         # теперь сохранить автора группы как ее админа.
 
         if operationFlag == 'I':
