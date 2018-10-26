@@ -393,11 +393,11 @@ class Model: #Connector:
                             _loDb.execute(sqlStr, tuple(toValueList))
             if self.__dict__[self._headStruct.getIdFieldName()] > 0 :
                 list = []
-                logging.info(' SAVE:: UPDATE self._dataStruct.getMainPrimaryList() = ' + str(self._dataStruct.getMainPrimaryList()))  
+#                 logging.info(' SAVE:: UPDATE self._dataStruct.getMainPrimaryList() = ' + str(self._dataStruct.getMainPrimaryList()))  
                 if self._dataStruct.getMainPrimaryList() != None:
 #                     Надо построить слварь из всех полей, записанных в mainPrimaryList
                     list = self.getList2Update (self._dataStruct.getMainPrimaryList()) 
-                    logging.info(' SAVE:: UPDATE list = ' + str(list))  
+#                     logging.info(' SAVE:: UPDATE list = ' + str(list))  
                     
                     dataParamseObj = self.splitAttributes(self._dataStruct.getLisAttr())
                     

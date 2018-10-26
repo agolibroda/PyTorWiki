@@ -8,9 +8,9 @@
 
  	pip install cryptography -- Доки https://cryptography.io/en/latest/
  	
- 	pip install psycopg2
+ 	pip install psycopg2 
  	
- 	pip install py-postgresql
+ 	pip install py-postgresql -- http://pythonhosted.org/py-postgresql/
  	
  проверить, (и создать, если нет) директорию "filestorage" в "static" - туда будут складываться загружаемые файлы
  
