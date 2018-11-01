@@ -34,26 +34,18 @@ class TestAutors(unittest.TestCase):
 
     def setUp(self): 
         self.autor = Author()
-        self.authorId = 8
+        self.authorId = 24
 
 
     def test_autor_list(self):
-#         autor = core.models.Author()
- 
-#         print( 'setUp 12 autor = ' + str(self.autor) )
- 
         list = self.autor.list()
         
+        print( 'test_autor_list::: list = ' + str(list) )
         for oneAuthor in list:
-            print( 'oneAuthor = ' + str(oneAuthor) )
+            print( 'test_autor_list::: oneAuthor = ' + str(oneAuthor) )
 
     def test_autor_one(self):
-#         autor = core.models.Author()
- 
-#         print( 'setUp 12 autor = ' + str(self.autor) )
- 
         oneAuthor = self.autor.get(self.authorId)
-        
         print( 'test_autor_one oneAuthor = ' + str(oneAuthor) )
 
 

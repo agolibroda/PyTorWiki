@@ -195,7 +195,7 @@ class ComposeHandler(BaseHandler):
     @gen.coroutine
     def get(self, articleName = ''):
         """
-        едактирование статьи 
+        редактирование статьи 
         приходит НАЗВАНИЕ (articleName) 
         надо найти статью по ее назвнию, 
         после этого надо загрузить статью для редактирования
@@ -289,6 +289,11 @@ class ComposeHandler(BaseHandler):
     @tornado.web.authenticated
     @gen.coroutine
     def post(self, articleName = ''):
+        """
+        Получить статью из формы редактирования,
+        Разобрать и проверить данные, заполнить ВСЕ, то нжно, и
+        сохранить.
+        """
         try:
             logging.info( 'ComposeHandler:: post articleName = ' + str(articleName))
     

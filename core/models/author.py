@@ -116,7 +116,7 @@ class Author(Model):
         пароль (новый,старый) перешифровывается 
         """
         
-        logging.info(' save:: BEFORE work self = ' + str(self))
+#         logging.info(' save:: BEFORE work self = ' + str(self))
 #         logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
 #         logging.info(' save:: 1 self._old_pass = ' + str(self._old_pass))
 # 
@@ -129,7 +129,7 @@ class Author(Model):
 
         self._pass_source = bytes(self._pass_source, 'utf-8')
 #             logging.info(' save:: 1 _pass_source = ' + str(_pass_source))
-        logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
+#         logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
 #         del self._pass_source
 #         self._pass_source = _pass_source
          
@@ -271,7 +271,7 @@ class Author(Model):
                      " AND actual_flag = 'A' " 
                      } #  все остальные секции селекта
                     )
-        logging.info('Author:: get:: resList = ' + str(resList))
+#         logging.info('Author:: get:: resList = ' + str(resList))
         # от ут надо будет разкрыть приватный ключ????? 
         if len(resList) == 1:
 #             return resList[0]
@@ -294,8 +294,6 @@ class Author(Model):
         мы загружаем публичный ключ авторов для возможного дальнейшего использования.
         
         """
-#         logging.info('Author:: list:: START!!! >>>> ')
-#         cur = self.db().cursor()
         selectStr = 'dt_headers.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email, author_create, dt_headers.public_key '
         fromStr = 'dt_headers' #'authors'
         anyParams = {
@@ -305,20 +303,11 @@ class Author(Model):
 
         res = []
         resList = self.select(selectStr, fromStr, anyParams)
+        logging.info('Author:: list:: resList = ' + str(resList))
+                
         for oneAuthor in resList:
-            newAuthor = Author()
-            objValuesNameList = list(oneAuthor.__dict__.keys())
-            for objValue in objValuesNameList:
-                 if objValue.find('_') != 0:
-                    newAuthor.__setattr__(objValue,oneAuthor.__getattribute__(objValue) )
-            _public_key = bytes(newAuthor.public_key)
-            logging.info('Author:: list:: 1 newAuthor = ' + str(newAuthor) )                   
-            logging.info('Author:: list:: 1 _public_key = ' + str(_public_key) )                   
-            if _public_key != b'' and _public_key != None:
-                logging.info('Author:: list:: _public_key = ' + str(_public_key) ) 
-                newAuthor.unserializePyblicKey(_public_key)                   
-            logging.info('Author:: list:: 2 newAuthor = ' + str(newAuthor) )                   
-            res.append(newAuthor)
+            logging.info('Author:: list:: oneAuthor = ' + str(oneAuthor))
+            res.append(self.parsingAuthor(oneAuthor))
         
         return res
  
@@ -331,7 +320,25 @@ class Author(Model):
         except :
             self.public_key = None
 
+    def parsingAuthor(self, autorStruct):
+        """
+        Разобрать структуру, которая приходит из селекта,
+        и сделать полноценный ОБЪЕКТ  - Автора.
+        """
+        newAuthor = Author()
+        objValuesNameList = list(autorStruct.__dict__.keys())
+        for objValue in objValuesNameList:
+             if objValue.find('_') != 0:
+                newAuthor.__setattr__(objValue, autorStruct.__getattribute__(objValue) )
+        _public_key = bytes(newAuthor.public_key)
+        if _public_key != b'' and _public_key != None:
+            newAuthor.unserializePyblicKey(_public_key)
+             
+        return newAuthor                  
+
        
+    def publicKey(self):
+        return self.public_key       
     
 
  

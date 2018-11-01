@@ -67,17 +67,19 @@ class TestAutors(unittest.TestCase):
 #         self.assertEqual(self.autor.author_name, 'Name0012' )
 
 
-    def test_autor_list(self):
-#         autor = core.models.Author()
-
- 
-        print( 'setUp 12 autor = ' + str(self.autor) )
- 
-        list = self.autor.list()
-        
-        for oneAuthor in list:
-            print( 'oneAuthor = ' + str(oneAuthor) )
-#         self.assertEqual(self.autor.author_name, 'Name0012' )
+#     def test_autor_list(self):
+# #         autor = core.models.Author()
+# 
+#  
+#         print( 'setUp 12 autor = ' + str(self.autor) )
+#  
+#         list = self.autor.list()
+# 
+#         print( 'setUp 12 list = ' + str(list) )
+#         
+#         for oneAuthor in list:
+#             print( 'oneAuthor = ' + str(oneAuthor) )
+# #         self.assertEqual(self.autor.author_name, 'Name0012' )
 
 
 #     def test_autor_update(self):

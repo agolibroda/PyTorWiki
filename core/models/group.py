@@ -18,6 +18,8 @@ import tornado.options
 # import pymysql
 
 import hashlib
+import bcrypt
+
 import base64
         
 # from _overlapped import NULL
@@ -26,12 +28,15 @@ import base64
 import config
 
 
-from . import Model
+from . import Model, CipherWrapper
 from .. import WikiException 
+
+from core.models.author     import Author
+from ..constants.data_base  import *
 
 # from core.models.template   import Template
 
-from ..constants.data_base import * 
+from ..constants.data_base  import * 
 
 
 class Group(Model):
@@ -50,7 +55,10 @@ class Group(Model):
     - создавать группы
     - "удалять группы" - о... нужен флаг - "группа удалена"???
     
-    - добавлять (удаять) участников в группу
+    - добавлять (удаять) участников в группу 
+        - по приглашению - нужен список приглашений - соотв, у каждого автора может быть список приглашений "вступить в группу"
+        - нужен список заявок на вступление - это инструмент админа группы "список заявок на вступление"
+        
     - добавлять (удалять) статьи в библиотеку
         - статья моет ажодится в библиотеке и иметь флаг 
             "pbl" - для всеобщего доступа  
@@ -59,6 +67,22 @@ class Group(Model):
     Видимость групп (group_status) 
     - публичная - 'pbl' - любой посетитель может читать публичные материалы группы 
     - закрытая - 'shut' ??? - что - то я пока не знаю.... может, в закрытых группах не может быть "публичных статей"??
+    
+    Процедура создания новой группы:
+         При создании новой группы, Создатель группы становится ее Администратором.
+        Запись о создании группы размещается в таблицах "dt_headers" и "groups" 
+        Запись о вступлении в группу Администратора добавляется в таблицу "members";
+                  
+             Процедура работы с Ключами:
+                Создается уникальная пара RSA-ключей, 
+                Публичный ключ помещается в заголовок группы,  
+                персональный  - размещается в списке "members", 
+                Приватный ключ группы закрывается Публичным ключем Создателя группы, 
+                и добавляется в соответствующее поле таблицы "members" 
+            Когда Участник Группы открывает страницу группы (переходит на рабочий стол группы) 
+            в профиль Участника добавляется значение его копии приватного ключа группы;
+            После этого пользователь сможет читать и редактировать все статьи из групповой библиотеки, имеющие флаг "grp"
+    
     
     """
     
@@ -98,11 +122,6 @@ class Group(Model):
                                       idFieldName=None,
                                       mainPrimaryList =None,
                                       listAttrNames=['group_id', 'author_id', 'member_role_type', 'private_key']))
-
-            self.setHeadStruct(Model.TableDef( tabName='dt_headers', 
-                                          idFieldName='dt_header_id',
-                                          mainPrimaryList =['dt_header_id'],
-                                          listAttrNames=['dt_header_type','public_key']))
         
 
 
@@ -122,12 +141,12 @@ class Group(Model):
             """
 
             getRez = self.select(
-                    'dt_headers.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email ',
+                    'dt_headers.dt_header_id, author_name, author_surname, author_role, author_phon, author_email, author_create, dt_headers.public_key ',
                     'authors, dt_headers',
                         {
                     'whereStr': " members.dt_header_id = authors.dt_header_id AND dt_headers.dt_header_id = authors.dt_header_id AND " +\
                     " members.actual_flag = 'A' AND authors.actual_flag = 'A' AND "
-                    " members.dt_header_id = " + str(groupId) , # строка набор условий для выбора строк
+                    " members.group_id = " + str(groupId) , # строка набор условий для выбора строк
                     'orderStr': ' author_name, author_surname ', # строка порядок строк
                                      }
                                     )
@@ -138,34 +157,37 @@ class Group(Model):
             if len(getRez) == 0:
     #             raise WikiException( ARTICLE_NOT_FOUND )
                return []
-             
-#             for oneObj in getRez:
-#                 oneObj.article_title = base64.b64decode(oneObj.article_title).decode(encoding='UTF-8')
-#                 oneObj.article_link = base64.b64decode(oneObj.article_link).decode(encoding='UTF-8')
-#     #              articleTitle = oneObj.article_title.strip().strip(" \t\n")
-#     #              oneObj.article_link  =  articleTitle.lower().replace(' ','_')
-#                 oneObj.article_annotation =  base64.b64decode(oneObj.article_annotation).decode(encoding='UTF-8')
-#     #              logging.info( 'list:: After oneArt = ' + str(oneObj))
-#         
-            return getRez
+
+            authorList = []
+            author = Author()
+            for autorStruct in getRez:
+               authorList.append(author.parsingAuthor(self, autorStruct))
+            return authorList
 
 
     class Library(Model):
         
         def __init__(self, groupId = 0, articleId=0, libraryPermissionType = 'W' ):        
-            Model.__init__(self, 'librarys')   
+            Model.__init__(self)   
             self.group_id = groupId
             self.article_id = articleId
             self.library_permission_type = libraryPermissionType
+            
+            self.setDataStruct(Model.TableDef( tabName='librarys', 
+                                      idFieldName=None,
+                                      mainPrimaryList =['group_id','article_id' ],
+                                      listAttrNames=['group_id', 'author_id', 'library_permission_type']))
+            
 
         def save(self, autorId):
 
             operationFlag = 'I'
 
-            mainPrimaryObj = {'group_id': self.group_id, 'article_id': self.article_id }
             revisionsShaHashSou =  str(self.group_id) + str(self.article_id) + self.library_permission_type 
 #             logging.info(' Library save:: self = ' + str(self))
-            Model.save(self, autorId, operationFlag, mainPrimaryObj, revisionsShaHashSou)
+            Model.save(self, autorId, operationFlag, revisionsShaHashSou)
+
+#         self.dt_header_id = Model.save(self, self.dt_header_id, operationFlag, sha_hash_sou)
 
 
         def getGroupArticleList(self, groupId):
@@ -178,7 +200,7 @@ class Group(Model):
                     ' articles.article_id, articles.article_title, articles.article_link, ' +
                     ' articles.article_annotation, articles.article_category_id, ' + 
                     ' articles.article_template_id, ' +
-                    ' null AS group_title, null AS group_annotation,  null AS group_id ',
+                    ' null AS group_title, null AS group_annotation,  librarys AS group_id, librarys.library_permission_type ',
                     'articles',
                         {
                     'whereStr': " librarys.article_id = articles.article_id AND " +\
@@ -297,42 +319,56 @@ class Group(Model):
     
     def save(self, authorId ):
         """
-        сщхранить группу, 
+        сохранить группу, 
         пользователя, который создал группу надо воткнуть не только в авторы группы,
         но, и в "members" да еще и АДМИНОМ!!!
         
         """
+        bbsalt =  config.options.salt.encode()
+        cip = CipherWrapper()
 
         logging.info(' save:: before SAVE = ' + str(self)) 
-               
-               
-#             key = RSA.generate(2048)
-#             self.public_key = key.publickey().export_key() 
-#             pKey = key.export_key() # поучить незакрытый приватный ключ
-#             logging.info(' save:: PrivateKey ::: pKey = ' + str(pKey))
-#             self.private_key_hash = bcrypt.hashpw( pKey, bbsalt ).decode('utf-8') # получим ХЕш приватного ключа - для последуюей проверки при восстановлении пароля
-#             bbWrk = (bytePass+bbsalt)[0:32]
-#             cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
-#             ciphertext = cipher_aes.encrypt(pKey)
-#             self.private_key = pickle.dumps({'cipherKey': ciphertext, 'nonce': cipher_aes.nonce})
                
         if self.dt_header_id == 0:
 #             self.group_create_date = datetime.now()
             operationFlag = 'I'
+            
+            autotControl = Author()
+            creator = autotControl.get(authorId)
+
+            cip.rsaInit() # сделать пару ключей 
+            self.public_key = cip.rsaPubSerialiation(cip.getPublicKey())
+            pKey = cip.getPrivateKey() # поучить незакрытый приватный ключ
+#             self.private_key_hash = bcrypt.hashpw(cip.rsaPrivateSerialiation(pKey), bbsalt).decode('utf-8') # получим ХЕш приватного ключа - для последуюей проверки при восстановлении пароля
+#             logging.info(' save:: before SAVE creator.publicKey() = ' + str(creator.publicKey())) 
+            pkTmp = cip.rsaEncrypt(creator.publicKey(), cip.rsaPrivateSerialiation(pKey))
+#             logging.info(' save:: before SAVE pkTmp = ' + str(pkTmp)) 
+            self.private_key = pkTmp
+            
         else:
             operationFlag = 'U'
         
         self.begin()    
         revisions_sha_hash_sou = str(self.group_title) + str(self.group_annotation) + str(self.group_status)
         
-        self.dt_header_id = Model.save(self, authorId, operationFlag, revisions_sha_hash_sou )
+#         self.dt_header_id = 
+        Model.save(self, authorId, operationFlag, revisions_sha_hash_sou )
         # теперь сохранить автора группы как ее админа.
+#         logging.info(' SAVE:: GROUPPPPP authorId = ' + str(authorId))  
+#         logging.info(' SAVE:: GROUPPPPP 2 = ' + str(self))  
 
         if operationFlag == 'I':
             memberControl = self.Member()
-            memberControl.autor_id = authorId
+            memberControl.author_id = authorId
             memberControl.group_id = self.dt_header_id
             memberControl.member_role_type = 'A'
+            memberControl.private_key = self.private_key
+
+#             bbWrk = (bytePass+bbsalt)[0:32]
+#             cipher_aes = AES.new(bbWrk, AES.MODE_EAX) # закроем приватный ключ на пароль пользователя.
+#             ciphertext = cipher_aes.encrypt(pKey)
+#             self.private_key = pickle.dumps({'cipherKey': ciphertext, 'nonce': cipher_aes.nonce})
+            
             memberControl.save(authorId)
         
         self.commit()
@@ -344,7 +380,7 @@ class Group(Model):
         Добавить статью к группе 
         
         """
-        libControl = self.Library (groupId, authorId, library_permission_type)
+        libControl = self.Library(groupId, authorId, library_permission_type)
         libControl.save(authorId)
 
     

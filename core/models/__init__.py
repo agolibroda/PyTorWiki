@@ -368,17 +368,23 @@ class Model: #Connector:
             _loDb = self.cursor()
             self.begin()
 
+            #проверим, есть ли в поле "суперИндекс" в заголовке знчение (новый ли член....)
+            isValue = self.getValueIdFieldName(self._headStruct)
+            # и вообще, нужно ли нам сохнаняит "заголовок"???
             if headParamsObj != None :
-                if ( self.__dict__[self._headStruct.getIdFieldName()] == 0 or self.__dict__[self._headStruct.getIdFieldName()] == None ) :
+                if (isValue == None or isValue == 0) :
                     # сохраним заголовок, если он определен для ЭТОГО класса объектов.
                     sqlStr = "INSERT INTO " + self._headStruct.getTableName() +" ( " + headParamsObj.strListAttrNames + ") VALUES " +\
                         "( " + headParamsObj.strListAttrValues + " ) returning " + self._headStruct.getIdFieldName() + "; "
                     headValue = self.getToInsertValue( self._headStruct.getLisAttr())    
                     _loDb.execute(sqlStr, tuple(headValue) ) # 'dt_header_type','public_key'
                     sourse = _loDb.fetchone()
+                    logging.info(' SAVE:: INSERT HEAD sourse = ' + str(sourse))  
+                    logging.info(' SAVE:: INSERT HEAD [self._headStruct.getIdFieldName() = ' + str([self._headStruct.getIdFieldName()]))  
                     self.__dict__[self._headStruct.getIdFieldName()] = sourse[self._headStruct.getIdFieldName()]
+                    logging.info(' SAVE:: INSERT HEAD self = ' + str(self))  
                     
-                if self._isHeaderEdit and self.__dict__[self._headStruct.getIdFieldName()] > 0 :
+                elif self._isHeaderEdit and self.getValueIdFieldName(self._headStruct) > 0 :
                     # Заголовок Объекта поменялся! - его надо сохранить!
                     if self._headStruct.getLisAttr() != None:
                         listSet = self.splitAttributes2Update (self._headStruct.getLisAttr()) 
@@ -391,7 +397,7 @@ class Model: #Connector:
                             toValueList.extend(listSet.listAttrValues)
                             toValueList.extend(listWhere.listAttrValues)
                             _loDb.execute(sqlStr, tuple(toValueList))
-            if self.__dict__[self._headStruct.getIdFieldName()] > 0 :
+            if isValue != None and isValue > 0 :
                 list = []
 #                 logging.info(' SAVE:: UPDATE self._dataStruct.getMainPrimaryList() = ' + str(self._dataStruct.getMainPrimaryList()))  
                 if self._dataStruct.getMainPrimaryList() != None:
@@ -405,7 +411,7 @@ class Model: #Connector:
                         whtreStr  = ' AND '.join(list)    
                         # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
                         sqlStr = "UPDATE " + self._dataStruct.getTableName() + " SET actual_flag = 'O' WHERE " + whtreStr
-                        logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
+#                         logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
                         _loDb.execute(sqlStr)
             
             operation_timestamp = datetime.now() 
@@ -438,11 +444,14 @@ class Model: #Connector:
             
             _loDb.execute(sqlStr, tuple(dataValue))
             # если Это статьи, тогда нам нужнео сохранить статью, и получить ее ИД!
+            
+            logging.info(' SAVE:: AFTER _loDb.execute self = ' + str(self))
+              
             if returningStr != '':
                 sourse = _loDb.fetchone()
-                self.__dict__[requestParamName] = sourse[requestParamName]
+                self.__dict__[self._dataStruct.getIdFieldName()] = sourse[self._dataStruct.getIdFieldName()]
                 self.commit()
-                return  sourse[requestParamName]
+                return  sourse[self._dataStruct.getIdFieldName()]
             self.commit()
         except psycopg2.Error as error:
             logging.error(' save exception:: ' + str (error) )
@@ -648,6 +657,16 @@ class Model: #Connector:
             oList.append(oneObj)
                 
         return oList
+
+    def getValueIdFieldName (self, vStruct):
+        try:
+            idName = vStruct.getIdFieldName()
+            if idName != None:
+                return self.__dict__[idName]
+        except:
+            return None
+    
+    
 
     def splitAttributes2Str(self):
         """

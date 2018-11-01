@@ -112,7 +112,7 @@ class Article(Model):
     def __init__ (self, id=0, title = ''): 
 #         logging.info('article:: __init__')
 
-        Model.__init__(self, 'articles')   
+        Model.__init__(self)   
         self.article_id = id # эти параметры прилетают из формы редактирования
 #         self.author_id = 0;
         self.article_title = title # эти параметры прилетают из формы редактирования
@@ -123,7 +123,12 @@ class Article(Model):
         self.article_permissions = 'pbl'
         self.article_permission_code = 200
 #         self.article_link = '' 
-
+ 
+        self.setDataStruct(Model.TableDef( tabName='articles', 
+                                      idFieldName='article_id',
+                                      mainPrimaryList =['article_id'],
+                                      listAttrNames=['article_id', 'article_title','article_link', 'article_annotation','article_source','article_category_id','article_template_id','article_permissions']))
+ 
         
 
     def save(self, authorId, templateDir):
@@ -141,6 +146,10 @@ class Article(Model):
         смотрим по таблице ревизий - есть ли точно такое же, если сть, то 
         одаем автору ошибку, если все нормално, тогда записываем статью, и записываем ревизию.
         2.2.1 добавим новую запись в "articles"  
+        
+        :param     authorId - Автор статьи  
+        :param     templateDir - директория, в которой лежат всякие там отрендереные шаблоны и собственно статьи 
+        :Return:   вертаем статью        
         
         """
 
@@ -186,12 +195,13 @@ class Article(Model):
             else:
                 operationFlag = 'U'
 
-            sha_hash_sou =  self.article_title + self.article_link + self.article_annotation + self.article_source
+            sha_hash_sou = self.article_title + self.article_link + self.article_annotation + str(self.article_source)
             
 #             logging.info( 'save:: sha_hash_sout = '  + str(sha_hash_sou))
 
             mainPrimaryObj = {'article_id': self.article_id }
-            self.article_id = Model.save(self, authorId, operationFlag, mainPrimaryObj, sha_hash_sou, 'article_id')
+            self.article_id = Model.save(self, authorId, operationFlag, sha_hash_sou)
+                            # Model.save(self, self.dt_header_id, operationFlag, sha_hash_sou)
 
 #             logging.info( 'save:: After SAVE = '  + str(self))
         
@@ -221,9 +231,17 @@ class Article(Model):
 #                                         tornado.escape.utf8(self.article_source)
 #                                                 )
 #                                                     ).decode(encoding='UTF-8')
-        article_source = zlib.compress(
-                                        tornado.escape.utf8(self.article_source)
-                                                )
+
+        if self.article_permissions == 'pbl':
+            articteSou = tornado.escape.utf8(self.article_source)
+        else:
+            # если флаг доступа не "паблик", тогда надо все зарывать 
+            # если файл персональный, тогда закрываем его на публичном ключе, 
+            # если файл для группы, тогда его надо закрыть   
+            pass
+        
+        
+        article_source = zlib.compress( articteSou )
 
 #         self.article_title = article_title
 #         sef.article_link = article_link
