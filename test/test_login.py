@@ -32,8 +32,14 @@ class TestAutors(unittest.TestCase):
     autor= None
 
     def setUp(self): 
-        self.author_login = 'log_1540379436.686734'
-        self._pass_source = '123123' 
+# вот тут все работает!
+#         self.author_login = 'log_1540379436.686734' 
+#         self._pass_source = '123123' 
+
+ # а вот тут   НЕТ!!!! - значитЬ, надо поверитьдля пользователя №6, и правильно отредактировать данные, или поправить...
+ 
+        self.author_login = 'login_1'
+        self._pass_source = 'login' 
 
 
     def test_autor_login(self):

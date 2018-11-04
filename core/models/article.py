@@ -131,7 +131,7 @@ class Article(Model):
  
         
 
-    def save(self, authorId, templateDir):
+    def save(self, author, templateDir):
         """
         Обязательно:
         - Автора
@@ -158,7 +158,9 @@ class Article(Model):
 # вот такие категрии (служебные?) 'inf','trm','nvg','tpl'
 
 
-#         self.author_id = authorId
+        authorId = 0
+        if author != None:
+            authorId = author.dt_header_id
        
         if int(self.article_category_id) == int(config.options.tpl_categofy_id):
             htmlTextOut = self.article_source
@@ -199,9 +201,7 @@ class Article(Model):
             
 #             logging.info( 'save:: sha_hash_sout = '  + str(sha_hash_sou))
 
-            mainPrimaryObj = {'article_id': self.article_id }
             self.article_id = Model.save(self, authorId, operationFlag, sha_hash_sou)
-                            # Model.save(self, self.dt_header_id, operationFlag, sha_hash_sou)
 
 #             logging.info( 'save:: After SAVE = '  + str(self))
         
@@ -277,7 +277,7 @@ class Article(Model):
         return outArt
 
 
-    def get(self, articleLink, spectatorId = 0):
+    def get(self, articleLink, spectatorAuthor = None):
         """
          получить статью по названию (одну) - функция для пердставления данных (!!!) 
          получить ОЛЬКО опубликованный текст  (активную статью) - для редактирования получаем статью иным образом! 
@@ -289,7 +289,7 @@ class Article(Model):
          Кстати, статьи бывают не только "публичными" а и групповыми и ЛИЧНЫМИ!!!
          
          """
-#         logging.info( 'Article ::: get articleLink  = ' + str(articleLink))
+        logging.info( 'Article ::: get articleLink  = ' + str(articleLink))
 #         logging.info( 'Article ::: get spectatorId  = ' + str(spectatorId))
     
 #         article_link = base64.b64encode(tornado.escape.utf8(articleLink)).decode(encoding='UTF-8')
@@ -298,8 +298,10 @@ class Article(Model):
 #          articleLink = hashlib.sha256(
 #                                      tornado.escape.utf8(articleLink)
 #                                      ).hexdigest()  #.decode(encoding='UTF-8')
-#     
-     
+        spectatorId = 0
+        if spectatorAuthor != None:
+            spectatorId = spectatorAuthor.dt_header_id
+            
         if int(spectatorId) == 0:
             getRez = self.select(
                                 """
@@ -362,6 +364,7 @@ class Article(Model):
             raise WikiException( ARTICLE_NOT_FOUND )
         elif len(getRez) == 1:   
             outArt = self.articleDecode(getRez[0])
+#             logging.info( 'Article ::: >>>>> get outArt  = ' + str(outArt))
             return outArt
 
 

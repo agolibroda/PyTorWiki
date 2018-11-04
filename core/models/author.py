@@ -208,7 +208,7 @@ class Author(Model):
         selectStr = 'dt_headers.dt_header_id, author_login, author_name,  author_surname, author_pass, author_role, author_phon, author_email, author_create, dt_headers.public_key, authors.private_key, authors.private_key_hash' # строка - чего хотим получить из селекта
         fromStr = 'dt_headers' #'authors'
         anyParams = {
-                    'whereStr': " dt_headers.dt_header_id = authors.dt_header_id  AND " + 
+                    'whereStr': " dt_headers.dt_header_id = authors.dt_header_id AND authors.actual_flag = 'A' AND  " + 
                     " (author_login =  '" + loginMailStr + "' OR author_email =  '" + loginMailStr + "' )  AND author_pass =  '"  + test_pass + "' " , 
                      }
         resList = self.select(selectStr, fromStr, anyParams)
@@ -237,7 +237,12 @@ class Author(Model):
                 if tmpHash == _private_key_hash:
                     self.openPrivateKey = cip.rsaPrivateUnSerialiation( strKey )
                 else:
-                    raise WikiException(LOAD_PRIVATE_KEY_ERROR)
+                    # если ключи прочитались не верно, наверное х стоит переписать, 
+                    # и Автор ваще не должен иметь возоности ключами пользоваться, 
+                    # и автор должен идти в настройки профиля и редактировать из, и генерить сее новые ключи.
+                    self.openPrivateKey = None
+                    self.public_key = None
+#                     raise WikiException(LOAD_PRIVATE_KEY_ERROR)
             
             return self
         else:

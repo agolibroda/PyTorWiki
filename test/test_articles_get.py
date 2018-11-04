@@ -1,5 +1,4 @@
-# test_autor_login
-
+# test_articles_get
 
 import logging
 
@@ -23,36 +22,41 @@ sys.path.append(os.path.dirname('./../'))
 import config
 import core.models
 
-from core.models.author         import Author
-
-from core.BaseHandler           import *
-from core.WikiException         import *
-
+from core.models.article  import Article
+from core.models.author   import Author
 
 
 sys.path.pop()
 
 import unittest 
          
-class TestAutors(unittest.TestCase): 
-    autor= None
+         
+class TestArticle(unittest.TestCase): 
+    article= None
 
     def setUp(self): 
+        
         self.autor = Author()
         
+#         self.author_login = 'log_1540895938.3078651' #'login_1'
+#         self.pwdStr = '123123' #'login' 
+
         self.author_login = 'login_1'
         self.pwdStr = 'login' 
 
-
-
-    def testAutorLogin(self):
-#         autor = core.models.Author()
-
- 
         self.autor.login(self.author_login, self.pwdStr)
         print( 'setUp autor = ' + str(self.autor) )
-#         self.assertEqual(self.autor.author_name, 'Name0012' )
+        
+        self.articleLink = 'суперноваястатья_1541099871.471828'
+        self.article = Article()
+        
 
+    def test_article_update(self):
+#         article = core.models.Article()
+ 
+        artSou = self.article.get(self.articleLink, self.autor)
+
+        print( 'article artSou = ' + str(artSou) )
 
 
         

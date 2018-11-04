@@ -370,6 +370,9 @@ class Model: #Connector:
 
             #проверим, есть ли в поле "суперИндекс" в заголовке знчение (новый ли член....)
             isValue = self.getValueIdFieldName(self._headStruct)
+            if isValue == None :
+                isValue = self.getValueIdFieldName(self._dataStruct)
+                
             # и вообще, нужно ли нам сохнаняит "заголовок"???
             if headParamsObj != None :
                 if (isValue == None or isValue == 0) :
@@ -379,10 +382,10 @@ class Model: #Connector:
                     headValue = self.getToInsertValue( self._headStruct.getLisAttr())    
                     _loDb.execute(sqlStr, tuple(headValue) ) # 'dt_header_type','public_key'
                     sourse = _loDb.fetchone()
-                    logging.info(' SAVE:: INSERT HEAD sourse = ' + str(sourse))  
-                    logging.info(' SAVE:: INSERT HEAD [self._headStruct.getIdFieldName() = ' + str([self._headStruct.getIdFieldName()]))  
+#                     logging.info(' SAVE:: INSERT HEAD sourse = ' + str(sourse))  
+#                     logging.info(' SAVE:: INSERT HEAD [self._headStruct.getIdFieldName() = ' + str([self._headStruct.getIdFieldName()]))  
                     self.__dict__[self._headStruct.getIdFieldName()] = sourse[self._headStruct.getIdFieldName()]
-                    logging.info(' SAVE:: INSERT HEAD self = ' + str(self))  
+#                     logging.info(' SAVE:: INSERT HEAD self = ' + str(self))  
                     
                 elif self._isHeaderEdit and self.getValueIdFieldName(self._headStruct) > 0 :
                     # Заголовок Объекта поменялся! - его надо сохранить!
@@ -397,6 +400,7 @@ class Model: #Connector:
                             toValueList.extend(listSet.listAttrValues)
                             toValueList.extend(listWhere.listAttrValues)
                             _loDb.execute(sqlStr, tuple(toValueList))
+            
             if isValue != None and isValue > 0 :
                 list = []
 #                 logging.info(' SAVE:: UPDATE self._dataStruct.getMainPrimaryList() = ' + str(self._dataStruct.getMainPrimaryList()))  
@@ -411,7 +415,7 @@ class Model: #Connector:
                         whtreStr  = ' AND '.join(list)    
                         # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
                         sqlStr = "UPDATE " + self._dataStruct.getTableName() + " SET actual_flag = 'O' WHERE " + whtreStr
-#                         logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
+                        logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
                         _loDb.execute(sqlStr)
             
             operation_timestamp = datetime.now() 
@@ -768,6 +772,7 @@ class CipherWrapper:
 
 #         logging.info(' symmetricDecrypt:: key = ' + str(key))
 #         logging.info(' symmetricDecrypt:: self._key = ' + str(self._key))
+#         logging.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))        
 #         logging.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))
         
         # Construct a Cipher object, with the key, iv, and additionally the
@@ -784,7 +789,11 @@ class CipherWrapper:
      
         # Decryption gets us the authenticated plaintext.
         # If the tag does not match an InvalidTag exception will be raised.
-        return decryptor.update(cipherData['ciphertext']) + decryptor.finalize()
+        try:
+            outText = decryptor.update(cipherData['ciphertext']) + decryptor.finalize()
+            return outText
+        except :
+            return b''        
 
 
 
