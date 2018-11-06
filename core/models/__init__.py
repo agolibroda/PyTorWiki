@@ -48,6 +48,7 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from cryptography.hazmat.primitives import serialization
+from cryptography.exceptions import *
 
 
 from _ast import Try
@@ -372,7 +373,6 @@ class Model: #Connector:
             isValue = self.getValueIdFieldName(self._headStruct)
             if isValue == None :
                 isValue = self.getValueIdFieldName(self._dataStruct)
-                
             # и вообще, нужно ли нам сохнаняит "заголовок"???
             if headParamsObj != None :
                 if (isValue == None or isValue == 0) :
@@ -382,10 +382,7 @@ class Model: #Connector:
                     headValue = self.getToInsertValue( self._headStruct.getLisAttr())    
                     _loDb.execute(sqlStr, tuple(headValue) ) # 'dt_header_type','public_key'
                     sourse = _loDb.fetchone()
-#                     logging.info(' SAVE:: INSERT HEAD sourse = ' + str(sourse))  
-#                     logging.info(' SAVE:: INSERT HEAD [self._headStruct.getIdFieldName() = ' + str([self._headStruct.getIdFieldName()]))  
                     self.__dict__[self._headStruct.getIdFieldName()] = sourse[self._headStruct.getIdFieldName()]
-#                     logging.info(' SAVE:: INSERT HEAD self = ' + str(self))  
                     
                 elif self._isHeaderEdit and self.getValueIdFieldName(self._headStruct) > 0 :
                     # Заголовок Объекта поменялся! - его надо сохранить!
@@ -403,14 +400,10 @@ class Model: #Connector:
             
             if isValue != None and isValue > 0 :
                 list = []
-#                 logging.info(' SAVE:: UPDATE self._dataStruct.getMainPrimaryList() = ' + str(self._dataStruct.getMainPrimaryList()))  
                 if self._dataStruct.getMainPrimaryList() != None:
 #                     Надо построить слварь из всех полей, записанных в mainPrimaryList
                     list = self.getList2Update (self._dataStruct.getMainPrimaryList()) 
-#                     logging.info(' SAVE:: UPDATE list = ' + str(list))  
-                    
                     dataParamseObj = self.splitAttributes(self._dataStruct.getLisAttr())
-                    
                     if len(list) > 0:    
                         whtreStr  = ' AND '.join(list)    
                         # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
@@ -421,36 +414,23 @@ class Model: #Connector:
             operation_timestamp = datetime.now() 
             sha_hash =  hashlib.sha256(
                         tornado.escape.utf8(revisions_sha_hash_source + str(operation_timestamp) )
-                                                ).hexdigest()
+                                        ).hexdigest()
             
             returningStr = ''
             if self._dataStruct.getIdFieldName() != None:
                 returningStr = " returning " + self._dataStruct.getIdFieldName()
             # Теперь можно записать новые данные  в ревизии.    
-            
             dataParamseObj = self.splitAttributes(self._dataStruct.getLisAttr())
-            
             dataParamseObj.strListAttrNames += ', actual_flag, revision_author_id,  operation_flag, sha_hash, operation_timestamp '
             dataParamseObj.strListAttrValues += ", %s, %s, %s,  %s, %s "
-            
             sqlStr = "INSERT INTO " + self._dataStruct.getTableName() +" ( " + dataParamseObj.strListAttrNames + ") VALUES " +\
                     "( " + dataParamseObj.strListAttrValues + " ) "  +\
                     " ON CONFLICT (sha_hash) DO UPDATE SET actual_flag = 'A' "  + returningStr +  ' ;'
             
             dataValue = self.getToInsertValue( self._dataStruct.getLisAttr())
-
-            logging.info(' SAVE:: dataParamseObj.strListAttrNames 1 = ' + str(dataParamseObj.strListAttrNames))  
-            logging.info(' SAVE:: dataValue 1 = ' + str(dataValue))  
-
             dataValue += ['A', autorId, operationFlag, sha_hash, operation_timestamp]
-
-            logging.info(' SAVE:: dataValue 2 = ' + str(dataValue))  
-            
             _loDb.execute(sqlStr, tuple(dataValue))
             # если Это статьи, тогда нам нужнео сохранить статью, и получить ее ИД!
-            
-            logging.info(' SAVE:: AFTER _loDb.execute self = ' + str(self))
-              
             if returningStr != '':
                 sourse = _loDb.fetchone()
                 self.__dict__[self._dataStruct.getIdFieldName()] = sourse[self._dataStruct.getIdFieldName()]
@@ -464,9 +444,6 @@ class Model: #Connector:
 #             _loDb.rollback()
             self.rollback()
             raise WikiException(error)
-
-
-
 
     def select(self, 
                selectStr, # строка - чего хотим получить из селекта
@@ -507,32 +484,21 @@ class Model: #Connector:
               
         """
         try:
-#             logging.info(' select:: addTables = ' + str(addTables))
             _loDb = self.cursor()
             sqlStr = 'SELECT '+ selectStr
             if addTables != None:
                 sqlStr += ' FROM ' + self._dataStruct.getTableName() 
                 if addTables  != '':  sqlStr += ', ' + str(addTables)
             
-#             if addTables == '':
-#                 sqlStr += ' FROM ' + self._dataStruct.getTableName() 
-                
-                
             if str(anyParams.get('joinStr', ''))     != '':  sqlStr += ' ' + str(anyParams.get('joinStr'))
             if str(anyParams.get('whereStr', ''))    != '':  sqlStr += ' WHERE ' + str(anyParams.get('whereStr'))
             if str(anyParams.get('groupStr', ''))    != '':  sqlStr += ' GROUP BY ' + str(anyParams.get('groupStr'))
             if str(anyParams.get('orderStr', ''))    != '':  sqlStr += ' ORDER BY ' + str(anyParams.get('orderStr'))
             if str(anyParams.get('limitStr', ''))    != '':  sqlStr += ' LIMIT ' + str(anyParams.get('limitStr'))
-            logging.info(' select:: sqlStr = ' + sqlStr)
 
             _loDb.execute(sqlStr)
             sourse = _loDb.fetchall()
-#             for one in sourse:
-#                 logging.info('select:: list:: sourse = ' + str (one) )
             outListObj = self.dict2obj(sourse)    
-#             for one in outListObj:
-#                 logging.info('select:: list:: outListObj = ' + str (one) )
- 
             return outListObj
 
         except psycopg2.Error as error:
@@ -851,13 +817,13 @@ class CipherWrapper:
         return  pickle.dumps({'ciphertext': ciphertext, 'cipherPwd': cipherPwd})
     
     
-    def rsaDecrypt(self, cipherPickle):
+    def rsaDecrypt(self, openPrivateKey, cipherPickle):
         """
         Расшифровать текст по процедуре RSA
         """
         cipherData = pickle.loads(cipherPickle)
  
-        plainPwd = self.openPrivateKey.decrypt(
+        plainPwd = openPrivateKey.decrypt(
             cipherData['cipherPwd'],
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
@@ -865,7 +831,7 @@ class CipherWrapper:
                 label=b'None'
             )
         )
-        return symmetricDecrypt(self, plainPwd, cipherData['ciphertext'])
+        return self.symmetricDecrypt(plainPwd, cipherData['ciphertext'])
     
     
 
@@ -922,3 +888,6 @@ class CipherWrapper:
     def isinstance(self, pkey):
         return isinstance(pkey, rsa.RSAPublicKey)
 
+
+    class CipherErorr ( InternalError ):
+        pass

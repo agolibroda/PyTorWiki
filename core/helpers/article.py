@@ -22,6 +22,7 @@ import config
 
 import core.models
 
+
 from core.models.author     import Author
 from core.models.article    import Article
 from core.models.file       import File
@@ -145,7 +146,7 @@ class HelperArticle():
         return (article, fileList)
 
 
-    def сomposeArticleSave(self, authorId, templateDir, article_pgroipId):
+    def сomposeArticleSave(self, author, templateDir, article_pgroipId):
         """
         сохранить статью
         
@@ -153,8 +154,8 @@ class HelperArticle():
         try:
             self.artModel.begin()
 
-            article = self.artModel.save(authorId, templateDir)
-            logging.info( 'сomposeArticleSave:: authorId = ' + str(authorId))
+            article = self.artModel.save(author, templateDir)
+            logging.info( 'сomposeArticleSave:: authorId = ' + str(author))
             logging.info( 'сomposeArticleSave:: article_pgroipId = ' + str(article_pgroipId))
             logging.info( 'сomposeArticleSave:: article.article_id = ' + str(article.article_id))
       

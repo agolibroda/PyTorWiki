@@ -327,7 +327,7 @@ class ComposeHandler(BaseHandler):
             logging.info( 'ComposeHandler:: Before Save! templateDir = ' + str(templateDir))
             logging.info( 'ComposeHandler:: Before Save! article_pgroipId = ' + str(article_pgroipId))
      
-            rez = yield executor.submit( helperArticle.сomposeArticleSave, self.autor.author_id, templateDir, article_pgroipId )
+            rez = yield executor.submit( helperArticle.сomposeArticleSave, self.autor, templateDir, article_pgroipId )
     
     #         logging.info( 'ComposeHandler:: AFTER Save! artModel = ' + str(artModel))
             

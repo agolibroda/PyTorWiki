@@ -43,16 +43,15 @@ class TestArticle(unittest.TestCase):
         self.pwdStr1 = 'login' 
 
         self.author_login2 = 'log_1540895938.3078651' #'login_1'
-        self.pwdSt2r = '123123' #'login' 
+        self.pwdStr2 = '123123' #'login' 
 
         self.autor1.login(self.author_login1, self.pwdStr1)
-        print( 'setUp autor = ' + str(self.autor) )
+        print( 'setUp autor1 = ' + str(self.autor1) )
 
         self.autor2.login(self.author_login2, self.pwdStr2)
-        print( 'setUp autor = ' + str(self.autor2) )
+        print( 'setUp autor2 = ' + str(self.autor2) )
         
-#         self.articleLink = 'суперноваястатья_1541099871.471828' 
-        self.articleLink = 'суперноваястатья_персонаьно_tue,_06_nov_2018_09:04:05_+0000'
+        self.articleLink = 'суперноваястатья_персонаьно_tue,_06_nov_2018_09:22:36_+0000'
         self.article = Article()
         
 
@@ -61,14 +60,14 @@ class TestArticle(unittest.TestCase):
  
         artSou = self.article.get(self.articleLink, self.autor1)
 
-        print( 'article artSou = ' + str(artSou) )
+        print( 'article1 artSou = ' + str(artSou) )
 
     def test_article_get2(self):
 #         article = core.models.Article()
- 
+  
         artSou = self.article.get(self.articleLink, self.autor2)
-
-        print( 'article artSou = ' + str(artSou) )
+ 
+        print( 'article2 artSou = ' + str(artSou) )
 
 
         

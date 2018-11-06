@@ -32,7 +32,7 @@ from urllib.parse import quote
 import config
 
 
-from . import Model
+from . import Model, CipherWrapper
 from .. import WikiException 
 
 
@@ -145,10 +145,16 @@ class Article(Model):
         значит, делает длинную строку, и берем от нее ХЭШ 
         смотрим по таблице ревизий - есть ли точно такое же, если сть, то 
         одаем автору ошибку, если все нормално, тогда записываем статью, и записываем ревизию.
-        2.2.1 добавим новую запись в "articles"  
+        2.1.2 добавим новую запись в "articles"  
         
-        :param     authorId - Автор статьи  
-        :param     templateDir - директория, в которой лежат всякие там отрендереные шаблоны и собственно статьи 
+        2.2 Права долтупа
+            'pbl' - публично
+            'grp' – права определяются группой
+            'sol' – персональная статья, читать и редактировать ее может только автор. 
+        
+        
+        :param     author - Автор статьи  
+        :param     templateDir - директория, в которой лежат всякие там отрендереные шаблоны и собственно статьи для представления посетителям сайта 
         :Return:   вертаем статью        
         
         """
@@ -156,7 +162,6 @@ class Article(Model):
 # categories 
 # Это новая таблица  - все категории, которые только озможны, и пока там  
 # вот такие категрии (служебные?) 'inf','trm','nvg','tpl'
-
 
         authorId = 0
         if author != None:
@@ -173,7 +178,7 @@ class Article(Model):
         
         del self.article_permission_code 
         
-        self.articleEncode()
+        self.articleEncode(author)
 
 #         base64.b64encode(tornado.escape.utf8(article_source)).decode(encoding='UTF-8') 
 
@@ -186,9 +191,6 @@ class Article(Model):
 # UPDATE accounts SET balance = balance - 100.00 WHERE acctnum = 7534;
 # COMMIT;
 #             self.rollback()
-
-
-#         logging.info( 'article Before Save 2 self.article_id = ' + str(self) )
         
         try:
         
@@ -218,9 +220,14 @@ class Article(Model):
                 
         return self 
 
-    def articleEncode(self):
+    def articleEncode(self, readerMan=None):
         """
         Закодиоровать статью, подготовить к сохранению!!!!!
+        - работа с Данными класса, 
+        В астности, 
+        Обработка "article_source"... 
+
+        :param readerMan - читатель статьи - посетитеь, который читает - из его профиля берутся RSA ключи ... 
         
         """
 #         article_title = base64.b64encode(tornado.escape.utf8(self.article_title)).decode(encoding='UTF-8')
@@ -232,47 +239,41 @@ class Article(Model):
 #                                                 )
 #                                                     ).decode(encoding='UTF-8')
 
+        # если флаг доступа не "паблик", тогда надо все зарывать 
+        # если файл персональный, тогда закрываем его на публичном ключе, 
+        # если файл для группы, тогда его надо закрыть на тубличный ключ группы.  
         if self.article_permissions == 'pbl':
             articteSou = tornado.escape.utf8(self.article_source)
-        else:
-            # если флаг доступа не "паблик", тогда надо все зарывать 
-            # если файл персональный, тогда закрываем его на публичном ключе, 
-            # если файл для группы, тогда его надо закрыть   
-            pass
-        
+        elif self.article_permissions == 'sol':
+            cip = CipherWrapper()
+            articteSou = cip.rsaEncrypt(readerMan.public_key, bytes(self.article_source, 'utf-8') )
         
         article_source = zlib.compress( articteSou )
-
-#         self.article_title = article_title
-#         sef.article_link = article_link
-#         self.article_annotation = article_annotation  
         self.article_source = article_source
          
-    def articleDecode(self, art_source):
+         
+    def articleDecode(self, artStructure, readerMan=None):
         """
         нормальный декодирований нормальной статьи!!!!!
         
+        :param artStructure - Структура, которая получена из Селекта - сырая - сырая....
+        :param readerMan - читатель статьи - посетитеь, который читает - из его профиля берутся RSA ключи ... 
+        :Return: отдаем уже раскодированную статью       
+         
         """
-#         logging.info( 'articleDecode art_source.article_source = ' + str(art_source.article_source))
-        
-        outArt = art_source
-        
-        try:
-            outArt.article_permission_code = int(outArt.article_source)
-        except Exception as e:
-            outArt.article_permission_code = 200
-            
-        if outArt.article_permission_code != 403:
-#             raise WikiException( NOT_PERMISSION_TO_VIEW )
-#             outArt.article_source 
-#         else:
-    #         outArt.article_title = base64.b64decode(outArt.article_title).decode(encoding='UTF-8')
-    #         outArt.article_link = base64.b64decode(outArt.article_link).decode(encoding='UTF-8')
-    #         outArt.article_annotation = base64.b64decode(outArt.article_annotation).decode(encoding='UTF-8')
-#             decodeText =  base64.b64decode(outArt.article_source) #.decode(encoding='UTF-8')
-            decodeText =  outArt.article_source
-            outArt.article_source = zlib.decompress(decodeText).decode("utf-8")  #.decode('UTF-8')    
-    #         logging.info( 'articleDecode outArt = ' + str(outArt))
+        outArt = artStructure
+        logging.info( 'articleDecode 1 outArt = ' + str(outArt))
+
+#         decodeText =  
+        unZipText = zlib.decompress(outArt.article_source)
+        if outArt.article_permissions == 'sol':
+            try:
+                cip = CipherWrapper() 
+                outArt.article_source = cip.rsaDecrypt(readerMan.openPrivateKey, unZipText ).decode("utf-8")
+            except : # cip.CipherErorr as error:
+#                 logging.info( 'Save:: Exception as et = ' + str(e))
+                logging.info( 'Save:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
+                outArt.article_source = '403 -  у Вас нет доступа к данным! '
 
         return outArt
 
@@ -290,7 +291,7 @@ class Article(Model):
          
          """
         logging.info( 'Article ::: get articleLink  = ' + str(articleLink))
-#         logging.info( 'Article ::: get spectatorId  = ' + str(spectatorId))
+        logging.info( 'Article ::: get spectatorAuthor  = ' + str(spectatorAuthor))
     
 #         article_link = base64.b64encode(tornado.escape.utf8(articleLink)).decode(encoding='UTF-8')
         article_link = articleLink
@@ -306,10 +307,7 @@ class Article(Model):
             getRez = self.select(
                                 """
                                  DISTINCT articles.article_id, articles.article_title, articles.article_link,  
-                                articles.article_annotation,  
-                               CASE WHEN  articles.article_permissions = 'pbl' 
-                                   THEN articles.article_source
-                                   ELSE '403' END AS article_source, 
+                                articles.article_annotation, articles.article_source, 
                                 articles.article_category_id, articles.revision_author_id,  
                                 articles.article_template_id, articles.article_permissions 
                                 """,
@@ -325,10 +323,7 @@ class Article(Model):
             strTpl = """
                     SELECT 
                        articles.article_id, articles.article_title, articles.article_link, 
-                       articles.article_annotation,  
-                       CASE WHEN  articles.article_permissions = 'pbl' OR articles.revision_author_id = $sId  
-                           THEN articles.article_source
-                           ELSE '403' END AS article_source, 
+                       articles.article_annotation, articles.article_source, 
                        articles.article_category_id, articles.revision_author_id, 
                        articles.article_template_id, articles.article_permissions
                        FROM articles 
@@ -363,7 +358,7 @@ class Article(Model):
         if len(getRez) == 0:
             raise WikiException( ARTICLE_NOT_FOUND )
         elif len(getRez) == 1:   
-            outArt = self.articleDecode(getRez[0])
+            outArt = self.articleDecode(getRez[0], spectatorAuthor)
 #             logging.info( 'Article ::: >>>>> get outArt  = ' + str(outArt))
             return outArt
 
@@ -410,11 +405,7 @@ class Article(Model):
         strTpl = """
                SELECT 
                lfind.article_id, lfind.article_title, lfind.article_link, 
-               lfind.article_annotation,  
-               
-                CASE WHEN  lfind.article_permissions = 'pbl' OR lfind.revision_author_id = $sId  
-                    THEN lfind.article_source
-                    ELSE '403' END AS article_source, 
+               lfind.article_annotation, lfind.article_source, 
               
                lfind.article_category_id, lfind.revision_author_id, 
                lfind.article_template_id, lfind.article_permissions, lfind.actual_flag

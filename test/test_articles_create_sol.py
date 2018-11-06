@@ -1,4 +1,5 @@
-
+# test_articles_create_sol.py
+#  сохраним персональную статью.
 
 import logging
 
@@ -31,7 +32,7 @@ import unittest
          
 longArticleText = """
 
-Защитная реакция, «бей или беги», срабатывает, когда при обработке информации мы осознаём наличие проблем. Вот некоторые физиологические симптомы, которые могут сопровождать стресс:
+123456 Защитная реакция, «бей или беги», срабатывает, когда при обработке информации мы осознаём наличие проблем. Вот некоторые физиологические симптомы, которые могут сопровождать стресс:
 
 мышечное напряжение;
 учащение пульса и повышение артериального давления;
@@ -52,7 +53,6 @@ class TestAutors(unittest.TestCase):
 
     def setUp(self): 
 
-        
         self.autor = Author()
         
 #         self.author_login = 'log_1540895938.3078651' #'login_1'
@@ -65,11 +65,11 @@ class TestAutors(unittest.TestCase):
         
         
         self.article = Article()
-        self.article.article_title = 'СуперНоваяСтатья ' + str(time.time())
-        self.article.article_annotation = 'СуперНоваяСтатья  СуперНоваяСтатья  СуперНоваяСтатья ' + str(time.time())
+        self.article.article_title = 'СуперНоваяСтатья Персонаьно ' + str(time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()))
+        self.article.article_annotation = 'СуперНоваяСтатья  Персонаьно СуперНоваяСтатья  Персонаьно СуперНоваяСтатья  Персонаьно ' + str(time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()))
         self.article.article_category_id  = 3 
         self.article.article_template_id = 5
-        self.article.article_permissions = 'pbl'
+        self.article.article_permissions = 'sol'
         self.article.article_source = longArticleText
 
 #             artModel.article_category_id = self.get_argument("category_id", 0)
@@ -95,42 +95,6 @@ class TestAutors(unittest.TestCase):
 #         self.assertEqual(self.article.author_name, 'Name0012' )
 
 
-#     def test_article_list(self):
-# #         article = core.models.Article()
-# 
-#  
-#         print( 'setUp 12 article = ' + str(self.article) )
-#  
-#         list = self.article.list()
-# 
-#         print( 'setUp 12 list = ' + str(list) )
-#         
-#         for oneArticle in list:
-#             print( 'oneArticle = ' + str(oneArticle) )
-# #         self.assertEqual(self.article.author_name, 'Name0012' )
-
-
-#     def test_article_update(self):
-# #         article = core.models.Article()
-#  
-#         articleId = 43
-#         self.article.get(articleId) # .article.dt_header_id = 18
-#  
-#         print( 'test_article_update Before article = ' + str(self.article) )
-#          
-#          
-#         self.article.author_login = 'login_' + str(articleId)
-#         self.article.author_name = 'New Name ' +str(articleId) + ' ' + str(time.time())
-# #         self.article.author_create = date.fromtimestamp('2018-10-13 00:54:50.928231')
-#  
-#         self.article._pass_source = '333444' 
-#         self.article._old_pass = '123123'  # - старе значение пароля - нужно при смене 
-#          
-#         print( 'test_article_update Afiet Edit article = ' + str(self.article) )
-#  
-#         self.article.save()
-#         print( 'test_article_update AfterSave article = ' + str(self.article) )
-# #         self.assertEqual(self.article.author_name, 'Name0012' )
         
         
 if __name__ == '__main__': 
