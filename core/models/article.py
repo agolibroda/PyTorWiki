@@ -247,7 +247,6 @@ class Article(Model):
         elif self.article_permissions == 'sol':
             cip = CipherWrapper()
             articteSou = cip.rsaEncrypt(readerMan.public_key, bytes(self.article_source, 'utf-8') )
-        
         article_source = zlib.compress( articteSou )
         self.article_source = article_source
          
@@ -262,17 +261,14 @@ class Article(Model):
          
         """
         outArt = artStructure
-        logging.info( 'articleDecode 1 outArt = ' + str(outArt))
-
-#         decodeText =  
         unZipText = zlib.decompress(outArt.article_source)
         if outArt.article_permissions == 'sol':
             try:
                 cip = CipherWrapper() 
                 outArt.article_source = cip.rsaDecrypt(readerMan.openPrivateKey, unZipText ).decode("utf-8")
-            except : # cip.CipherErorr as error:
-#                 logging.info( 'Save:: Exception as et = ' + str(e))
-                logging.info( 'Save:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
+            except Exception as error: # cip.CipherErorr as error:
+                logging.info( 'Decode:: Exception as et = ' + str(error))
+#                 logging.info( 'Decode:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
                 outArt.article_source = '403 -  у Вас нет доступа к данным! '
 
         return outArt
@@ -290,8 +286,8 @@ class Article(Model):
          Кстати, статьи бывают не только "публичными" а и групповыми и ЛИЧНЫМИ!!!
          
          """
-        logging.info( 'Article ::: get articleLink  = ' + str(articleLink))
-        logging.info( 'Article ::: get spectatorAuthor  = ' + str(spectatorAuthor))
+#         logging.info( 'Article ::: get articleLink  = ' + str(articleLink))
+#         logging.info( 'Article ::: get spectatorAuthor  = ' + str(spectatorAuthor))
     
 #         article_link = base64.b64encode(tornado.escape.utf8(articleLink)).decode(encoding='UTF-8')
         article_link = articleLink

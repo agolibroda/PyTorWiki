@@ -122,7 +122,7 @@ class GroupDeskTop(BaseHandler):
     """
     @tornado.web.authenticated
     @gen.coroutine
-    def get(self, group_id=0):
+    def get(self, dt_header_id=0):
         """
         и шаблон должен быть что - то типа "АдминДома" -) 
         и набирать его... 
@@ -133,36 +133,38 @@ class GroupDeskTop(BaseHandler):
         """
         try:
 
+            logging.info( 'GroupDeskTop Get:: dt_header_id = ' + str(dt_header_id))
+
             author = self.get_current_user() 
 
             if not author.dt_header_id: return None
 
             groupModel = Group()
     
-            if group_id==0:
+            if dt_header_id==0:
                 groupName = 'Create New Group'
                 groupData = groupModel
             else:
-                groupData = yield executor.submit( groupModel.get, group_id )
+                groupData = yield executor.submit( groupModel.get, dt_header_id )
                 groupName = groupData.group_title 
 
-            logging.info( 'GroupDeskTop Get:: 1 = ' + str(True))
             tplControl = TemplateParams()
             tplControl.make(author)
             tplControl.page_name = groupName 
             tplControl.groupData = groupData
 
-            articles = yield executor.submit( groupModel.getGroupArticleList, group_id )
+            articles = yield executor.submit( groupModel.getGroupArticleList, dt_header_id )
             tplControl.articlesList = articles 
-            logging.info( 'GroupDeskTop Get:: 2 = ' + str(True))
-            members = yield executor.submit( groupModel.getGroupMembersleList, group_id )
+            logging.info( 'GroupDeskTop Get:: dt_header_id = ' + str(dt_header_id))
+            logging.info( 'GroupDeskTop Get:: groupModel = ' + str(groupModel))
+            members = yield executor.submit( groupModel.getGroupMembersleList, dt_header_id )
             tplControl.groupMembersList = members 
-            logging.info( 'GroupDeskTop Get:: 3 = ' + str(True))
+            logging.info( 'GroupDeskTop Get:: members = ' + str(members))
 
-            if int(group_id) == 0:
+            if int(dt_header_id) == 0:
                 tplControl.link = 'group_desk_top'
             else:
-                tplControl.link='group_desk_top/' + str(group_id)   
+                tplControl.link='group_desk_top/' + str(dt_header_id)   
 
             logging.info( 'GroupDeskTop Get:: 4 = ' + str(True))
 
@@ -175,20 +177,20 @@ class GroupDeskTop(BaseHandler):
 
     @tornado.web.authenticated
     @gen.coroutine
-    def post(self, group_id=0):
+    def post(self, dt_header_id=0):
         try:
             author = self.get_current_user() 
     
             groupModel = Group()
     
-            groupModel.group_id = int(self.get_argument("id", 0))
+            groupModel.dt_header_id = int(self.get_argument("id", 0))
             groupModel.group_title = self.get_argument("title")
             groupModel.group_annotation = self.get_argument("annotation")
             groupModel.group_status = self.get_argument("status", 'pbl')                                
             
             rez = yield executor.submit( groupModel.save, author.dt_header_id )
             
-            self.redirect("/group_desk_top/" + str(groupModel.group_id))
+            self.redirect("/group_desk_top/" + str(groupModel.dt_header_id))
         except Exception as e:
             logging.info( 'GroupDeskTop POST!!! (Save):: Exception as et = ' + str(e))
 #             error = Error ('500', 'что - то пошло не так :-( ')

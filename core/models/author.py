@@ -220,10 +220,14 @@ class Author(Model):
                     self.__setattr__(objValue,resList[0].__getattribute__(objValue) )
             #  вот тут надо посмотреть - что у нс с данными пользователя происходит - и посмотреть - что ложится в сесию. :-) 
             
-#             logging.info(' login:: After Load self = ' + str(self))
+            logging.info(' login:: After Load self = ' + str(self))
             
             _private_key = bytes(self.private_key)
+            del self.private_key
+#             self.private_key = _private_key
             _private_key_hash = bytes(self.private_key_hash)
+            del self.private_key_hash
+            self.private_key_hash = _private_key_hash
             _public_key = bytes(self.public_key)
             del self.public_key
             # пока мы знаем пароль, надо получить и положить в данные пользователя, в сессию, его АСКРЫТЫЙ приватный ключик!!!!
@@ -243,7 +247,8 @@ class Author(Model):
                     self.openPrivateKey = None
                     self.public_key = None
 #                     raise WikiException(LOAD_PRIVATE_KEY_ERROR)
-            
+
+            logging.info(' login:: END self = ' + str(self))
             return self
         else:
             raise WikiException(LOGIN_ERROR)
@@ -317,13 +322,51 @@ class Author(Model):
         return res
  
     def unserializePyblicKey(self, _public_key):
-        del self.public_key
         try:
+            del self.public_key
             cip = CipherWrapper()
             public_key = cip.rsaPubUnSerialiation(_public_key)
             self.public_key = public_key
         except :
+            logging.error(' insert exception:: sqlStr = ' + sqlStr )
             self.public_key = None
+
+
+    def unserializePrivateKey(self, _private_key):
+        """
+        Сделать из ОТКРЫТОГО приватного ключа объект - для загрузки в Автора.
+        :param _private_key - текстовый вариант приватного ключа (НЕ ЗАКРЫТ!!!!) 
+        :Return: отдаем ОБЪЕКТ класса "....openssl.rsa._RSAPrivateKey" 
+        
+        """
+        try:
+            del self.openPrivateKey
+            cip = CipherWrapper()
+            self.openPrivateKey =  cip.rsaPrivateUnSerialiation( _private_key )
+        except :
+            self.openPrivateKey =  ''
+            
+
+#     def serializeKeys(self):
+#         """
+#         Сделать из РАБОЧЕГО приватного ключа строковеое предствление, 
+#         Для последующего хранения в сесии, допустим.
+#         :param _private_key - ОБЪЕКТ класса "....openssl.rsa._RSAPrivateKey"  
+#         :Return: отдаем текстовый вариант приватного ключа (НЕ ЗАКРЫТ!!!!) 
+#         
+#         """
+#         try:
+#             cip = CipherWrapper()
+#             tmp = cip.rsaPrivateSerialiation( self.public_key )
+#             del self.public_key
+#             self.public_key = tmp
+#             tmp = cip.rsaPrivateSerialiation( self.openPrivateKey )
+#             del self.public_key
+#             del self.public_key
+#         except :
+#             
+#             return ''
+        
 
     def parsingAuthor(self, autorStruct):
         """
@@ -341,9 +384,84 @@ class Author(Model):
              
         return newAuthor                  
 
-       
+
     def publicKey(self):
         return self.public_key       
     
 
+    def parsing(self, picledAutor):
+        """
+        на входе у нас строка - сериализованный автор, который, пока лежит в сесии,
+        Главное, у этого автор  - открытый приватный ключ, в текстовом виде.  
+        его надо разобрать, и превратить в полноценного автора, с которым РАБОТАТЬ.
+        ну, и, естественно, загрузить его в "селф"
+        
+        """
+        newAuthor = Author()
+        newAuthor = pickle.loads(picledAutor)
+        self =  self.parsingAuthor() #  разберем все поля, кроме приватного ключа       
+
+        _private_key = bytes(newAuthor.private_key)
+        del newAuthor.private_key
+        if _private_key != b'' and _private_key != None:
+            newAuthor.unserializePrivateKey(_private_key)
+
+        if  newAuthor.private_key_hash != None and newAuthor.private_key_hash != b'':
+#             _private_key_hash = newAuthor.private_key_hash
+            _private_key_hash = bytes(newAuthor.private_key_hash)
+
+            del newAuthor.private_key_hash
+            newAuthor.private_key_hash = _private_key_hash 
+            #pickle.loads(_private_key_hash)
+            
+
+            
+    def serializationAuthor(self):
+        """
+        Подготовить к сериализации - унас 2 поля  - private_key и public_key 
+        являются объектами, 
+        вот их и надо превратить в текст.
+        :Return: отдаем СТРОКУ с сериализованным объектом 
+        """
+        # pickle.dumps(_authorLoc.prepareForSerialization())
+
+#         logging.info( 'prepareForSerialization  self = ' + str(self))
+
+        newAuthor = Author()
+        cip = CipherWrapper()
+        newAuthor = self.preparingForPicked (self)
+        if newAuthor.openPrivateKey != None and newAuthor.openPrivateKey != b'': 
+            _openPrivateKey = cip.rsaPrivateSerialiation(newAuthor.openPrivateKey)
+            del newAuthor.openPrivateKey
+            newAuthor.openPrivateKey = _openPrivateKey
+        if newAuthor.public_key != None and newAuthor.public_key != b'':
+            _public_key = newAuthor.public_key
+            del newAuthor.public_key 
+            newAuthor.public_key = cip.rsaPubSerialiation(_public_key)
+        return pickle.dumps(newAuthor.__dict__)    
  
+ 
+    def unSerializationAuthor(self, authorPicle):
+        """
+        Получить строку, и сделать из нее Объект - Автора.
+        :param Строку с Сериализованым автором 
+        :Return: отдаем ОБЪЕКТ Автора.
+        """
+#         logging.info( 'prepareForSerialization  self = ' + str(self))
+
+        cip = CipherWrapper()
+        authorDict = pickle.loads(authorPicle)
+        self.parsingOfPicked(authorDict) 
+        
+        if self.openPrivateKey != None and self.openPrivateKey != b'': 
+            _openPrivateKey = cip.rsaPrivateUnSerialiation(self.openPrivateKey)
+            del self.openPrivateKey
+            self.openPrivateKey = _openPrivateKey
+                
+        if self.public_key != None and self.public_key != b'':
+            _public_key = self.public_key
+            del self.public_key 
+            self.public_key = cip.rsaPubUnSerialiation(_public_key)
+
+        logging.info(' unSerializationAuthor:: self = ' + str(self))   
+

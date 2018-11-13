@@ -9,6 +9,12 @@
 
 # import .BaseHandler
 import logging
+
+logging.basicConfig(filename='test.log', level=logging.INFO)
+FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
+logging.basicConfig(format=FORMAT)
+
+
 # import pickle
 import json
 

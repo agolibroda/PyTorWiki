@@ -104,26 +104,18 @@ class BaseHandler(tornado.web.RequestHandler):
 
         self.author = SingletonAuthor()
         try:
-            cookie = self.get_secure_cookie("wiki_author")
-            logging.info('BaseHandler:: get_current_user:: cookie = '+ str(cookie))
-            authorId = 0
-            if not cookie:
+            picledAutor = self.get_secure_cookie("wiki_author")
+            logging.info('BaseHandler:: get_current_user:: picledAutor = '+ str(picledAutor))
+            if not picledAutor:
                 return None
-            authorId = int(cookie)
-#             logging.info('BaseHandler:: get_current_user:: get_secure_cookie authorId '+ str(authorId))
-            if not authorId or authorId == 0: return None
-#             logging.info('BaseHandler:: get_current_user:: 11 self.author '+ str(self.author))
-            if self.author.dt_header_id != authorId:
-                self.author = self.author.get(authorId)
-#                 self.author =  yield executor.submit( self.author.get, authorId)
-#             logging.info('BaseHandler:: get_current_user:: 22 self.author '+ str(self.author))
-
+            self.author.parsing(picledAutor) # parsing(self, picledAutor)
+            return self.author
         except Exception as e:
             logging.info('BaseHandler:: get_current_user:: Have Error!!! '+ str(e))
             return None
-#             authorId = 0
 
         return self.author
+    
 
     def any_author_exists(self):
         return bool(self.get_current_user())

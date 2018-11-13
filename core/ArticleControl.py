@@ -75,14 +75,14 @@ class HomeHandler(BaseHandler):
             artHelper = HelperArticle()
             articleId = config.options.main_page_id
 
-            logging.info( 'HomeHandler get article articleId = ' + str(articleId))
+#             logging.info( 'HomeHandler get article articleId = ' + str(articleId))
             
             (article, fileList) = yield executor.submit( artHelper.getArticleById, articleId)
-            logging.info( 'HomeHandler get article = ' + str(article))
+#             logging.info( 'HomeHandler get article = ' + str(article))
     
     #         templateName = "admin/article.html"
             templateName = os.path.join(config.options.tmpTplPath, str(article.article_template_id) + config.options.tplExtension)
-            logging.info( 'HomeHandler get templateName = ' + str(templateName))
+#             logging.info( 'HomeHandler get templateName = ' + str(templateName))
             self.render(templateName, article=article, fileList=fileList, link='/compose', page_name='Редактирование')
         except Exception as e:
             logging.info( 'Save:: Exception as et = ' + str(e))
@@ -152,19 +152,19 @@ class ArticleHandler(BaseHandler):
 
     @gen.coroutine
     def get(self, articleName):
-        logging.info( 'ArticleHandler get articleName = ' + str(articleName))
+#         logging.info( 'ArticleHandler get articleName = ' + str(articleName))
 
         try:
             
             spectator = self.get_current_user()
-            logging.info( 'ArticleHandler get spectator = ' + str(spectator))
+#             logging.info( 'ArticleHandler get spectator = ' + str(spectator))
             
             artHelper = HelperArticle()
             articleLink = articleName.strip().strip(" \t\n")
             articleLink =  articleLink.lower().replace(' ','_')
             articleLink =  articleLink.replace('__','_')
 
-            logging.info( 'ArticleHandler get articleLink = ' + str(articleLink))
+#             logging.info( 'ArticleHandler get articleLink = ' + str(articleLink))
             
             (article, fileList) = yield executor.submit( artHelper.getArticleByName, spectator.author_id, articleLink )
        
@@ -174,8 +174,8 @@ class ArticleHandler(BaseHandler):
     
             templateName = os.path.join(config.options.tmpTplPath, str(article.article_template_id) + config.options.tplExtension)
     
-            logging.info( 'ArticleHandler get templateName = ' + str(templateName))
-            logging.info( 'ArticleHandler:: article = ' + str(article))
+#             logging.info( 'ArticleHandler get templateName = ' + str(templateName))
+#             logging.info( 'ArticleHandler:: article = ' + str(article))
     
             self.render(templateName, article=article, fileList=fileList, link='/compose', page_name='Редактирование')
         except Exception as e:
@@ -219,7 +219,7 @@ class ComposeHandler(BaseHandler):
 
             
             if articleName != '' and hash == '':
-                logging.info( 'ComposeHandler get articleName = ' + str(articleName))
+#                 logging.info( 'ComposeHandler get articleName = ' + str(articleName))
                 
                 articleLink = articleName.strip().strip(" \t\n")
                 articleLink =  articleLink.lower().replace(' ','_')
@@ -232,8 +232,8 @@ class ComposeHandler(BaseHandler):
                 """
                 Выберем статью по ее ХЕШУ - это, скорее всего, будет одна из старых версий.... 
                 """
-                logging.info( 'ComposeHandler get hash = ' + str(hash))
-                logging.info( 'ComposeHandler get self.autor.author_id = ' + str(self.autor.author_id))
+#                 logging.info( 'ComposeHandler get hash = ' + str(hash))
+#                 logging.info( 'ComposeHandler get self.autor.author_id = ' + str(self.autor.author_id))
                 (article, fileList) = yield executor.submit( artHelper.getArticleHash, self.autor.author_id, hash )
 #             elif articleName != '':
 #                 artHelper.setArticleTitle (articleName)
@@ -273,7 +273,7 @@ class ComposeHandler(BaseHandler):
 # {{ parameters.article.article_id }}
 
 #             logging.info( ' ComposeHandler: GET: tplControl = ' + toStr(tplControl))
-            logging.info( ' ComposeHandler: GET: tplControl.article = ' + toStr(tplControl.article))
+#             logging.info( ' ComposeHandler: GET: tplControl.article = ' + toStr(tplControl.article))
             self.render("compose.html", parameters= tplControl)
         except Exception as e:
             logging.info( 'Get:: Exception as et = ' + toStr(e))
@@ -295,7 +295,7 @@ class ComposeHandler(BaseHandler):
         сохранить.
         """
         try:
-            logging.info( 'ComposeHandler:: post articleName = ' + str(articleName))
+#             logging.info( 'ComposeHandler:: post articleName = ' + str(articleName))
     
             self.autor = self.get_current_user()
 #             logging.info( 'ComposeHandler:: post self.autor = ' + str(self.autor))
@@ -323,9 +323,9 @@ class ComposeHandler(BaseHandler):
             helperArticle = HelperArticle()
             helperArticle.setModel(artModel)
 
-            logging.info( 'ComposeHandler:: Before Save! self.autor.author_id = ' + str(self.autor.author_id))
-            logging.info( 'ComposeHandler:: Before Save! templateDir = ' + str(templateDir))
-            logging.info( 'ComposeHandler:: Before Save! article_pgroipId = ' + str(article_pgroipId))
+#             logging.info( 'ComposeHandler:: Before Save! self.autor.author_id = ' + str(self.autor.author_id))
+#             logging.info( 'ComposeHandler:: Before Save! templateDir = ' + str(templateDir))
+#             logging.info( 'ComposeHandler:: Before Save! article_pgroipId = ' + str(article_pgroipId))
      
             rez = yield executor.submit( helperArticle.сomposeArticleSave, self.autor, templateDir, article_pgroipId )
     
@@ -404,7 +404,7 @@ class RevisionViewHandler(BaseHandler):
     #             return
             fileControl = File()
     
-            logging.info( 'RevisionViewHandler:: revision = ' + str(revision))
+#             logging.info( 'RevisionViewHandler:: revision = ' + str(revision))
             self.render("revision.html", revision=revision, link='/compose', page_name='Редактирование')
         except Exception as e:
             logging.info( 'Save:: Exception as et = ' + str(e))

@@ -39,8 +39,8 @@
 					  {% for oneGroup in parameters.autorGroupList %} 
 					  
 					<!-- class="active"  -->
-					        <li {% if parameters.link == 'group_desk_top/'+str(oneGroup.group_id) %} class="active"  {% end %} ><a href="/group_desk_top/{{oneGroup.group_id}}">
-					        {% if parameters.link == 'group_desk_top/'+str(oneGroup.group_id)  %}<i class="fa fa-folder-open fa-fw">{% else %}<i class="fa fa-folder fa-fw">{% end %}
+					        <li {% if parameters.link == 'group_desk_top/'+str(oneGroup.dt_header_id) %} class="active"  {% end %} ><a href="/group_desk_top/{{oneGroup.dt_header_id}}">
+					        {% if parameters.link == 'group_desk_top/'+str(oneGroup.dt_header_id)  %}<i class="fa fa-folder-open fa-fw">{% else %}<i class="fa fa-folder fa-fw">{% end %}
 					            <div class="icon-bg bg-blue"></div>
 					        </i><span class="menu-title">{{oneGroup.group_title}}</span></a>
 					        </li>

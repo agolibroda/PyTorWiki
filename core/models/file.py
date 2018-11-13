@@ -91,12 +91,17 @@ class File(Model):
 #             self.insert()
   
     def __init__(self):
-        Model.__init__(self, 'files')   
+        Model.__init__(self)   
         self.file_id = 0
         self.file_name = ''
         self.file_inside_name = ''
         self.file_extension = ''
         self.error = ''
+        self.setDataStruct(Model.TableDef( tabName='files', 
+                                      idFieldName='file_id',
+                                      mainPrimaryList =['file_id'],
+                                      listAttrNames=['file_id', 'file_name','file_inside_name', 'file_extension','file_name']))
+
 
 
     def getRealFileName(self, fname, storageDir):
@@ -198,8 +203,7 @@ class File(Model):
         
         operationFlag = 'I'
         sha_hash_sou = file_inside_name +  fileName  + fileExtension + str(article_id) + str( author_id)
-        mainPrimaryObj = {'file_id': self.file_id }
-        self.file_id = Model.save(self, author_id, operationFlag, mainPrimaryObj, sha_hash_sou, 'file_id')
+        self.file_id = Model.save(self, author_id, operationFlag, sha_hash_sou)
         
         kross = self.Kross()
 #         kross.file_kros_flag
@@ -216,7 +220,6 @@ class File(Model):
 #        нужен специальный шаблон для показухи картинок...  и создавать картиночную страницу, с ТЕМшаблоном!!!!
 #       подменять в шаблоне имя   
 #       а потом добавить туда и новый кросс...
-
 
         artHelper = HelperArticle()
          

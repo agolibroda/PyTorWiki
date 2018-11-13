@@ -496,6 +496,8 @@ class Model: #Connector:
             if str(anyParams.get('orderStr', ''))    != '':  sqlStr += ' ORDER BY ' + str(anyParams.get('orderStr'))
             if str(anyParams.get('limitStr', ''))    != '':  sqlStr += ' LIMIT ' + str(anyParams.get('limitStr'))
 
+            logging.error(' select :: sqlStr =  ' + str (sqlStr) )
+
             _loDb.execute(sqlStr)
             sourse = _loDb.fetchall()
             outListObj = self.dict2obj(sourse)    
@@ -676,6 +678,35 @@ class Model: #Connector:
         return objValuesNameList
 
 
+    def preparingForPicked (self, modelObject):
+        """
+        Подготовить модель для последующей сериаизаии
+        (удаляем всякую служебку - все, что начинается с "_...") 
+        :param Объект, который нужно подготовить к сериализации 
+        :Return: отдаем ОБЪЕКТ, в котором нет ничего, кроме данных 
+        """
+        class Local:pass
+        model2Picled = Local()
+        objValuesNameList = list(modelObject.__dict__.keys())
+        for objValue in objValuesNameList:
+            if objValue.find('_') != 0:
+                model2Picled.__setattr__(objValue, modelObject.__getattribute__(objValue) )
+        return model2Picled
+
+
+    def parsingOfPicked (self, modelDict):
+        """
+        Подготовить модель для последующей сериаизаии
+        (удаляем всякую служебку - все, что начинается с "_...") 
+        :param Объект, который нужно подготовить к сериализации 
+        :Return: отдаем ОБЪЕКТ, в котором нет ничего, кроме данных 
+        """
+#         logging.info(' parsingOfPicked:: modelDict = ' + str(modelDict))   
+             
+        objValuesNameList = list(modelDict.keys())
+#         logging.info(' parsingOfPicked:: objValuesNameList = ' + str(objValuesNameList))   
+        for objValue in objValuesNameList:
+            self.__setattr__(objValue, modelDict[objValue] )
 
 
 

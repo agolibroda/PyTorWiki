@@ -144,7 +144,7 @@ class Group(Model):
                     'dt_headers.dt_header_id, author_name, author_surname, author_role, author_phon, author_email, author_create, dt_headers.public_key ',
                     'authors, dt_headers',
                         {
-                    'whereStr': " members.dt_header_id = authors.dt_header_id AND dt_headers.dt_header_id = authors.dt_header_id AND " +\
+                    'whereStr': " members.group_id = authors.dt_header_id AND dt_headers.dt_header_id = authors.dt_header_id AND " +\
                     " members.actual_flag = 'A' AND authors.actual_flag = 'A' AND "
                     " members.group_id = " + str(groupId) , # строка набор условий для выбора строк
                     'orderStr': ' author_name, author_surname ', # строка порядок строк
