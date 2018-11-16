@@ -257,7 +257,7 @@ class Group(Model):
                     'dt_headers.dt_header_id,  group_title, group_annotation,  group_status  ' , # строка - чего хотим получить из селекта
                     'dt_headers', #'authors',  # строка - список таблиц 
                     {
-                     'whereStr': " groups.actual_flag = 'A' "
+                     'whereStr': " groups.actual_flag = 'A' AND groups.dt_header_id = dt_headers.dt_header_id "
                      } #  все остальные секции селекта
                     )
 #         logging.info('Author:: get:: resList = ')

@@ -375,7 +375,7 @@ class Model: #Connector:
                 isValue = self.getValueIdFieldName(self._dataStruct)
             # и вообще, нужно ли нам сохнаняит "заголовок"???
             if headParamsObj != None :
-                if (isValue == None or isValue == 0) :
+                if (isValue == None or int(isValue) == 0) :
                     # сохраним заголовок, если он определен для ЭТОГО класса объектов.
                     sqlStr = "INSERT INTO " + self._headStruct.getTableName() +" ( " + headParamsObj.strListAttrNames + ") VALUES " +\
                         "( " + headParamsObj.strListAttrValues + " ) returning " + self._headStruct.getIdFieldName() + "; "
@@ -398,7 +398,7 @@ class Model: #Connector:
                             toValueList.extend(listWhere.listAttrValues)
                             _loDb.execute(sqlStr, tuple(toValueList))
             
-            if isValue != None and isValue > 0 :
+            if isValue != None and int(isValue) > 0 :
                 list = []
                 if self._dataStruct.getMainPrimaryList() != None:
 #                     Надо построить слварь из всех полей, записанных в mainPrimaryList

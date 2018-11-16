@@ -34,7 +34,6 @@ import config
 
 from core.Helpers           import *
 
-from core.models.group      import Group
 
 import core.models
 
@@ -48,35 +47,6 @@ from core.models.author     import Author
 # from core.control.article import ControlArticle 
 
 
-
-# A thread pool to be used for password hashing with bcrypt.
-executor = concurrent.futures.ThreadPoolExecutor(2)
-
-
-@singleton
-class TemplateParams:
-    """
-     место хранения всех параметров, которые надо передавать в шаблон        
-     
-    """
-#     @gen.coroutine
-    def make (self, author):
-        """
-        для работы с формами, туда надо передать некоорое количество данных. 
-        все эти данные надо собрать в объкт (одиночку) TemplateParams
-        и пользоваться его данными
-          
-        """
-#         logging.info( ' makeTplParametr:: author = ' + toStr(author))
-#         if not hasattr(self, 'autorGroupList'): 
-
-        self.author = author
-        groupModel = Group()
-#         self.autorGroupList = yield executor.submit( groupModel.grouplistForAutor, self.author.author_id )
-        self.autorGroupList = groupModel.grouplistForAutor( self.author.dt_header_id )
-         
-        logging.info (' makeTplParametr:: self = ' + toStr( self))
-     
 
 @singleton
 class SingletonAuthor(Author):
@@ -103,19 +73,19 @@ class BaseHandler(tornado.web.RequestHandler):
 # надо проверить - то, что лежит в модеи!!!!
 
         self.author = SingletonAuthor()
+#         logging.info('BaseHandler:: get_current_user:: START self.author = '+ str(self.author))
         try:
-            picledAutor = self.get_secure_cookie("wiki_author")
-            logging.info('BaseHandler:: get_current_user:: picledAutor = '+ str(picledAutor))
-            if not picledAutor:
-                return None
-            self.author.parsing(picledAutor) # parsing(self, picledAutor)
+            if self.author.dt_header_id == 0:
+                picledAutor = self.get_secure_cookie("wiki_author")
+                if not picledAutor:
+                    return None
+                self.author.unSerializationAuthor(picledAutor)
+#                 logging.info('BaseHandler:: get_current_user:: END self.author = '+ str(self.author))
             return self.author
         except Exception as e:
             logging.info('BaseHandler:: get_current_user:: Have Error!!! '+ str(e))
             return None
 
-        return self.author
-    
 
     def any_author_exists(self):
         return bool(self.get_current_user())

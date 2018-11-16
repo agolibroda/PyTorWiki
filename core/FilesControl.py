@@ -39,13 +39,16 @@ import core.models
 from core.models.author import Author
 from core.models.article import Article
 from core.models.file import File
-from core.models.template import Template
+from core.models.template import Template, TemplateParams
 
 from core.helpers.article import HelperArticle 
 
 from core.BaseHandler import *
 from core.WikiException import *
 
+
+# A thread pool to be used for password hashing with bcrypt.
+executor = concurrent.futures.ThreadPoolExecutor(2)
 
 
 
@@ -68,9 +71,10 @@ class UploadHandler(BaseHandler):
 #         article_id = self.get_argument("id", 0)
         logging.info( 'UploadHandler:: get article_id =  ' + str(article_id) )
         curentAuthor = yield executor.submit(self.get_current_user ) 
-        logging.info( 'MyProfileHandler GET :: curentAuthor = ' + str(curentAuthor))
+#         logging.info( 'MyProfileHandler GET :: curentAuthor = ' + str(curentAuthor))
 
-        if not curentAuthor.author_id: raise tornado.web.HTTPError(404, "author not found")
+        if not curentAuthor.dt_header_id or curentAuthor.dt_header_id == 0 : 
+            raise tornado.web.HTTPError(404, "author not found")
         
         tplControl = TemplateParams()
 #         tplControl.make(curentAuthor)

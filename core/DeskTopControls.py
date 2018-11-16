@@ -39,7 +39,7 @@ from core.models.group      import Group
 from core.helpers.article import HelperArticle 
 
 
-from core.models.template   import Template
+from core.models.template   import Template, TemplateParams
 
 from core.BaseHandler import *
 from core.WikiException import *
@@ -73,7 +73,7 @@ class PersonalDeskTop(BaseHandler):
         try:
             author = self.get_current_user() 
     
-            logging.info( 'PersonalDeskTop get:: author = ' + str(author))
+#             logging.info( 'PersonalDeskTop get:: author = ' + str(author))
     
             tplControl = TemplateParams()
             tplControl.make(author)
@@ -217,7 +217,8 @@ class GroupAdmDeskTop(BaseHandler):
 
         """
         try:
-            self.render(config.options.adminTplPath+"admin_home.html", articles=articles, tplCategory=config.options.tpl_categofy_id )
+#             self.render(config.options.adminTplPath+"admin_home.html", articles=articles, tplCategory=config.options.tpl_categofy_id )
+            self.render(config.options.adminTplPath+"admin_home.html" )
         except Exception as e:
             logging.info( 'Save:: Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
@@ -242,7 +243,37 @@ class SysAdmDeskTop(BaseHandler):
 
         """
         try:
-            self.render(config.options.adminTplPath+"admin_home.html", articles=articles, tplCategory=config.options.tpl_categofy_id )
+
+            author = self.get_current_user() 
+
+            if not author.dt_header_id: return None
+
+            tplControl = TemplateParams()
+            tplControl.make(author)
+            tplControl.page_name = 'Страница Супер Администратора' 
+            tplControl.link='sys_adm_desk_top'
+
+            # Выбрать все Статьи одного автора.
+            artHelper = HelperArticle()
+
+            # Выбрать все статьи в системе. 
+            tplControl.allArticlesList = yield executor.submit( artHelper.getListArticlesAll, author.dt_header_id )
+
+#             logging.info( 'PersonalDeskTop get:: tplControl.allArticlesList = ' + toStr(tplControl.allArticlesList))
+
+            # выберем все группы в Автора.
+            groupModel = Group()
+            tplControl.autorGroupList = yield executor.submit( groupModel.grouplistForAutor, author.dt_header_id )
+            tplControl.allGroupsList = yield executor.submit( groupModel.list )
+
+#             logging.info( 'PersonalDeskTop get:: tplControl.autorGroupList = ' + toStr(tplControl.autorGroupList))
+#             logging.info( 'PersonalDeskTop get:: tplControl.allGroupsList = ' + toStr(tplControl.allGroupsList))
+
+            # Выьерем всех Авторов в системе.
+            authorModel = Author()
+            tplControl.allAuthorsList = yield executor.submit( authorModel.list )
+            
+            self.render(config.options.adminTplPath+"admin_home.html", parameters= tplControl )
         except Exception as e:
             logging.info( 'Save:: Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')

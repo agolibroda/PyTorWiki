@@ -313,12 +313,8 @@ class Author(Model):
 
         res = []
         resList = self.select(selectStr, fromStr, anyParams)
-        logging.info('Author:: list:: resList = ' + str(resList))
-                
         for oneAuthor in resList:
-            logging.info('Author:: list:: oneAuthor = ' + str(oneAuthor))
             res.append(self.parsingAuthor(oneAuthor))
-        
         return res
  
     def unserializePyblicKey(self, _public_key):

@@ -13,7 +13,7 @@
                         <div class="icon-bg bg-orange"></div>
                     </i><span class="menu-title">{{ _("Create new wiki") }}</span></a></li>
 {% if current_user.author_role == "admin"  %}
-                    <li {% if parameters.link == 'admin_desk_top' %} class="active" {% end %}><a href="/admin_desk_top">
+                    <li {% if parameters.link == 'sys_adm_desk_top' %} class="active" {% end %}><a href="/sys_adm_desk_top">
                     	<i class="fa fa-th-list fa-fw">
                         <div class="icon-bg bg-blue"></div>
                     </i><span class="menu-title">{{ _("System Admin Desk Top") }} </span></a>

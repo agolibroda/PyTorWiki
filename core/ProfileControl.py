@@ -98,7 +98,7 @@ class AuthCreateHandler(BaseHandler):
             logging.info( 'AuthCreateHandler  post rez = ' + str(rez))
             logging.info( 'AuthCreateHandler  post authorLoc = ' + str(authorLoc))
             
-            self.set_secure_cookie("wiki_author", authorLoc.prepareForSerialization())
+            self.set_secure_cookie("wiki_author", authorLoc.serializationAuthor())
             self.redirect(self.get_argument("next", "/personal_desk_top"))
         except Exception as e:
             logging.info( 'Save:: Exception as et = ' + str(e))
@@ -136,7 +136,7 @@ class AuthLoginHandler(BaseHandler):
             if rezult:
                 logging.info( 'AuthCreateHandler  post authorloginLoad = ' + str(authorloginLoad))
                 
-                self.set_secure_cookie("wiki_author", authorloginLoad.prepareForSerialization())
+                self.set_secure_cookie("wiki_author", authorloginLoad.serializationAuthor())
                 self.redirect(self.get_argument("next", "/personal_desk_top"))
             else:
                 raise WikiException( 'incorrect login/password' )
@@ -247,7 +247,7 @@ class MyProfileHandler(BaseHandler):
             rez = yield executor.submit( authorLoc.save )
             logging.info( 'MyProfileHandler  post rez = ' + str(rez))
             
-            self.set_secure_cookie("wiki_author", authorLoc.prepareForSerialization())
+            self.set_secure_cookie("wiki_author", authorLoc.serializationAuthor())
             
     #         tplControl.make(self.autor)
             tplControl.page_name = authorLoc.author_name + ' '+ authorLoc.author_surname

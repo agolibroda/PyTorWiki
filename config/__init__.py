@@ -43,6 +43,8 @@ define("adminTplPath", default=r"admin/", help="Path to Admin Area")
 
 define("tmpTplPath", default=r"tmp", help="Path to user`s Template Area")
 define("tplExtension", default=r".html", help="Template file Extension")
+define("templateDir", default=r"", help="Template Dir")
+
 
 
 define("list_categofy_id", default=1, help="Information Page Category")

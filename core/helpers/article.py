@@ -28,6 +28,8 @@ from core.models.article    import Article
 from core.models.file       import File
 from core.models.group      import Group
 
+from core.models.template   import Template, TemplateParams
+
 from core.WikiException     import *
 
 
@@ -52,17 +54,21 @@ class HelperArticle():
     def setModel(self, article):
         self.artModel = article
 
+
     def getArticleById(self, articleId):
         logging.info( ' getArticleById:: articleId = ' + str(articleId))
         article = self.artModel.getById( articleId )
         if not article: raise tornado.web.HTTPError(404)
+        
+        templateName = self.temtlatePrepare(article.article_template_id) # article_template_id
+        
         fileModel = File()
 # вот тут надо посмотреть - что - то не работает выбор файлов!!!!!!!
         fileList = fileModel.getFilesListForArticle( articleId, config.options.to_out_path)
             
 #             logging.info( 'getArticleById:: article = ' + str(article))
 #             logging.info( 'getArticleById:: fileList = ' + str(fileList))
-        return (article, fileList)
+        return (article, fileList, templateName)
      
      
     
@@ -116,7 +122,7 @@ class HelperArticle():
             
 
         
-    def getArticleByName(self, spectatorId, articleName):
+    def getArticleByName(self, spectator, articleName):
         """
         получить статью по ее названию (не линка, а название!!!!! )
         хотя, по - идее, надо поредакитровать и сначала превратить навание в линку...
@@ -127,20 +133,28 @@ class HelperArticle():
         """
         fileModel = File()
         articleLink = articleName.strip().strip(" \t\n")
-        article = self.artModel.get( articleLink, spectatorId )
+        article = self.artModel.get( articleLink, spectator )
+        
+        
+        templateName = self.temtlatePrepare(article.article_template_id) # article_template_id
+
         fileList =  fileModel.getFilesListForArticle( article.article_id, 
                                                     config.options.to_out_path)
-        return (article, fileList)
+        
+        logging.info( 'getArticleByName article = ' + str(article))
+        logging.info( 'getArticleByName fileList = ' + str(fileList))
+        logging.info( 'getArticleByName templateName = ' + str(templateName))
+        return (article, fileList, templateName)
 
 
-    def getArticleHash(self, spectatorId, articleHash):
+    def getArticleHash(self, spectator, articleHash):
         """
         получить статью по ее ХЕШУ (не линка, а название!!!!! )
         хотя, по - идее, надо поредакитровать и сначала превратить навание в линку...
         
         """
         fileModel = File()
-        article = self.artModel.getByUsingHash( spectatorId, articleHash )
+        article = self.artModel.getByUsingHash( spectator, articleHash )
         fileList =  fileModel.getFilesListForArticle( article.article_id, 
                                                     config.options.to_out_path)
         return (article, fileList)
@@ -155,20 +169,20 @@ class HelperArticle():
             self.artModel.begin()
 
             article = self.artModel.save(author, templateDir)
-            logging.info( 'сomposeArticleSave:: authorId = ' + str(author))
-            logging.info( 'сomposeArticleSave:: article_pgroipId = ' + str(article_pgroipId))
-            logging.info( 'сomposeArticleSave:: article.article_id = ' + str(article.article_id))
+#             logging.info( 'сomposeArticleSave:: author = ' + str(author))
+#             logging.info( 'сomposeArticleSave:: article_pgroipId = ' + str(article_pgroipId))
+#             logging.info( 'сomposeArticleSave:: article.article_id = ' + str(article.article_id))
       
             if int(article_pgroipId) > 0 :
                 groupModel = Group()
                 groupModel.librarySave(int(authorId), int(article_pgroipId), int(article.article_id), 'W')
                 
             self.artModel.commit()                
-            return True
+            return article
         except WikiException as e:   
 #             WikiException( ARTICLE_NOT_FOUND )
             logging.info( 'сomposeArticleSave:: e = ' + str(e))
-            return False
+            return None
 
         
 

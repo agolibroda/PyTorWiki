@@ -48,7 +48,6 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/", HomeHandler),
             (r"/index.html", HomeHandler),
-            
 
             (r"/compose", ComposeHandler), # (ArticleControl) редактор - в зависимости от роли запускателя (или, откуда оно запускается?) такой набор инструментов и покажем.
             (r"/compose/([^/]+)", ComposeHandler), # (ArticleControl)
@@ -105,6 +104,9 @@ class Application(tornado.web.Application):
             debug=True,
         )
         super(Application, self).__init__(handlers, **settings)
+        config.options.templateDir = settings['template_path']
+#         config.options.__setattr__('templateDir', settings['template_path']) 
+
         # Have one global connection to the wiki DB across all handlers
         
 

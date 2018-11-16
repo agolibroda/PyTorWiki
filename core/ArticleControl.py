@@ -38,7 +38,7 @@ import core.models
 from core.models.author import Author
 from core.models.article import Article
 from core.models.file import File
-from core.models.template import Template
+from core.models.template import Template, TemplateParams
 
 from core.helpers.article import HelperArticle 
 
@@ -77,12 +77,9 @@ class HomeHandler(BaseHandler):
 
 #             logging.info( 'HomeHandler get article articleId = ' + str(articleId))
             
-            (article, fileList) = yield executor.submit( artHelper.getArticleById, articleId)
+            (article, fileList, templateName) = yield executor.submit( artHelper.getArticleById, articleId)
 #             logging.info( 'HomeHandler get article = ' + str(article))
     
-    #         templateName = "admin/article.html"
-            templateName = os.path.join(config.options.tmpTplPath, str(article.article_template_id) + config.options.tplExtension)
-#             logging.info( 'HomeHandler get templateName = ' + str(templateName))
             self.render(templateName, article=article, fileList=fileList, link='/compose', page_name='Редактирование')
         except Exception as e:
             logging.info( 'Save:: Exception as et = ' + str(e))
@@ -166,18 +163,13 @@ class ArticleHandler(BaseHandler):
 
 #             logging.info( 'ArticleHandler get articleLink = ' + str(articleLink))
             
-            (article, fileList) = yield executor.submit( artHelper.getArticleByName, spectator.author_id, articleLink )
+            (article, fileList, tmlFullName) = yield executor.submit( artHelper.getArticleByName, spectator, articleLink )
        
        # а вот тут я должен получить и распарсить шаблон - как - текст в статьях (особой категории!!!!)
             if article.article_id == 0 : 
                 self.redirect("/compose/" + articleName ) 
     
-            templateName = os.path.join(config.options.tmpTplPath, str(article.article_template_id) + config.options.tplExtension)
-    
-#             logging.info( 'ArticleHandler get templateName = ' + str(templateName))
-#             logging.info( 'ArticleHandler:: article = ' + str(article))
-    
-            self.render(templateName, article=article, fileList=fileList, link='/compose', page_name='Редактирование')
+            self.render(tmlFullName, article=article, fileList=fileList, link='/compose', page_name='Редактирование')
         except Exception as e:
             logging.info( 'ArticleHandler Get:: Exception as et = ' + str(e))
             tplControl = TemplateParams()
@@ -226,15 +218,15 @@ class ComposeHandler(BaseHandler):
                 articleLink =  articleLink.replace('__','_')
     
                 
-                (article, fileList) = yield executor.submit( artHelper.getArticleByName, self.autor.author_id, articleLink )
+                (article, fileList, tplName) = yield executor.submit( artHelper.getArticleByName, self.autor, articleLink )
                 
             elif hash != '':
                 """
                 Выберем статью по ее ХЕШУ - это, скорее всего, будет одна из старых версий.... 
                 """
 #                 logging.info( 'ComposeHandler get hash = ' + str(hash))
-#                 logging.info( 'ComposeHandler get self.autor.author_id = ' + str(self.autor.author_id))
-                (article, fileList) = yield executor.submit( artHelper.getArticleHash, self.autor.author_id, hash )
+#                 logging.info( 'ComposeHandler get self.autor = ' + str(self.autor))
+                (article, fileList) = yield executor.submit( artHelper.getArticleHash, self.autor, hash )
 #             elif articleName != '':
 #                 artHelper.setArticleTitle (articleName)
 #                 pageName='Редактирование ' + articleName
@@ -300,13 +292,13 @@ class ComposeHandler(BaseHandler):
             self.autor = self.get_current_user()
 #             logging.info( 'ComposeHandler:: post self.autor = ' + str(self.autor))
             
-            if not self.autor or not self.autor.author_id: return None
+            if not self.autor or not self.autor.dt_header_id: return None
     
             artModel = Article()
     
             artModel.article_id = self.get_argument("id", 0)
             if artModel.article_id == 0:
-                artModel.author_id = self.autor.author_id
+                artModel.dt_header_id = self.autor.dt_header_id
             artModel.article_title = self.get_argument("title")
             artModel.article_annotation = self.get_argument("annotation")
             artModel.article_source = self.get_argument("sourse")
@@ -323,16 +315,15 @@ class ComposeHandler(BaseHandler):
             helperArticle = HelperArticle()
             helperArticle.setModel(artModel)
 
-#             logging.info( 'ComposeHandler:: Before Save! self.autor.author_id = ' + str(self.autor.author_id))
-#             logging.info( 'ComposeHandler:: Before Save! templateDir = ' + str(templateDir))
-#             logging.info( 'ComposeHandler:: Before Save! article_pgroipId = ' + str(article_pgroipId))
-     
-            rez = yield executor.submit( helperArticle.сomposeArticleSave, self.autor, templateDir, article_pgroipId )
-    
-    #         logging.info( 'ComposeHandler:: AFTER Save! artModel = ' + str(artModel))
+            afterSaveArticle = yield executor.submit( helperArticle.сomposeArticleSave, self.autor, templateDir, article_pgroipId )
+
+            # стоит проерить, если мы сохранили шаблон, тогда ндо удалить старый шаблон из директории, где лежат все пользовательские шаблоны!!!!!
+            if afterSaveArticle != None and int(afterSaveArticle.article_category_id) == int(config.options.tpl_categofy_id):
+                templateEnginer = Template()
+                templateEnginer.clean(afterSaveArticle.article_id)
             
             #  поучить ссылку н страничку, откуда был переход на нынешню...
-            if rez:
+            if afterSaveArticle:
 #                self.redirect("/" + tornado.escape.url_escape(article_link))
                 self.redirect("/personal_desk_top")
             else:
@@ -373,7 +364,7 @@ class RevisionsHandler(BaseHandler):
 #             articleId = self.get_argument("id", None)
             self.autor = self.get_current_user()
             artModel = Article()
-            revisions = yield executor.submit( artModel.getRevisionsList, articleId, self.autor.author_id)
+            revisions = yield executor.submit( artModel.getRevisionsList, articleId, self.autor.dt_header_id)
             
             tplControl = TemplateParams()
             tplControl.make(self.autor)
