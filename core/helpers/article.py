@@ -28,7 +28,7 @@ from core.models.article    import Article
 from core.models.file       import File
 from core.models.group      import Group
 
-from core.models.template   import Template, TemplateParams
+from .template   import Template, TemplateParams
 
 from core.WikiException     import *
 
@@ -59,8 +59,8 @@ class HelperArticle():
         logging.info( ' getArticleById:: articleId = ' + str(articleId))
         article = self.artModel.getById( articleId )
         if not article: raise tornado.web.HTTPError(404)
-        
-        templateName = self.temtlatePrepare(article.article_template_id) # article_template_id
+        templator = Template()
+        templateName = templator.temtlatePrepareById(article.article_template_id) # article_template_id
         
         fileModel = File()
 # вот тут надо посмотреть - что - то не работает выбор файлов!!!!!!!
@@ -135,8 +135,9 @@ class HelperArticle():
         articleLink = articleName.strip().strip(" \t\n")
         article = self.artModel.get( articleLink, spectator )
         
-        
-        templateName = self.temtlatePrepare(article.article_template_id) # article_template_id
+        templator = Template()
+        templateName = templator.temtlatePrepareById(article.article_template_id) # article_template_id
+        logging.info( 'getArticleByName 1 templateName = ' + str(templateName))
 
         fileList =  fileModel.getFilesListForArticle( article.article_id, 
                                                     config.options.to_out_path)
@@ -173,6 +174,12 @@ class HelperArticle():
 #             logging.info( 'сomposeArticleSave:: article_pgroipId = ' + str(article_pgroipId))
 #             logging.info( 'сomposeArticleSave:: article.article_id = ' + str(article.article_id))
       
+            # а вот сдесь я и грохну старый отрендериный шаблон!!!! и будет все НОРМ!!!!!
+            if int(article.article_category_id) == int(config.options.tpl_categofy_id):
+                wrkTpl = Template()
+                wrkTpl.clean(article.article_id) #save(article.article_id, htmlTextOut, templateDir)
+                
+            
             if int(article_pgroipId) > 0 :
                 groupModel = Group()
                 groupModel.librarySave(int(authorId), int(article_pgroipId), int(article.article_id), 'W')

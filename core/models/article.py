@@ -38,13 +38,7 @@ from .. import WikiException
 
 from core.Helpers      import *
 
-# import core.models.template
-# from .template import Template
-# from . import Template
-from core.models.template   import Template
-
 from core.WikiException     import *
-
 
 from ..constants.data_base import * 
 
@@ -207,10 +201,6 @@ class Article(Model):
 
 #             logging.info( 'save:: After SAVE = '  + str(self))
         
-            if int(self.article_category_id) == int(config.options.tpl_categofy_id):
-                wrkTpl = Template()
-                wrkTpl.save(self.article_id, htmlTextOut, templateDir)
-
         except Exception as e:
             logging.info( 'Save:: Exception as et = ' + str(e))
             logging.info( 'Save:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))

@@ -36,13 +36,13 @@ from core.models.file       import File
 
 from core.models.group      import Group
 
-from core.helpers.article import HelperArticle 
+from core.helpers.article   import HelperArticle 
 
 
-from core.models.template   import Template, TemplateParams
+from core.helpers.template  import Template, TemplateParams
 
-from core.BaseHandler import *
-from core.WikiException import *
+from core.BaseHandler       import *
+from core.WikiException     import *
 
 
 

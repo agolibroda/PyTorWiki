@@ -1,3 +1,12 @@
+#
+# Работа с Шаблонами!!! 
+#
+#
+#
+#
+#
+
+
 #!/usr/bin/env python
 #
 # Copyright 2015 Alec Goliboda
@@ -22,19 +31,22 @@ import tornado.web
 import os
 import os.path
 
+import re
+
+
         
 # from _overlapped import NULL
 
 ##############
 import config
-from . import Model
-from .. import WikiException 
-from . import Article
-
+from core.models.article    import Article
+from core.models.file       import File
 from core.models.group      import Group
 
+from core.WikiException     import *
 
-class Template(Model): #, tornado.web.RequestHandler):
+
+class Template(): #, tornado.web.RequestHandler):
     """
     Работа с шаблонами
     похоже, нужна процедура выкладки шаблона в особую директорию (ну, что бы не смешивать :-) )
@@ -48,6 +60,13 @@ class Template(Model): #, tornado.web.RequestHandler):
     https://www.tornadoweb.org/en/stable/template.html    
     
     """
+    class ParsingObject():
+        """
+        Объект для хранения результатов синтаксического разбора шаблона. 
+        - что бы было куда подставить нйденные артефакты и полученные для них значения.   
+        
+        """
+        pass
 
     def __init__(self):
         self.file_name = ''
@@ -63,6 +82,7 @@ class Template(Model): #, tornado.web.RequestHandler):
         
         """
         pass
+
 
     def realFileName(self, templateId):
         """
@@ -108,8 +128,53 @@ class Template(Model): #, tornado.web.RequestHandler):
         output_file.close()
 
 
-    def temtlatePrepare(self, articleTemplateId): # article_template_id
+    def temtlatePrepareById(self, articleTemplateId): # article_template_id
         """
+        Подготовка шаблона выбирать его будем по ИД
+    
+        """
+        tmlFullName = self.realFileName(articleTemplateId)
+        logging.info( 'temtlatePrepare:: save 3 tmlFullName =  ' + str(tmlFullName))
+        if not self.exists(tmlFullName):
+#             (template, tlFile) = yield executor.submit( artHelper.getArticleById, article.article_template_id )
+
+            artControl = Article()
+            template = artControl.getById( articleTemplateId )
+            # проанализируем код полученного шаблона, и, если надо, тогда выгрузим все шаблоны, на которые ссылается текущий шаблон.
+            #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
+            self.temtlateParsing(template.article_source)
+            
+            self.save(tmlFullName, template.article_source)
+        return tmlFullName
+
+    def temtlatePrepareByName(self, articleTemplateName): # article_template_id
+        """
+        Шаблон выбирать будем по его ИМЕНИ, как статью. :-) 
+    
+        """
+        logging.info( 'temtlatePrepare:: save 3 tmlFullName =  ' + str(tmlFullName))
+        if not self.exists(tmlFullName):
+#             (template, tlFile) = yield executor.submit( artHelper.getArticleById, article.article_template_id )
+
+            articleLink = articleTemplateName.strip().strip(" \t\n")
+            artControl = Article()
+            spectator = None
+            template = artControl.get( articleLink, spectator )
+            # проанализируем код полученного шаблона, и, если надо, тогда выгрузим все шаблоны, на которые ссылается текущий шаблон.
+            #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
+            _article_source = self.temtlateParsing(template.article_source)
+            
+            # Сначала надо плучить текст шаблона по его имени, 
+            # а вот потом, разобрать шаблон,  его ИД использовать для генерации имени.
+            tmlFullName = self.realFileName(template.article_id)
+            self.save(tmlFullName, _article_source)
+        return tmlFullName
+
+
+    def temtlateParsing(self, templateSrc): # article_template_id
+        """
+        Ситаксический разбор шаблона.  именно тут найдем всякие " tw_..." конструкции
+        
         Подготовка шаблона - надо пройти по шаблону, и зменить все вызовы вида
          "{% tw_include "main_site_menu" %}" на "{% include ".../tmp/334.html" %}" 
          - с имененм файла, вместо имени шаблона, и, положить все шаблоны в даректорию, где лежат все шаблоны
@@ -121,19 +186,26 @@ class Template(Model): #, tornado.web.RequestHandler):
         
         Все остальное  - оставляем в рамках синтаксиса базового шаблонизатора 
         описание  - https://www.tornadoweb.org/en/stable/template.html
-    
+
+        и сделаем из них табличку. или, список объектов 
+        ParsingObject
+        
         """
-        tmlFullName = self.realFileName(articleTemplateId)
-        logging.info( 'temtlatePrepare:: save 3 tmlFullName =  ' + str(tmlFullName))
-        if not self.exists(tmlFullName):
-#             (template, tlFile) = yield executor.submit( artHelper.getArticleById, article.article_template_id )
-            (template, tlFile) = artHelper.getArticleById( articleTemplateId )
-            # проанализируем код полученного шаблона, и, если надо, тогда выгрузим все шаблоны, на которые ссылается текущий шаблон.
-            #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
-            self.save(tmlFullName, template.article_source)
-        return tmlFullName
+        logging.info( 'temtlateParsing templateSrc = ' + str(templateSrc))
+        pattern = r"""{% tw_\w+ "\w+" %}"""
+#         prog = re.compile(pattern)
+#         result = prog.match(templateSrc)
+        result = re.match (pattern, templateSrc)
+        if result:
+            pass
+        logging.info( 'temtlateParsing self.displaymatch(result) = ' + str(self.displaymatch(result)))
+#         logging.info( 'temtlateParsing::: result =  ' + str(result.groups()))
+        return templateSrc
 
-
+    def displaymatch(self, match):
+        if match is None:
+            return None
+        return '<Match: %r, groups=%r>' % (match.group(), match.groups())
 
 # @singleton
 class TemplateParams:
@@ -160,7 +232,4 @@ class TemplateParams:
 #         logging.info (' makeTplParametr:: self = ' + str( self ))
 
   
-
-
-    
-
+ 

@@ -38,7 +38,7 @@ import core.models
 from core.models.author import Author
 from core.models.article import Article
 from core.models.file import File
-from core.models.template import Template, TemplateParams
+from core.helpers.template import Template, TemplateParams
 
 from core.helpers.article import HelperArticle 
 
@@ -271,6 +271,8 @@ class ComposeHandler(BaseHandler):
             logging.info( 'Get:: Exception as et = ' + toStr(e))
             logging.info( 'Get:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
             error = Error ('500', 'что - то пошло не так :-( ')
+            tplControl = TemplateParams()
+            tplControl.make(self.autor)
             tplControl.error=error
             tplControl.link='/compose'
             tplControl.page_name='редактирование статьи'

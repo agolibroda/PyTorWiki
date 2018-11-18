@@ -39,7 +39,7 @@ import core.models
 from core.models.author import Author
 from core.models.article import Article
 from core.models.file import File
-from core.models.template import Template, TemplateParams
+from core.helpers.template import Template, TemplateParams
 
 from core.helpers.article import HelperArticle 
 
