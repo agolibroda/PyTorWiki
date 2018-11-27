@@ -220,7 +220,7 @@ class GroupAdmDeskTop(BaseHandler):
 #             self.render(config.options.adminTplPath+"admin_home.html", articles=articles, tplCategory=config.options.tpl_categofy_id )
             self.render(config.options.adminTplPath+"admin_home.html" )
         except Exception as e:
-            logging.info( 'Save:: Exception as et = ' + str(e))
+            logging.info( 'GroupAdmDeskTop:: GET Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
             self.render('error.html', error=error)
 
@@ -275,7 +275,7 @@ class SysAdmDeskTop(BaseHandler):
             
             self.render(config.options.adminTplPath+"admin_home.html", parameters= tplControl )
         except Exception as e:
-            logging.info( 'Save:: Exception as et = ' + str(e))
+            logging.info( 'SysAdmDeskTop:: GET Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
             self.render('error.html', error=error)
 

@@ -72,16 +72,18 @@ class BaseHandler(tornado.web.RequestHandler):
 # походу, это какая  - то не правильная версия одиночки!!!!
 # надо проверить - то, что лежит в модеи!!!!
 
-        self.author = SingletonAuthor()
+        self.current_user = SingletonAuthor()
 #         logging.info('BaseHandler:: get_current_user:: START self.author = '+ str(self.author))
         try:
-            if self.author.dt_header_id == 0:
+            if self.current_user.dt_header_id == 0:
                 picledAutor = self.get_secure_cookie("wiki_author")
                 if not picledAutor:
                     return None
-                self.author.unSerializationAuthor(picledAutor)
+                if picledAutor == None:
+                    self.current_user = None
+                self.current_user.unSerializationAuthor(picledAutor)
 #                 logging.info('BaseHandler:: get_current_user:: END self.author = '+ str(self.author))
-            return self.author
+            return self.current_user
         except Exception as e:
             logging.info('BaseHandler:: get_current_user:: Have Error!!! '+ str(e))
             return None

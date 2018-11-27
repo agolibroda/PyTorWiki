@@ -285,8 +285,8 @@ class Article(Model):
          Кстати, статьи бывают не только "публичными" а и групповыми и ЛИЧНЫМИ!!!
          
          """
-        logging.info( 'Article ::: get articleLink  = ' + str(articleLink))
-        logging.info( 'Article ::: get spectatorAuthor  = ' + str(spectatorAuthor))
+#         logging.info( 'Article ::: get articleLink  = ' + str(articleLink))
+#         logging.info( 'Article ::: get spectatorAuthor  = ' + str(spectatorAuthor))
     
 #         article_link = base64.b64encode(tornado.escape.utf8(articleLink)).decode(encoding='UTF-8')
         article_link = articleLink

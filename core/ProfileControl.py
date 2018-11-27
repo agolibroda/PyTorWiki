@@ -43,6 +43,7 @@ from core.WikiException         import *
 
 from core.models.article import Article
 
+from core.helpers.template import Template, TemplateParams
 
 
 # A thread pool to be used for password hashing with bcrypt.
@@ -96,7 +97,7 @@ class AuthCreateHandler(BaseHandler):
             
             rez = yield executor.submit( authorLoc.save )
             logging.info( 'AuthCreateHandler  post rez = ' + str(rez))
-            logging.info( 'AuthCreateHandler  post authorLoc = ' + str(authorLoc))
+            logging.info( 'AuthCreateHandler  post self.get_secure_cookie("wiki_author") = ' + str(self.get_secure_cookie("wiki_author")))
             
             self.set_secure_cookie("wiki_author", authorLoc.serializationAuthor())
             self.redirect(self.get_argument("next", "/personal_desk_top"))
@@ -153,7 +154,10 @@ class AuthLoginHandler(BaseHandler):
 
 class AuthLogoutHandler(BaseHandler):
     def get(self):
+        logging.info( 'AuthLogoutHandler get!!! ')
+        logging.info( 'AuthLogoutHandler self.get_secure_cookie("wiki_author") = ' + str(self.get_secure_cookie("wiki_author")))
         self.clear_cookie("wiki_author")
+        self.current_user = None
         self.redirect(self.get_argument("next", "/"))
 
 
@@ -187,7 +191,7 @@ class MyProfileHandler(BaseHandler):
             tplControl.page_name= curentAuthor.author_name + ' '+ curentAuthor.author_surname
             tplControl.link='profile'
             tplControl.error=None
-            tplControl.autor=curentAuthor
+            tplControl.anyAuthor=curentAuthor
             
             self.render("my_profile.html", parameters=tplControl)
             
@@ -300,7 +304,7 @@ class AuthorProfile(BaseHandler):
     
             tplControl = TemplateParams()
             tplControl.make(spectatorAuthor)
-            tplControl.autor = yield executor.submit( authorControl.get, int(presentAuthorId) )
+            tplControl.anyAuthor = yield executor.submit( authorControl.get, int(presentAuthorId) )
             artControl = Article()
             articles = yield executor.submit( artControl.listByAutorId, int(presentAuthorId), spectatorAuthor.dt_header_id )
             tplControl.articlesList = articles

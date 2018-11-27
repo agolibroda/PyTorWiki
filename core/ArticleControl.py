@@ -74,17 +74,31 @@ class HomeHandler(BaseHandler):
         try:
             artHelper = HelperArticle()
             articleId = config.options.main_page_id
+            spectator = self.get_current_user()
 
 #             logging.info( 'HomeHandler get article articleId = ' + str(articleId))
             
             (article, fileList, templateName) = yield executor.submit( artHelper.getArticleById, articleId)
 #             logging.info( 'HomeHandler get article = ' + str(article))
-    
-            self.render(templateName, article=article, fileList=fileList, link='/compose', page_name='Редактирование')
+
+            tplControl = TemplateParams()
+#             tplControl.setAuthor(spectator)
+            tplControl.article=article
+            tplControl.fileList=fileList
+            tplControl.link='/compose'
+            tplControl.loginLink='/auth/login'
+            
+            tplControl.tpl_categofy_id = config.options.tpl_categofy_id
+            tplControl.page_name = article.article_title 
+# article=article, fileList=fileList, link='/compose', page_name='Редактирование'
+
+            
+            self.render(templateName, parameters=tplControl)
         except Exception as e:
-            logging.info( 'Save:: Exception as et = ' + str(e))
-            error = Error ('500', 'что - то пошло не так :-( ')
-            self.render('error.html', error=error, link='/compose', page_name='Редактирование')
+            logging.info( 'HomeHandler:: GET Exception as et = ' + str(e))
+            tplControl = TemplateParams()
+            tplControl.error = Error ('500', 'что - то пошло не так :-( ')
+            self.render('main_error.html', parameters=tplControl)
 
 
 
@@ -105,9 +119,10 @@ class ArticleListHandler(BaseHandler):
                 return
             self.render("articles.html", articles=articles, link='/compose', page_name='Редактирование')
         except Exception as e:
-            logging.info( 'Save:: Exception as et = ' + str(e))
-            error = Error ('500', 'что - то пошло не так :-( ')
-            self.render('error.html', error=error, link='/compose', page_name='Редактирование')
+            logging.info( 'ArticleListHandler:: Exception as et = ' + str(e))
+            tplControl = TemplateParams()
+            tplControl.error = Error ('500', 'что - то пошло не так :-( ')
+            self.render('main_error.html', parameters=tplControl)
 
 # что - то здеся не то - 
 # что - то тут надо поправить 
@@ -131,7 +146,7 @@ class ArticleListHandler(BaseHandler):
 #     
 #             self.render(config.options.adminTplPath+"articles.html", articles=articles, link='/compose', page_name='Редактирование')
 #         except Exception as e:
-#             logging.info( 'Save:: Exception as et = ' + str(e))
+#             logging.info( 'AdminHomeArticlesCategory:: Exception as et = ' + str(e))
 #             error = Error ('500', 'что - то пошло не так :-( ')
 #             self.render('error.html', error=error, link='/compose', page_name='Редактирование')
 
@@ -268,7 +283,7 @@ class ComposeHandler(BaseHandler):
 #             logging.info( ' ComposeHandler: GET: tplControl.article = ' + toStr(tplControl.article))
             self.render("compose.html", parameters= tplControl)
         except Exception as e:
-            logging.info( 'Get:: Exception as et = ' + toStr(e))
+            logging.info( 'ComposeHandler Get:: Exception as et = ' + toStr(e))
             logging.info( 'Get:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
             error = Error ('500', 'что - то пошло не так :-( ')
             tplControl = TemplateParams()
@@ -378,7 +393,7 @@ class RevisionsHandler(BaseHandler):
             
             self.render("revisionses_dt.html", parameters=tplControl )
         except Exception as e:
-            logging.info( 'Save:: Exception as et = ' + str(e))
+            logging.info( 'RevisionsHandler:: Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
             self.render('error.html', error=error, link='/compose', page_name='Список ревизий')
    
@@ -400,7 +415,7 @@ class RevisionViewHandler(BaseHandler):
 #             logging.info( 'RevisionViewHandler:: revision = ' + str(revision))
             self.render("revision.html", revision=revision, link='/compose', page_name='Редактирование')
         except Exception as e:
-            logging.info( 'Save:: Exception as et = ' + str(e))
+            logging.info( 'RevisionViewHandler:: Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
             self.render('error.html', error=error, link='/compose', page_name='Редактирование')
 
@@ -425,7 +440,7 @@ class FeedHandler(BaseHandler):
             self.set_header("Content-Type", "application/atom+xml")
             self.render("feed.xml", articles=articles, link='/compose', page_name='Редактирование')
         except Exception as e:
-            logging.info( 'Save:: Exception as et = ' + str(e))
+            logging.info( 'FeedHandler:: Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
             self.render('error.html', error=error, link='/compose', page_name='Редактирование')
 

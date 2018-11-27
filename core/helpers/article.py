@@ -137,14 +137,14 @@ class HelperArticle():
         
         templator = Template()
         templateName = templator.temtlatePrepareById(article.article_template_id) # article_template_id
-        logging.info( 'getArticleByName 1 templateName = ' + str(templateName))
+#         logging.info( 'getArticleByName 1 templateName = ' + str(templateName))
 
         fileList =  fileModel.getFilesListForArticle( article.article_id, 
                                                     config.options.to_out_path)
         
-        logging.info( 'getArticleByName article = ' + str(article))
-        logging.info( 'getArticleByName fileList = ' + str(fileList))
-        logging.info( 'getArticleByName templateName = ' + str(templateName))
+#         logging.info( 'getArticleByName article = ' + str(article))
+#         logging.info( 'getArticleByName fileList = ' + str(fileList))
+#         logging.info( 'getArticleByName templateName = ' + str(templateName))
         return (article, fileList, templateName)
 
 

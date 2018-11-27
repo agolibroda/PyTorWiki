@@ -116,7 +116,7 @@ def main():
     FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
     logging.basicConfig(format=FORMAT)
 
-    logging.info('config.options.main_port = ' + str(config.options.main_port))
+    logging.info('Server start at .main_port = ' + str(config.options.main_port))
     
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(config.options.main_port)

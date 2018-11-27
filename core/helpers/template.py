@@ -142,7 +142,7 @@ class Template(): #, tornado.web.RequestHandler):
             template = artControl.getById( articleTemplateId )
             # проанализируем код полученного шаблона, и, если надо, тогда выгрузим все шаблоны, на которые ссылается текущий шаблон.
             #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
-            self.temtlateParsing(template.article_source)
+            template.article_source = self.temtlateParsing(template.article_source)
             
             self.save(tmlFullName, template.article_source)
         return tmlFullName
@@ -152,23 +152,18 @@ class Template(): #, tornado.web.RequestHandler):
         Шаблон выбирать будем по его ИМЕНИ, как статью. :-) 
     
         """
-        logging.info( 'temtlatePrepare:: save 3 tmlFullName =  ' + str(tmlFullName))
-        if not self.exists(tmlFullName):
-#             (template, tlFile) = yield executor.submit( artHelper.getArticleById, article.article_template_id )
-
-            articleLink = articleTemplateName.strip().strip(" \t\n")
-            artControl = Article()
-            spectator = None
-            template = artControl.get( articleLink, spectator )
-            # проанализируем код полученного шаблона, и, если надо, тогда выгрузим все шаблоны, на которые ссылается текущий шаблон.
-            #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
-            _article_source = self.temtlateParsing(template.article_source)
-            
-            # Сначала надо плучить текст шаблона по его имени, 
-            # а вот потом, разобрать шаблон,  его ИД использовать для генерации имени.
-            tmlFullName = self.realFileName(template.article_id)
-            self.save(tmlFullName, _article_source)
-        return tmlFullName
+        logging.info( 'temtlatePrepareByName:: articleTemplateName =  ' + str(articleTemplateName))
+        articleLink = articleTemplateName.strip().strip(" \t\n")
+        artControl = Article()
+        spectator = None
+        template = artControl.get( articleLink, spectator )
+        # проанализируем код полученного шаблона, и, если надо, тогда выгрузим все шаблоны, на которые ссылается текущий шаблон.
+        #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
+        template.article_source = self.temtlateParsing(template.article_source)
+        tmlFullName = self.realFileName(template.article_id)
+        self.save(tmlFullName, template.article_source)
+        
+        return template.article_id
 
 
     def temtlateParsing(self, templateSrc): # article_template_id
@@ -191,21 +186,18 @@ class Template(): #, tornado.web.RequestHandler):
         ParsingObject
         
         """
-        logging.info( 'temtlateParsing templateSrc = ' + str(templateSrc))
-        pattern = r"""{% tw_\w+ "\w+" %}"""
-#         prog = re.compile(pattern)
-#         result = prog.match(templateSrc)
-        result = re.match (pattern, templateSrc)
-        if result:
-            pass
-        logging.info( 'temtlateParsing self.displaymatch(result) = ' + str(self.displaymatch(result)))
-#         logging.info( 'temtlateParsing::: result =  ' + str(result.groups()))
+#         logging.info( 'temtlateParsing IN templateSrc = ' + str(templateSrc))
+        pattern = r"""\{\%[ \t]+tw_(\w+){1}[ \t]+[\'\"](.+)[\'\"][ \t]+\%\}""" 
+        result = re.finditer(pattern, templateSrc)
+        for item in result:
+            try:
+                temtlateId = self.temtlatePrepareByName(item.group(2))
+                newTemplateName = str(temtlateId)+ '.html'
+                newOperator = '{% ' + item.group(1) + ' "' + newTemplateName + '" %}'
+                templateSrc = templateSrc.replace(item.group(0), newOperator)
+            except WikiException as e:
+                templateSrc = templateSrc.replace(item.group(0), '')
         return templateSrc
-
-    def displaymatch(self, match):
-        if match is None:
-            return None
-        return '<Match: %r, groups=%r>' % (match.group(), match.groups())
 
 # @singleton
 class TemplateParams:
@@ -224,12 +216,19 @@ class TemplateParams:
 #         logging.info( ' makeTplParametr:: author = ' + toStr(author))
 #         if not hasattr(self, 'autorGroupList'): 
 
-        self.author = author
+        self.current_user = author
         groupModel = Group()
 #         self.autorGroupList = yield executor.submit( groupModel.grouplistForAutor, self.author.author_id )
-        self.autorGroupList = groupModel.grouplistForAutor( self.author.dt_header_id )
+        self.autorGroupList = groupModel.grouplistForAutor( self.current_user.dt_header_id )
          
 #         logging.info (' makeTplParametr:: self = ' + str( self ))
+    def setAuthor (self, author):
+        """
+        Добавить в шаблон зрителя - 
+        в шаблоне называем его автором.
+          
+        """
+        self.current_user = author
 
   
  
