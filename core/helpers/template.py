@@ -213,13 +213,13 @@ class TemplateParams:
         и пользоваться его данными
           
         """
-#         logging.info( ' makeTplParametr:: author = ' + toStr(author))
+        logging.info( ' makeTplParametr:: author = ' + str(author))
 #         if not hasattr(self, 'autorGroupList'): 
 
-        self.current_user = author
+#         self.current_user = author
         groupModel = Group()
 #         self.autorGroupList = yield executor.submit( groupModel.grouplistForAutor, self.author.author_id )
-        self.autorGroupList = groupModel.grouplistForAutor( self.current_user.dt_header_id )
+        self.autorGroupList = groupModel.grouplistForAutor( author.dt_header_id )
          
 #         logging.info (' makeTplParametr:: self = ' + str( self ))
     def setAuthor (self, author):

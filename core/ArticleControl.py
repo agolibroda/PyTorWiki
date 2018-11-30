@@ -74,7 +74,9 @@ class HomeHandler(BaseHandler):
         try:
             artHelper = HelperArticle()
             articleId = config.options.main_page_id
-            spectator = self.get_current_user()
+            self.get_current_user()
+            spectator = self.current_user
+
 
 #             logging.info( 'HomeHandler get article articleId = ' + str(articleId))
             
@@ -168,7 +170,8 @@ class ArticleHandler(BaseHandler):
 
         try:
             
-            spectator = self.get_current_user()
+            self.get_current_user()
+            spectator = self.current_user
 #             logging.info( 'ArticleHandler get spectator = ' + str(spectator))
             
             artHelper = HelperArticle()
@@ -180,11 +183,19 @@ class ArticleHandler(BaseHandler):
             
             (article, fileList, tmlFullName) = yield executor.submit( artHelper.getArticleByName, spectator, articleLink )
        
+            tplControl = TemplateParams()
+            tplControl.make(spectator)
+
+            tplControl.page_name = 'Редактирование' + article.article_title
+            tplControl.link='/compose'
+            tplControl.article=article
+
+# article=article, fileList=fileList, link='/compose', page_name='Редактирование'
        # а вот тут я должен получить и распарсить шаблон - как - текст в статьях (особой категории!!!!)
             if article.article_id == 0 : 
                 self.redirect("/compose/" + articleName ) 
     
-            self.render(tmlFullName, article=article, fileList=fileList, link='/compose', page_name='Редактирование')
+            self.render(tmlFullName, parameters=tplControl)
         except Exception as e:
             logging.info( 'ArticleHandler Get:: Exception as et = ' + str(e))
             tplControl = TemplateParams()
@@ -215,7 +226,9 @@ class ComposeHandler(BaseHandler):
             hash = self.get_argument("hash", "")
             groupId = self.get_argument("gid", 0)
             
-            self.autor = self.get_current_user()
+            self.get_current_user()
+            self.autor = self.current_user
+            
             
             article = Article()
             fileList = []
@@ -306,7 +319,9 @@ class ComposeHandler(BaseHandler):
         try:
 #             logging.info( 'ComposeHandler:: post articleName = ' + str(articleName))
     
-            self.autor = self.get_current_user()
+            self.get_current_user()
+            self.autor = self.current_user
+            
 #             logging.info( 'ComposeHandler:: post self.autor = ' + str(self.autor))
             
             if not self.autor or not self.autor.dt_header_id: return None
@@ -379,7 +394,8 @@ class RevisionsHandler(BaseHandler):
     def get(self, articleId):
         try:
 #             articleId = self.get_argument("id", None)
-            self.autor = self.get_current_user()
+            self.get_current_user()
+            self.autor = self.current_user
             artModel = Article()
             revisions = yield executor.submit( artModel.getRevisionsList, articleId, self.autor.dt_header_id)
             

@@ -100,6 +100,7 @@ class AuthCreateHandler(BaseHandler):
             logging.info( 'AuthCreateHandler  post self.get_secure_cookie("wiki_author") = ' + str(self.get_secure_cookie("wiki_author")))
             
             self.set_secure_cookie("wiki_author", authorLoc.serializationAuthor())
+            
             self.redirect(self.get_argument("next", "/personal_desk_top"))
         except Exception as e:
             logging.info( 'Save:: Exception as et = ' + str(e))
@@ -117,9 +118,9 @@ class AuthCreateHandler(BaseHandler):
 class AuthLoginHandler(BaseHandler):
     def get(self):
         
-        if self.get_current_user():
+        isLogin = self.get_current_user()
+        if isLogin:
             self.redirect("/personal_desk_top")
-
         tplControl = TemplateParams()
 #         tplControl.make(self.autor)
         tplControl.page_name='Страница входа'
@@ -137,6 +138,7 @@ class AuthLoginHandler(BaseHandler):
             if rezult:
                 logging.info( 'AuthCreateHandler  post authorloginLoad = ' + str(authorloginLoad))
                 
+                self.current_user = authorloginLoad
                 self.set_secure_cookie("wiki_author", authorloginLoad.serializationAuthor())
                 self.redirect(self.get_argument("next", "/personal_desk_top"))
             else:
@@ -154,10 +156,12 @@ class AuthLoginHandler(BaseHandler):
 
 class AuthLogoutHandler(BaseHandler):
     def get(self):
+        self.current_user = None # Author()
         logging.info( 'AuthLogoutHandler get!!! ')
-        logging.info( 'AuthLogoutHandler self.get_secure_cookie("wiki_author") = ' + str(self.get_secure_cookie("wiki_author")))
         self.clear_cookie("wiki_author")
-        self.current_user = None
+        self.set_secure_cookie("wiki_author", '') # self.current_user.serializationAuthor()
+        
+        logging.info( 'AuthLogoutHandler self.get_secure_cookie("wiki_author") = ' + str(self.get_secure_cookie("wiki_author")))
         self.redirect(self.get_argument("next", "/"))
 
 
@@ -181,7 +185,10 @@ class MyProfileHandler(BaseHandler):
         """
         try:
 
-            curentAuthor = yield executor.submit(self.get_current_user ) 
+#             curentAuthor = yield executor.submit(self.get_current_user ) 
+            self.get_current_user()
+            curentAuthor = self.current_user
+            
             logging.info( 'MyProfileHandler GET :: curentAuthor = ' + str(curentAuthor))
 
             if not curentAuthor.dt_header_id: raise tornado.web.HTTPError(404, "author not found")
@@ -220,13 +227,17 @@ class MyProfileHandler(BaseHandler):
 #             logging.info( 'MyProfileHandler  post surname !!!! = ' + str(self.get_argument("surname")))
 #             logging.info( 'MyProfileHandler  post phon !!!! = ' + str(self.get_argument("phon")))
 
-            authorLoc = yield executor.submit(self.get_current_user )
+#             authorLoc = yield executor.submit(self.get_current_user )
+            self.get_current_user()
+            authorLoc = self.current_user
+            
              
             tplControl = TemplateParams()
             tplControl.make(authorLoc)
 
             passwd = self.get_argument("pass")
             passwd2 = self.get_argument("pass_conf")
+#             old_passwd = self.get_argument("pass_conf")
             if passwd != passwd2: 
 #  надо добавить сообщение о том,что пароли не совпадают, и вывести эти сообщеия в правильном месте!!!!                
                 raise WikiException( 'Пароли не совпадают! ' )  # Exception # 
@@ -250,6 +261,7 @@ class MyProfileHandler(BaseHandler):
             
             rez = yield executor.submit( authorLoc.save )
             logging.info( 'MyProfileHandler  post rez = ' + str(rez))
+            self.current_user = authorLoc
             
             self.set_secure_cookie("wiki_author", authorLoc.serializationAuthor())
             
@@ -289,7 +301,10 @@ class AuthorProfile(BaseHandler):
         """
         try:
             # от его имени ведутся все расмотреня.... 
-            spectatorAuthor = yield executor.submit(self.get_current_user ) #self.get_current_user ()
+#             spectatorAuthor = yield executor.submit(self.get_current_user ) #self.get_current_user ()
+            self.get_current_user()
+            spectatorAuthor = self.current_user
+            
     #         logging.info( 'ComposeHandler:: post rezult = ' + str(rezult))
     #         curentAuthor = rezult.result()
             

@@ -76,14 +76,16 @@ class BaseHandler(tornado.web.RequestHandler):
 #         logging.info('BaseHandler:: get_current_user:: START self.author = '+ str(self.author))
         try:
             if self.current_user.dt_header_id == 0:
+                self.current_user = None
                 picledAutor = self.get_secure_cookie("wiki_author")
+#                 logging.info('BaseHandler:: get_current_user:: picledAutor = '+ str(picledAutor))
                 if not picledAutor:
                     return None
-                if picledAutor == None:
-                    self.current_user = None
-                self.current_user.unSerializationAuthor(picledAutor)
-#                 logging.info('BaseHandler:: get_current_user:: END self.author = '+ str(self.author))
-            return self.current_user
+                author = Author()
+                author.unSerializationAuthor(picledAutor)
+                self.current_user = author
+                logging.info('BaseHandler:: get_current_user:: END self.current_user = '+ str(self.current_user))
+            return True
         except Exception as e:
             logging.info('BaseHandler:: get_current_user:: Have Error!!! '+ str(e))
             return None

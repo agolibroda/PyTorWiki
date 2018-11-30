@@ -82,6 +82,7 @@ class Author(Model):
         self.public_key = None
         self.private_key = None
         self.private_key_hash = None
+        self.openPrivateKey = None
         
         
         ########################
@@ -459,5 +460,5 @@ class Author(Model):
             del self.public_key 
             self.public_key = cip.rsaPubUnSerialiation(_public_key)
 
-        logging.info(' unSerializationAuthor:: self = ' + str(self))   
+        logging.info(' unSerializationAuthor:: END self = ' + str(self))   
 

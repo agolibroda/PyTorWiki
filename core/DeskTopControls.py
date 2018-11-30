@@ -71,9 +71,10 @@ class PersonalDeskTop(BaseHandler):
 
         """
         try:
-            author = self.get_current_user() 
+            self.get_current_user() 
+            author = self.current_user
     
-#             logging.info( 'PersonalDeskTop get:: author = ' + str(author))
+            logging.info( 'PersonalDeskTop get:: author = ' + str(author))
     
             tplControl = TemplateParams()
             tplControl.make(author)
@@ -135,7 +136,8 @@ class GroupDeskTop(BaseHandler):
 
             logging.info( 'GroupDeskTop Get:: dt_header_id = ' + str(dt_header_id))
 
-            author = self.get_current_user() 
+            self.get_current_user() 
+            author = self.current_user
 
             if not author.dt_header_id: return None
 
@@ -179,7 +181,8 @@ class GroupDeskTop(BaseHandler):
     @gen.coroutine
     def post(self, dt_header_id=0):
         try:
-            author = self.get_current_user() 
+            self.get_current_user() 
+            author = self.current_user
     
             groupModel = Group()
     
@@ -244,7 +247,8 @@ class SysAdmDeskTop(BaseHandler):
         """
         try:
 
-            author = self.get_current_user() 
+            self.get_current_user() 
+            author = self.current_user
 
             if not author.dt_header_id: return None
 

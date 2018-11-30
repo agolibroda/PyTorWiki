@@ -59,7 +59,10 @@ class RestMinHandler(BaseHandler):
         logging.info('RestMinHandler:: link = '+ str(link))
 
         
-        self.curentAuthor = yield executor.submit(self.get_current_user ) #self.get_current_user ()
+#         self.curentAuthor = yield executor.submit(self.get_current_user ) #self.get_current_user ()
+        self.get_current_user()
+        self.curentAuthor = self.current_user
+
         logging.info( 'getPersonalArticlesList:: get self.curentAuthor = ' + str(self.curentAuthor))
         
         
