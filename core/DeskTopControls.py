@@ -71,7 +71,7 @@ class PersonalDeskTop(BaseHandler):
 
         """
         try:
-            self.get_current_user() 
+            self.get_current_user()
             author = self.current_user
     
             logging.info( 'PersonalDeskTop get:: author = ' + str(author))
@@ -135,8 +135,7 @@ class GroupDeskTop(BaseHandler):
         try:
 
             logging.info( 'GroupDeskTop Get:: dt_header_id = ' + str(dt_header_id))
-
-            self.get_current_user() 
+            self.get_current_user()
             author = self.current_user
 
             if not author.dt_header_id: return None
@@ -181,7 +180,7 @@ class GroupDeskTop(BaseHandler):
     @gen.coroutine
     def post(self, dt_header_id=0):
         try:
-            self.get_current_user() 
+            self.get_current_user()
             author = self.current_user
     
             groupModel = Group()
@@ -220,6 +219,8 @@ class GroupAdmDeskTop(BaseHandler):
 
         """
         try:
+            self.get_current_user()
+            author = self.current_user
 #             self.render(config.options.adminTplPath+"admin_home.html", articles=articles, tplCategory=config.options.tpl_categofy_id )
             self.render(config.options.adminTplPath+"admin_home.html" )
         except Exception as e:
@@ -246,8 +247,7 @@ class SysAdmDeskTop(BaseHandler):
 
         """
         try:
-
-            self.get_current_user() 
+            self.get_current_user()
             author = self.current_user
 
             if not author.dt_header_id: return None

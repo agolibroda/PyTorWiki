@@ -70,7 +70,6 @@ class UploadHandler(BaseHandler):
     def get(self, article_id):
 #         article_id = self.get_argument("id", 0)
         logging.info( 'UploadHandler:: get article_id =  ' + str(article_id) )
-#         curentAuthor = yield executor.submit(self.get_current_user )
         self.get_current_user()
         curentAuthor = self.current_user
  
@@ -97,14 +96,11 @@ class UploadHandler(BaseHandler):
     def post(self, article_id):
         try:
             logging.info( 'UploadHandler:: post article_id =  ' + str(article_id) )
-#             curentAuthor = yield executor.submit(self.get_current_user ) #self.get_current_user ()
             self.get_current_user()
             curentAuthor = self.current_user
             
     #         logging.info( 'ComposeHandler:: post rezult = ' + str(rezult))
     #         curentAuthor = rezult.result()
-            
-            
             fileContrl = File()
             fileInfo = yield executor.submit(
                                             fileContrl.upload, 

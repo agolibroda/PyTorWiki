@@ -7,12 +7,15 @@
 #
 
 
+import tornado.web
+import tornado.httpserver
+import tornado.ioloop
+import torndsession
+
+
 # import .BaseHandler
 import logging
 
-logging.basicConfig(filename='test.log', level=logging.INFO)
-FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
-logging.basicConfig(format=FORMAT)
 
 
 # import pickle
@@ -32,6 +35,10 @@ from core.DeskTopControls import *
 
 from core.RestControl import *
 
+if hasattr(config.options, 'logFileName'):
+    logging.basicConfig(filename=config.options.logFileName, level=logging.INFO)
+FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
+logging.basicConfig(format=FORMAT)
 
 
 # from tornado.options import define, options
@@ -103,6 +110,34 @@ class Application(tornado.web.Application):
             login_url="/auth/login",
             debug=True,
         )
+        
+        # sid_name, lifetime added in 1.1.5.0
+        # sid_name: the name of session id in cookies.
+        # lifetime: session default expires seconds.
+        session_settings = dict(
+            
+#             driver='memory',
+#             driver_settings={'host': self},
+            
+#             driver="file",
+#             driver_settings=dict(host="#_sessions",),
+
+            driver="redis",
+            driver_settings=dict(
+                host='localhost',
+                port=6379,
+                db=14,
+#                 "pass"='',
+                max_connections=1024,
+            ),
+
+
+            force_persistence=True,
+            sid_name='wiki_author',
+            session_lifetime=180000,
+        )
+        settings.update(session=session_settings)
+        
         super(Application, self).__init__(handlers, **settings)
         config.options.templateDir = settings['template_path']
 #         config.options.__setattr__('templateDir', settings['template_path']) 
@@ -113,8 +148,6 @@ class Application(tornado.web.Application):
 
 def main():
 #     logging.basicConfig(filename='torViki.log', level=logging.INFO)
-    FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
-    logging.basicConfig(format=FORMAT)
 
     logging.info('Server start at .main_port = ' + str(config.options.main_port))
     

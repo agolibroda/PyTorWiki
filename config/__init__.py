@@ -11,6 +11,7 @@
 from tornado.options import define, options, parse_config_file
 # options.logging = debug #None
 
+define("logFileName", default= 'test.log', help="log File Name")
 
 #
 define("Project_Name", default= 'TorWiki', help="Project name")

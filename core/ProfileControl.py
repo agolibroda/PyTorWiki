@@ -21,10 +21,13 @@ import copy
 # import torndb
 import tornado.escape
 from tornado import gen
-import tornado.httpserver
-import tornado.ioloop
-import tornado.options
-import tornado.web
+# import tornado.httpserver
+# import tornado.ioloop
+# import tornado.options
+# import tornado.web
+
+from torndsession.sessionhandler import SessionBaseHandler
+
 import unicodedata
 
 import logging
@@ -103,7 +106,7 @@ class AuthCreateHandler(BaseHandler):
             
             self.redirect(self.get_argument("next", "/personal_desk_top"))
         except Exception as e:
-            logging.info( 'Save:: Exception as et = ' + str(e))
+            logging.info( 'AuthCreateHandler:: post Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
 
             tplControl = TemplateParams()
@@ -116,9 +119,16 @@ class AuthCreateHandler(BaseHandler):
 
 
 class AuthLoginHandler(BaseHandler):
+    """
+    Контроллер обработки формы логина 
+    
+    """
+    
     def get(self):
         
         isLogin = self.get_current_user()
+#         logging.info( 'AuthLoginHandler  get isLogin = ' + str(isLogin))
+#         logging.info( 'AuthLoginHandler  get self.current_user = ' + str(self.current_user))
         if isLogin:
             self.redirect("/personal_desk_top")
         tplControl = TemplateParams()
@@ -136,10 +146,11 @@ class AuthLoginHandler(BaseHandler):
     
             rezult = yield executor.submit( authorloginLoad.login, self.get_argument("login"), self.get_argument("password") )
             if rezult:
-                logging.info( 'AuthCreateHandler  post authorloginLoad = ' + str(authorloginLoad))
+#                 logging.info( 'AuthLoginHandler  post authorloginLoad = ' + str(authorloginLoad))
                 
                 self.current_user = authorloginLoad
-                self.set_secure_cookie("wiki_author", authorloginLoad.serializationAuthor())
+#                 logging.info( 'AuthLoginHandler  post 1 authorloginLoad.serializationAuthor() = ' + str(authorloginLoad.serializationAuthor()))
+                self.session['author'] = authorloginLoad.serializationAuthor()
                 self.redirect(self.get_argument("next", "/personal_desk_top"))
             else:
                 raise WikiException( 'incorrect login/password' )
@@ -153,15 +164,11 @@ class AuthLoginHandler(BaseHandler):
             tplControl.page_name='Страница входа'
             self.render('login.html', parameters = tplControl )
 
-
 class AuthLogoutHandler(BaseHandler):
     def get(self):
         self.current_user = None # Author()
-        logging.info( 'AuthLogoutHandler get!!! ')
-        self.clear_cookie("wiki_author")
-        self.set_secure_cookie("wiki_author", '') # self.current_user.serializationAuthor()
-        
-        logging.info( 'AuthLogoutHandler self.get_secure_cookie("wiki_author") = ' + str(self.get_secure_cookie("wiki_author")))
+#         logging.info( 'AuthLogoutHandler get!!! ')
+        self.session.delete("author")
         self.redirect(self.get_argument("next", "/"))
 
 
@@ -185,7 +192,6 @@ class MyProfileHandler(BaseHandler):
         """
         try:
 
-#             curentAuthor = yield executor.submit(self.get_current_user ) 
             self.get_current_user()
             curentAuthor = self.current_user
             
@@ -216,24 +222,8 @@ class MyProfileHandler(BaseHandler):
     def post(self):
 
         try:
-#             if self.any_author_exists():
-#                 raise tornado.web.HTTPError(400, "author already created")
- 
-#             logging.info( 'MyProfileHandler  post pass !!!! = ' + str(self.get_argument("pass")))
-#             logging.info( 'MyProfileHandler  post pass_conf !!!! = ' + str(self.get_argument("pass_conf")))
-#             logging.info( 'MyProfileHandler  post login !!!! = ' + str(self.get_argument("login")))
-#             logging.info( 'MyProfileHandler  post email !!!! = ' + str(self.get_argument("email")))
-#             logging.info( 'MyProfileHandler  post name !!!! = ' + str(self.get_argument("name")))
-#             logging.info( 'MyProfileHandler  post surname !!!! = ' + str(self.get_argument("surname")))
-#             logging.info( 'MyProfileHandler  post phon !!!! = ' + str(self.get_argument("phon")))
-
-#             authorLoc = yield executor.submit(self.get_current_user )
             self.get_current_user()
             authorLoc = self.current_user
-            
-             
-            tplControl = TemplateParams()
-            tplControl.make(authorLoc)
 
             passwd = self.get_argument("pass")
             passwd2 = self.get_argument("pass_conf")
@@ -241,44 +231,43 @@ class MyProfileHandler(BaseHandler):
             if passwd != passwd2: 
 #  надо добавить сообщение о том,что пароли не совпадают, и вывести эти сообщеия в правильном месте!!!!                
                 raise WikiException( 'Пароли не совпадают! ' )  # Exception # 
-
-      
-#             authorLoc =  Author()
-            
-#             authorLoc.dt_header_id = self.get_current_user
-#             authorLoc.author_role = 'volunteer'
             
             authorLoc.author_login = self.get_argument("login")
             authorLoc.author_email = self.get_argument("email")
 
-            authorLoc.author_pass = passwd
+            authorLoc.password_entered = passwd
+            authorLoc.author_old_pass = self.get_argument("old_pass")
             
             authorLoc.author_name = self.get_argument("name")
             authorLoc.author_surname = self.get_argument("surname")
             authorLoc.author_phon = self.get_argument("phon")
-
-            logging.info( 'MyProfileHandler  post authorLoc = ' + str(authorLoc))
             
             rez = yield executor.submit( authorLoc.save )
             logging.info( 'MyProfileHandler  post rez = ' + str(rez))
+            logging.info( 'MyProfileHandler  post authorLoc = ' + str(authorLoc))
             self.current_user = authorLoc
+
+            logging.info( 'MyProfileHandler  post authorLoc.serializationAuthor() = ' + str(authorLoc.serializationAuthor()))
+
+            self.session['author'] = authorLoc.serializationAuthor()
             
-            self.set_secure_cookie("wiki_author", authorLoc.serializationAuthor())
-            
-    #         tplControl.make(self.autor)
+            tplControl = TemplateParams()
+            tplControl.make(authorLoc)
             tplControl.page_name = authorLoc.author_name + ' '+ authorLoc.author_surname
             tplControl.link='profile'
             tplControl.error=None
             tplControl.autor=authorLoc
             
-            self.render("my_profile.html", parameters=tplControl)
+            self.render("my_profile.html", parameters = tplControl)
         except Exception as e:
             logging.info( 'MyProfileHandler Post:: Exception as et = ' + str(e))
             logging.info( 'MyProfileHandler Post:: Exception as authorLoc = ' + str(authorLoc))
             
+            tplControl = TemplateParams()
             tplControl.error=str(e)
             tplControl.link='/profile'
             tplControl.page_name = authorLoc.author_name + ' '+ authorLoc.author_surname
+            tplControl.error=str(e)
             tplControl.autor=authorLoc
             self.render('my_profile.html', parameters = tplControl )
 
@@ -301,19 +290,12 @@ class AuthorProfile(BaseHandler):
         """
         try:
             # от его имени ведутся все расмотреня.... 
-#             spectatorAuthor = yield executor.submit(self.get_current_user ) #self.get_current_user ()
             self.get_current_user()
             spectatorAuthor = self.current_user
             
-    #         logging.info( 'ComposeHandler:: post rezult = ' + str(rezult))
-    #         curentAuthor = rezult.result()
-            
-            if not spectatorAuthor.dt_header_id: return None
-            
             logging.info( 'AdminHomeHandler:: get ')
             logging.info( 'AdminHomeHandler:: get presentAuthorId = ' + str (presentAuthorId))
-#             presentAuthorId
-# Надо загрузить описание пользователя ИД.... 
+            # Надо загрузить описание пользователя по его ИД.... 
             
             authorControl = Author()
     

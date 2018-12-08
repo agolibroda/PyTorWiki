@@ -37,7 +37,7 @@
                      <div class="clearfix"></div>
                      
                      <div class="clearfix"></div>
-
+					{% if hasattr(parameters, 'autorGroupList') %}
 					  {% for oneGroup in parameters.autorGroupList %} 
 					  
 					<!-- class="active"  -->
@@ -48,6 +48,7 @@
 					        </li>
 					
 					  {% end %}
+					{% end %}
 					                     
                 {% end %}
                 </ul>

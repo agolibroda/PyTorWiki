@@ -115,11 +115,11 @@ CREATE UNIQUE INDEX members_author_id_group_id_ind ON members (author_id, group_
 ALTER TABLE authors
 	ADD COLUMN private_key bytea; -- after sha_hash;
 
- ALTER TABLE authors
+ALTER TABLE authors
 	ADD COLUMN private_key_hash bytea; -- after sha_hash;
 
- ALTER TABLE groups	
-	  sha_hash character varying(66) NOT NULL primary key,
+--ALTER TABLE groups	
+--	  sha_hash character varying(66) NOT NULL primary key;
 	  
 ALTER TABLE groups ADD PRIMARY KEY (sha_hash);
 	

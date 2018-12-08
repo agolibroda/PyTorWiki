@@ -18,11 +18,15 @@ import subprocess
 # import torndb
 import tornado.escape
 from tornado import gen
-import tornado.httpserver
-import tornado.ioloop
-import tornado.options
+# import tornado.httpserver
+# import tornado.ioloop
+# import tornado.options
 import tornado.web
+from torndsession.sessionhandler import SessionBaseHandler
+
+
 import unicodedata
+
 
 import logging
 import json
@@ -52,40 +56,28 @@ from core.models.author     import Author
 class SingletonAuthor(Author):
     pass
 
-class BaseHandler(tornado.web.RequestHandler):
-#     @property
-#     def db(self):
-#         return self.application.db
-#     x = OnlyOne('sausage')
+class BaseHandler(SessionBaseHandler):
 
-#     @singleton
-#     class __Autor:
-#         def __init__(self):
-#             self.locAuthor = self.__Autor()
-        
 #     @gen.coroutine
     def get_current_user(self):
         """
         Это Стандартный торнадовский функций, про получение данных о пользователе
         
         """
-# походу, это какая  - то не правильная версия одиночки!!!!
-# надо проверить - то, что лежит в модеи!!!!
-
         self.current_user = SingletonAuthor()
 #         logging.info('BaseHandler:: get_current_user:: START self.author = '+ str(self.author))
         try:
             if self.current_user.dt_header_id == 0:
+                isLogin = False
                 self.current_user = None
-                picledAutor = self.get_secure_cookie("wiki_author")
-#                 logging.info('BaseHandler:: get_current_user:: picledAutor = '+ str(picledAutor))
-                if not picledAutor:
-                    return None
-                author = Author()
-                author.unSerializationAuthor(picledAutor)
-                self.current_user = author
-                logging.info('BaseHandler:: get_current_user:: END self.current_user = '+ str(self.current_user))
-            return True
+                if 'author' in self.session:
+                    picledAutor = self.session['author']
+                    author = Author()
+                    author.unSerializationAuthor(picledAutor)
+                    self.current_user = author
+                    isLogin = True
+#                     logging.info('BaseHandler:: get_current_user:: END self.current_user = '+ str(self.current_user))
+            return isLogin
         except Exception as e:
             logging.info('BaseHandler:: get_current_user:: Have Error!!! '+ str(e))
             return None

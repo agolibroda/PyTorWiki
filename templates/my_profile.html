@@ -26,10 +26,10 @@
                         <div class="row mtl">
                             <div class="col-md-3">
                                 <div class="form-group">
-    {% if parameters.anyAuthor.dt_header_id > 0 %}
+    {% if current_user %}
                                     <div class="text-center mbl"><img src="/static/images/rolls.gif" alt="" class="img-responsive"/></div>
                                     <div class="text-center mbl">
-                                    <a href="/upload/{{ parameters.anyAuthor.dt_header_id  if parameters.anyAuthor else 0 }}" class="btn btn-green"><i class="fa fa-upload"></i>&nbsp;
+                                    <a href="/upload/{{ current_user.dt_header_id  if current_user else 0 }}" class="btn btn-green"><i class="fa fa-upload"></i>&nbsp;
                                          {{_("Upload")}}</a></div>
     {% end %}
                                 </div>
@@ -41,7 +41,7 @@
                                     </tr>
                                     <tr>
                                         <td>{{_("Email")}}</td>
-                                        <td>{{parameters.anyAuthor.author_email}}</td>
+                                        <td>{{current_user.author_email}}</td>
                                     </tr>
 <!--                                     <tr>
                                         <td>{{_("Address")}}</td>
@@ -54,11 +54,11 @@
  -->
                                      <tr>
                                         <td>{{_("Autor Role")}}</td>
-                                        <td><span class="label label-success">{{parameters.anyAuthor.author_role}}</span></td>
+                                        <td><span class="label label-success">{{current_user.author_role}}</span></td>
                                     </tr>
                                     <tr>
                                         <td>{{_("Member Since")}}</td>
-                                        <td> {{ locale.format_date(parameters.anyAuthor.author_create, full_format=True, shorter=True) }}</td>
+                                        <td> {{ locale.format_date(current_user.author_create, full_format=True, shorter=True) }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -88,7 +88,7 @@
 
                                                 <div class="col-sm-9 controls">
                                                     <div class="row">
-                                                        <div class="col-xs-9"><input name="email" value="{{parameters.anyAuthor.author_email}}" type="email" placeholder="email@yourcompany.com" class="form-control"/></div>
+                                                        <div class="col-xs-9"><input name="email" value="{{current_user.author_email}}" type="email" placeholder="email@yourcompany.com" class="form-control"/></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -96,10 +96,20 @@
 
                                                 <div class="col-sm-9 controls">
                                                         <div class="col-xs-9"> 
-                                                    <div class="row"> <input name="login" value="{{parameters.anyAuthor.author_login}}" type="text" placeholder="login" class="form-control"/></div>
+                                                    <div class="row"> <input name="login" value="{{current_user.author_login}}" type="text" placeholder="login" class="form-control"/></div>
                                                     </div>
                                                 </div>
                                             </div>
+                                            
+                                            <div class="form-group"><label class="col-sm-3 control-label">{{_("Old Password")}}</label>
+
+                                                <div class="col-sm-9 controls">
+                                                    <div class="row">
+                                                        <div class="col-xs-4"><input name="old_pass" type="password" placeholder="password" class="form-control"/></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
                                             <div class="form-group"><label class="col-sm-3 control-label">{{_("Password")}}</label>
 
                                                 <div class="col-sm-9 controls">
@@ -125,7 +135,7 @@
 
                                                 <div class="col-sm-9 controls">
                                                     <div class="row">
-                                                        <div class="col-xs-9"><input name="name" value="{{parameters.anyAuthor.author_name}}"  type="text" placeholder="first name" class="form-control"/></div>
+                                                        <div class="col-xs-9"><input name="name" value="{{current_user.author_name}}"  type="text" placeholder="first name" class="form-control"/></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -133,7 +143,7 @@
 
                                                 <div class="col-sm-9 controls">
                                                     <div class="row">
-                                                        <div class="col-xs-9"><input type="text"name="surname" value="{{parameters.anyAuthor.author_surname}}"  placeholder="last name" class="form-control"/></div>
+                                                        <div class="col-xs-9"><input type="text"name="surname" value="{{current_user.author_surname}}"  placeholder="last name" class="form-control"/></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -153,7 +163,7 @@
 
                                                 <div class="col-sm-9 controls">
                                                     <div class="row">
-                                                        <div class="col-xs-4"><input id="datepicker-normal" name="birthday" value="{{parameters.anyAuthor.author_surname}}" type="text" class="form-control"/></div>
+                                                        <div class="col-xs-4"><input id="datepicker-normal" name="birthday" value="{{current_user.author_surname}}" type="text" class="form-control"/></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -173,7 +183,7 @@
 
                                                 <div class="col-sm-9 controls">
                                                     <div class="row">
-                                                        <div class="col-xs-9"><input type="text" placeholder="mobile phone" class="form-control" name="phon" value="{{parameters.anyAuthor.author_phon}}" /></div>
+                                                        <div class="col-xs-9"><input type="text" placeholder="mobile phone" class="form-control" name="phon" value="{{current_user.author_phon}}" /></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -181,7 +191,7 @@
 
                                                 <div class="col-sm-9 controls">
                                                     <div class="row">
-                                                        <div class="col-xs-9"><input type="text" placeholder="website" class="form-control" name="name" value="{{parameters.anyAuthor.author_login}}"/></div>
+                                                        <div class="col-xs-9"><input type="text" placeholder="website" class="form-control" name="name" value="{{current_user.author_login}}"/></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -189,7 +199,7 @@
 
                                                 <div class="col-sm-9 controls">
                                                     <div class="row">
-                                                        <div class="col-xs-9"><input type="text" placeholder="facebook" class="form-control" name="name" value="{{parameters.anyAuthor.author_login}}"/></div>
+                                                        <div class="col-xs-9"><input type="text" placeholder="facebook" class="form-control" name="name" value="{{current_user.author_login}}"/></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -197,7 +207,7 @@
 
                                                 <div class="col-sm-9 controls">
                                                     <div class="row">
-                                                        <div class="col-xs-9"><input type="text" placeholder="twitter" class="form-control" name="name" value="{{parameters.anyAuthor.author_login}}"/></div>
+                                                        <div class="col-xs-9"><input type="text" placeholder="twitter" class="form-control" name="name" value="{{current_user.author_login}}"/></div>
                                                     </div>
                                                 </div>
                                             </div>

@@ -408,7 +408,7 @@ class Model: #Connector:
                         whtreStr  = ' AND '.join(list)    
                         # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
                         sqlStr = "UPDATE " + self._dataStruct.getTableName() + " SET actual_flag = 'O' WHERE " + whtreStr
-                        logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
+#                         logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
                         _loDb.execute(sqlStr)
             
             operation_timestamp = datetime.now() 
@@ -429,14 +429,23 @@ class Model: #Connector:
             
             dataValue = self.getToInsertValue( self._dataStruct.getLisAttr())
             dataValue += ['A', autorId, operationFlag, sha_hash, operation_timestamp]
+#             logging.info(' SAVE:: 2 sqlStr = ' + str(sqlStr))  
+#             logging.info(' SAVE:: 2 dataValue = ' + str(dataValue))  
             _loDb.execute(sqlStr, tuple(dataValue))
+#             logging.error(' save AFTER SAVE self:: ' + str (self) )
             # если Это статьи, тогда нам нужнео сохранить статью, и получить ее ИД!
             if returningStr != '':
                 sourse = _loDb.fetchone()
                 self.__dict__[self._dataStruct.getIdFieldName()] = sourse[self._dataStruct.getIdFieldName()]
-                self.commit()
-                return  sourse[self._dataStruct.getIdFieldName()]
+#                 self.commit()
             self.commit()
+#             logging.info(' SAVE:: 2 self._dataStruct.getIdFieldName() = ' + str(self._dataStruct.getIdFieldName()))  
+#             logging.info(' SAVE:: 2 self._headStruct.getIdFieldName() = ' + str(self._headStruct.getIdFieldName()))  
+            if self._dataStruct.getIdFieldName():
+                return self.__dict__[self._dataStruct.getIdFieldName()]
+            elif self._headStruct.getIdFieldName():
+                return self.__dict__[self._headStruct.getIdFieldName()]
+
         except psycopg2.Error as error:
             logging.error(' save exception:: ' + str (error) )
             logging.error(' save exception:: sqlStr = ' + sqlStr )
@@ -916,8 +925,11 @@ class CipherWrapper:
         
         return pkey
     
-    def isinstance(self, pkey):
+    def isInstancePublicKey(self, pkey):
         return isinstance(pkey, rsa.RSAPublicKey)
+
+    def isInstancePrivateKey(self, pkey):
+        return isinstance(pkey, rsa.RSAPrivateKey)
 
 
     class CipherErorr ( InternalError ):

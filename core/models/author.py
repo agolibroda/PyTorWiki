@@ -82,7 +82,8 @@ class Author(Model):
         self.public_key = None
         self.private_key = None
         self.private_key_hash = None
-        self.openPrivateKey = None
+        self._openPublicKey = None
+        self._openPrivateKey = None
         
         
         ########################
@@ -117,22 +118,17 @@ class Author(Model):
         пароль (новый,старый) перешифровывается 
         """
         
-#         logging.info(' save:: BEFORE work self = ' + str(self))
-#         logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
-#         logging.info(' save:: 1 self._old_pass = ' + str(self._old_pass))
-# 
-#         logging.info(' save:: 1 self.public_key = ' + str(self.public_key))
-#         logging.info(' save:: 1 self.private_key = ' + str(self.private_key))
-#         logging.info(' save:: 1 self.private_key_hash = ' + str(self.private_key_hash))
-
         bbsalt =  config.options.salt.encode()
         cip = CipherWrapper()
+        
+#             authorLoc.password_entered = passwd
+#             authorLoc.author_old_pass = self.get_argument("old_pass")
+        
+        self._old_pass = bytes(self.author_old_pass, 'utf-8')
+        self._pass_source = bytes(self.password_entered, 'utf-8')
+        self.author_pass = bytes(self.author_pass, 'utf-8')
 
-        self._pass_source = bytes(self._pass_source, 'utf-8')
-#             logging.info(' save:: 1 _pass_source = ' + str(_pass_source))
-#         logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
-#         del self._pass_source
-#         self._pass_source = _pass_source
+        logging.info(' save:: BEFORE work self = ' + str(self))
          
         if self._pass_source != '' and (self.dt_header_id == 0 or self.dt_header_id == None):
             #  это новый пользователь, для него просто делаем ХЕШ
@@ -142,37 +138,48 @@ class Author(Model):
 
         # self.dt_header_id == 0 or self.dt_header_id == None) and - когда проверим  
         # здать новую приватно-публичую парочку, если ее не было раньше.
-        isNotPubKey = not cip.isinstance(self.public_key)
-        if ( self._pass_source != '' and isNotPubKey ):
+        isNotPubKey = not cip.isInstancePublicKey(self._openPublicKey)
+#         logging.info(' save:: 1 isNotPubKey = ' + str(isNotPubKey))
+#         logging.info(' save:: 1 self._pass_source = ' + str(self._pass_source))
+        if ( self._pass_source != b'' and isNotPubKey ):
             cip.rsaInit() # сделать пару ключей 
-            self.public_key = cip.getPublicKey()
-            pKey = cip.getPrivateKey() # поучить незакрытый приватный ключ
-            bArrKey = cip.rsaPrivateSerialiation(pKey)
+            self._openPublicKey = cip.getPublicKey()
+            self._openPrivateKey = cip.getPrivateKey() # поучить незакрытый приватный ключ
+            bArrKey = cip.rsaPrivateSerialiation(self._openPrivateKey)
             self.private_key_hash = bcrypt.hashpw( bArrKey, bbsalt ).decode('utf-8') # получим ХЕш приватного ключа - для последуюей проверки при восстановлении пароля
             # закрыть приватный ключ на пароле автора.
             self.private_key = cip.symmetricEncrypt(self._pass_source, bArrKey)
+            self.public_key = cip.rsaPubSerialiation(self._openPublicKey)
+            
             self._isHeaderEdit = True
+
+#         logging.info(' save:: 2 work self = ' + str(self))
 
         # если мы поменяли пароль, значит, я должен из формы получить 2 значения - старый пароль и новый пароль - и оба в тесте.    
         # потом я проверю, что старый пароль - совпадает ХЕШЕМ,
         # еслиДА, тогда 
         # 1 - декодировать приватный ключ старым паролем,
         # 2 закодировать - новым, сделать новый ХЕШ, и - УРА!!!!
-        isPubKey = cip.isinstance(self.public_key)
-        if self._pass_source != '' and isPubKey :
-            bbOldPAss = tornado.escape.utf8(self._old_pass)
-            hashOldPass = bcrypt.hashpw( bbOldPAss, bbsalt ) #.decode('utf-8')
+        if self._pass_source != b'' and self._old_pass != b'' and not isNotPubKey :
+            hashOldPass = bcrypt.hashpw( self._old_pass, bbsalt ) #.decode('utf-8')
+            logging.info(' save:: 2 work self.author_pass = ' + str(self.author_pass))
+            logging.info(' save:: 2 work hashOldPass = ' + str(hashOldPass))
             if hashOldPass == self.author_pass:
                 #  все норм, старый пароль - верный, можно заняться сменой пароля.
 #                 tmpPrivate_key = cip.symmetricDecrypt(self._old_pass, self.private_key)
-                bArrKey = cip.rsaPrivateSerialiation(self.openPrivateKey)
-                tmpHash = bcrypt.hashpw( bArrKey, bbsalt ).decode('utf-8') 
-                if tmpHash == self.private_key_hash:
+                bArrKey = cip.rsaPrivateSerialiation(self._openPrivateKey)
+#                 tmpHash = bcrypt.hashpw( bArrKey, bbsalt ).decode('utf-8') 
+#                 if tmpHash == self.private_key_hash:
                     # все орм, мы нормально открыли приватный ключ, теперб его можно закрытьна новый пароль!
-                    cip = setKey(self._pass_source)
-                    self.private_key = cip.symmetricEncrypt(self._pass_source, bArrKey)
-                    # на и запомним новый Хеш пароля!!!!!
-                    self.author_pass = bcrypt.hashpw( newPassbb, bbsalt ).decode('utf-8') 
+#                 cip.setKey(self._pass_source)
+                self.private_key = cip.symmetricEncrypt(self._pass_source, bArrKey)
+                # на и запомним новый Хеш пароля!!!!!
+                self.author_pass = bcrypt.hashpw( self._pass_source, bbsalt ).decode('utf-8') 
+            else:
+                # все плохо, стрый пароль не верный, ничего сохранять нельзя!!!!
+                raise WikiException(OLD_PASSWORD_IS_BAD) 
+
+        logging.info(' save:: 3 work self = ' + str(self))
                     
         if self.dt_header_id == 0:
             self.author_create = datetime.now()
@@ -182,8 +189,7 @@ class Author(Model):
             operationFlag = 'U'
             
         sha_hash_sou =  str(self.author_login) + str(self.author_name) + str(self.author_surname) + str(self.author_role) + str(self.author_phon) + str(self.author_email)  
-
-        self.public_key = cip.rsaPubSerialiation(self.public_key)
+#         вот тут  self.private_key должен быть, и должен быть закрытым!!!!
         logging.info(' save:: 99 self = ' + str(self)) 
            
         self.dt_header_id = Model.save(self, self.dt_header_id, operationFlag, sha_hash_sou)
@@ -223,33 +229,42 @@ class Author(Model):
             
             logging.info(' login:: After Load self = ' + str(self))
             
-            _private_key = bytes(self.private_key)
-            del self.private_key
-#             self.private_key = _private_key
-            _private_key_hash = bytes(self.private_key_hash)
-            del self.private_key_hash
-            self.private_key_hash = _private_key_hash
-            _public_key = bytes(self.public_key)
-            del self.public_key
-            # пока мы знаем пароль, надо получить и положить в данные пользователя, в сессию, его АСКРЫТЫЙ приватный ключик!!!!
-            if _private_key != '' or _private_key != None:
+            try:
                 cip = CipherWrapper()
-                # rsaUnSerialiation(self, strKey)
-                public_key = cip.rsaPubUnSerialiation(_public_key)
-                self.public_key = public_key
-                strKey = cip.symmetricDecrypt( tornado.escape.utf8(pwdStr), _private_key )
-                tmpHash = bcrypt.hashpw( strKey, bbsalt )
-                if tmpHash == _private_key_hash:
-                    self.openPrivateKey = cip.rsaPrivateUnSerialiation( strKey )
-                else:
-                    # если ключи прочитались не верно, наверное х стоит переписать, 
-                    # и Автор ваще не должен иметь возоности ключами пользоваться, 
-                    # и автор должен идти в настройки профиля и редактировать из, и генерить сее новые ключи.
-                    self.openPrivateKey = None
-                    self.public_key = None
-#                     raise WikiException(LOAD_PRIVATE_KEY_ERROR)
+#                 .decode('utf-8')
 
-            logging.info(' login:: END self = ' + str(self))
+                self.public_key = bytes(self.public_key)#.decode(encoding="utf-8") #.decode('utf-8') 
+                self.private_key = bytes(self.private_key)#.decode(encoding="utf-8") #.decode('utf-8') 
+                self.private_key_hash = bytes(self.private_key_hash)#.decode(encoding="utf-8") #.decode('utf-8') 
+
+                if self.public_key != b'' or self.public_key != None:
+                    self._openPublicKey = cip.rsaPubUnSerialiation(self.public_key)
+                    
+                # пока мы знаем пароль, надо получить и положить в данные пользователя, в сессию, его АСКРЫТЫЙ приватный ключик!!!!
+                if self.private_key != b'' or self.private_key != None:
+                    strKey = cip.symmetricDecrypt( tornado.escape.utf8(pwdStr), self.private_key) 
+                    tmpHash = bcrypt.hashpw( strKey, bbsalt )
+                    if tmpHash == bytes(self.private_key_hash):
+                        self._openPrivateKey = cip.rsaPrivateUnSerialiation( strKey )
+                    else:
+                        # если ключи прочитались не верно, наверное х стоит переписать, 
+                        # и Автор ваще не должен иметь возоности ключами пользоваться, 
+                        # и автор должен идти в настройки профиля и редактировать из, и генерить сее новые ключи.
+                        self._openPrivateKey = None
+                        self._openPublicKey = None
+                        self.private_key = None
+                        self.public_key = None
+                logging.info(' login:: END self = ' + str(self))
+            except Exception as err:
+                logging.error(' login:: END:: err = ' + str(err) )
+                self.private_key_hash = None
+                self.private_key = None
+                self.public_key = None
+                self._openPrivateKey = None
+                self._openPublicKey = None
+#                 self.public_key = None
+
+#             logging.info(' login:: END self = ' + str(self))
             return self
         else:
             raise WikiException(LOGIN_ERROR)
@@ -291,6 +306,7 @@ class Author(Model):
                  if objValue.find('_') != 0:
                     self.__setattr__(objValue,resList[0].__getattribute__(objValue) )
                     
+#             self.author_pass =  bytes(self.author_pass, 'utf-8')                  
             _public_key = bytes(self.public_key)
             if _public_key != b'' and _public_key != None:
                 self.unserializePyblicKey(_public_key)
@@ -320,13 +336,12 @@ class Author(Model):
  
     def unserializePyblicKey(self, _public_key):
         try:
-            del self.public_key
+            del self._openPublicKey
             cip = CipherWrapper()
-            public_key = cip.rsaPubUnSerialiation(_public_key)
-            self.public_key = public_key
+            self._openPublicKey = cip.rsaPubUnSerialiation(_public_key)
         except :
-            logging.error(' insert exception:: sqlStr = ' + sqlStr )
-            self.public_key = None
+#             logging.error(' insert exception:: sqlStr = ' + sqlStr )
+            self._openPublicKey = None
 
 
     def unserializePrivateKey(self, _private_key):
@@ -337,11 +352,11 @@ class Author(Model):
         
         """
         try:
-            del self.openPrivateKey
+            del self._openPrivateKey
             cip = CipherWrapper()
-            self.openPrivateKey =  cip.rsaPrivateUnSerialiation( _private_key )
+            self._openPrivateKey =  cip.rsaPrivateUnSerialiation( _private_key )
         except :
-            self.openPrivateKey =  ''
+            self._openPrivateKey =  None
             
 
 #     def serializeKeys(self):
@@ -357,7 +372,7 @@ class Author(Model):
 #             tmp = cip.rsaPrivateSerialiation( self.public_key )
 #             del self.public_key
 #             self.public_key = tmp
-#             tmp = cip.rsaPrivateSerialiation( self.openPrivateKey )
+#             tmp = cip.rsaPrivateSerialiation( self._openPrivateKey )
 #             del self.public_key
 #             del self.public_key
 #         except :
@@ -383,7 +398,11 @@ class Author(Model):
 
 
     def publicKey(self):
-        return self.public_key       
+        return self._openPublicKey       
+
+
+    def privateKey(self):
+        return self._openPrivateKey       
     
 
     def parsing(self, picledAutor):
@@ -403,13 +422,6 @@ class Author(Model):
         if _private_key != b'' and _private_key != None:
             newAuthor.unserializePrivateKey(_private_key)
 
-        if  newAuthor.private_key_hash != None and newAuthor.private_key_hash != b'':
-#             _private_key_hash = newAuthor.private_key_hash
-            _private_key_hash = bytes(newAuthor.private_key_hash)
-
-            del newAuthor.private_key_hash
-            newAuthor.private_key_hash = _private_key_hash 
-            #pickle.loads(_private_key_hash)
             
 
             
@@ -422,43 +434,44 @@ class Author(Model):
         """
         # pickle.dumps(_authorLoc.prepareForSerialization())
 
-#         logging.info( 'prepareForSerialization  self = ' + str(self))
+#         logging.info( 'serializationAuthor  self = ' + str(self))
 
         newAuthor = Author()
         cip = CipherWrapper()
         newAuthor = self.preparingForPicked (self)
-        if newAuthor.openPrivateKey != None and newAuthor.openPrivateKey != b'': 
-            _openPrivateKey = cip.rsaPrivateSerialiation(newAuthor.openPrivateKey)
-            del newAuthor.openPrivateKey
-            newAuthor.openPrivateKey = _openPrivateKey
-        if newAuthor.public_key != None and newAuthor.public_key != b'':
-            _public_key = newAuthor.public_key
-            del newAuthor.public_key 
-            newAuthor.public_key = cip.rsaPubSerialiation(_public_key)
+        if self._openPrivateKey != None and self._openPrivateKey != b'' and cip.isInstancePrivateKey(self._openPrivateKey): 
+            newAuthor._openPrivateKey = cip.rsaPrivateSerialiation(self._openPrivateKey)
+#         logging.info( 'serializationAuthor  newAuthor.public_key = ' + str(newAuthor.public_key))
+#         if newAuthor.public_key != None and newAuthor.public_key != b'' and cip.isInstancePublicKey(newAuthor.public_key):
+#             _public_key = newAuthor.public_key
+#             del newAuthor.public_key 
+#             newAuthor.public_key = cip.rsaPubSerialiation(_public_key)
+#         logging.info( 'serializationAuthor  newAuthor = ' + str(newAuthor))
+#         logging.info( 'serializationAuthor END newAuthor = ' + str(newAuthor))
+
         return pickle.dumps(newAuthor.__dict__)    
  
  
     def unSerializationAuthor(self, authorPicle):
         """
         Получить строку, и сделать из нее Объект - Автора.
+        Это делаем при вынимании автора из сессии.
         :param Строку с Сериализованым автором 
         :Return: отдаем ОБЪЕКТ Автора.
         """
-#         logging.info( 'prepareForSerialization  self = ' + str(self))
+#         logging.info( 'unSerializationAuthor  self = ' + str(self))
 
         cip = CipherWrapper()
         authorDict = pickle.loads(authorPicle)
         self.parsingOfPicked(authorDict) 
         
-        if self.openPrivateKey != None and self.openPrivateKey != b'': 
-            _openPrivateKey = cip.rsaPrivateUnSerialiation(self.openPrivateKey)
-            del self.openPrivateKey
-            self.openPrivateKey = _openPrivateKey
+        if self._openPrivateKey != None and self._openPrivateKey != b'': 
+            _openPrivateKey = cip.rsaPrivateUnSerialiation(self._openPrivateKey)
+            del self._openPrivateKey
+            self._openPrivateKey = _openPrivateKey
                 
         if self.public_key != None and self.public_key != b'':
-            _public_key = self.public_key
-            del self.public_key 
-            self.public_key = cip.rsaPubUnSerialiation(_public_key)
+            self._openPublicKey = cip.rsaPubUnSerialiation(self.public_key)
 
         logging.info(' unSerializationAuthor:: END self = ' + str(self))   
 
