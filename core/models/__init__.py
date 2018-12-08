@@ -846,27 +846,31 @@ class CipherWrapper:
         session_pwd = Fernet.generate_key()
         ciphertext = self.symmetricEncrypt(session_pwd, data)
 
+        mgf = padding.MGF1(algorithm=hashes.SHA256())
         cipherPwd = publicKey.encrypt(
             session_pwd,
             padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                mgf=mgf,
                 algorithm=hashes.SHA256(),
                 label=b'None'
             )
         )
-        return  pickle.dumps({'ciphertext': ciphertext, 'cipherPwd': cipherPwd})
+        return  pickle.dumps({'ciphertext': ciphertext, 'cipherPwd': cipherPwd, 'mgf': mgf})
     
     
     def rsaDecrypt(self, openPrivateKey, cipherPickle):
         """
         Расшифровать текст по процедуре RSA
+        :param openPrivateKey - Объект Приватного ключа 
+        :param cipherPickle - Это сериализованная структура Данных 
+        :Return: отдаем уже готовый текст        
         """
         cipherData = pickle.loads(cipherPickle)
  
         plainPwd = openPrivateKey.decrypt(
             cipherData['cipherPwd'],
             padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                mgf=cipherData['mgf'],
                 algorithm=hashes.SHA256(),
                 label=b'None'
             )

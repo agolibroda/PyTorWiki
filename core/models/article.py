@@ -236,7 +236,7 @@ class Article(Model):
             articteSou = tornado.escape.utf8(self.article_source)
         elif self.article_permissions == 'sol':
             cip = CipherWrapper()
-            articteSou = cip.rsaEncrypt(readerMan.public_key, bytes(self.article_source, 'utf-8') )
+            articteSou = cip.rsaEncrypt(readerMan._openPublicKey, bytes(self.article_source, 'utf-8') )
         article_source = zlib.compress( articteSou )
         self.article_source = article_source
          
@@ -264,7 +264,7 @@ class Article(Model):
             # статья закрыта персональным ключем АВТОРА - открывать ее надо посоответственно!
             try:
                 cip = CipherWrapper() 
-                outArt.article_source = cip.rsaDecrypt(readerMan.openPrivateKey, unZipText ).decode("utf-8")
+                outArt.article_source = cip.rsaDecrypt(readerMan._openPrivateKey, unZipText ).decode("utf-8")
             except Exception as error: # cip.CipherErorr as error:
                 logging.info( 'Decode:: Exception as et = ' + str(error))
 #                 logging.info( 'Decode:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
