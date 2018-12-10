@@ -21,6 +21,11 @@ define("salt", default= '$2b$12$.b9454ab5a22859b68bb48a65ed3be7ab208c', help="Ma
 
 define("cookie_secret", default= '64d1c3defc5f9e829010881cfae22db38732', help="Main cookie_secret")
 
+# define("sessions_strategy", default= 'memory', help="Session strategy")
+# define("sessions_strategy", default= 'file', help="Session strategy")
+define("sessions_strategy", default= 'redis', help="Session strategy")
+
+
 ########################################################################
 define("postgreHost", default="localhost", help="postgreHost")
 define("postgrePort", default="5432", help="postgrePort")

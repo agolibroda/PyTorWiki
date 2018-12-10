@@ -94,6 +94,7 @@ class Application(tornado.web.Application):
 
         
         ]
+        
         settings = dict(
             wiki_title = config.options.Project_Name,
             wiki_title_admin ="TorWiki Admin layer",
@@ -114,27 +115,30 @@ class Application(tornado.web.Application):
         # sid_name, lifetime added in 1.1.5.0
         # sid_name: the name of session id in cookies.
         # lifetime: session default expires seconds.
-        session_settings = dict(
-            
-#             driver='memory',
-#             driver_settings={'host': self},
-            
-#             driver="file",
-#             driver_settings=dict(host="#_sessions",),
-
-            driver="redis",
-            driver_settings=dict(
+        if config.options.sessions_strategy == 'redis':
+            driverValue="redis"
+            driverSettings=dict(
                 host='localhost',
                 port=6379,
                 db=14,
 #                 "pass"='',
                 max_connections=1024,
-            ),
-
+            )
+        elif config.options.sessions_strategy == 'file':
+            driverValue="file"
+            driverSettings=dict(host="#_sessions",)
+        else:
+            # memory
+            driverValue='memory'
+            driverSettings={'host': self}
+        
+        session_settings = dict(
+            driver=driverValue,
+            driver_settings=driverSettings,
 
             force_persistence=True,
             sid_name='wiki_author',
-            session_lifetime=180000,
+            session_lifetime=1800,
         )
         settings.update(session=session_settings)
         
