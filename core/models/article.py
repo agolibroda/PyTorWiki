@@ -432,42 +432,42 @@ class Article(Model):
             return outArt
 
     
-    def list(self, categoryId = 0):
-         """
+    def list(self, serchOptions = None):
+        """
          получить список статей
          упорядочивать потом будем
     
          получить список статей 
          - выбираем данные из "articles" - получить при этом АКТАЛЬНЫЕ ИД ревизий!
                  
-         """
-    
-         categoryStr = '';
-         if categoryId > 0 :
-             categoryStr = ' articles.article_category_id = ' + str(categoryId)
+        """
+        whereStr = ''
+        
+        if serchOptions != None and hasattr(serchOptions, 'categoryId') and serchOptions.categoryId > 0 :
+            whereStr = ' articles.article_category_id = ' + str(serchOptions.categoryId)
              
-         if categoryStr == '':
-             categoryStr += " articles.actual_flag = 'A' "
-         else:
-             categoryStr += " AND articles.actual_flag = 'A' "
+        if whereStr == '':
+            whereStr += " articles.actual_flag = 'A' "
+        else:
+            whereStr += " AND articles.actual_flag = 'A' "
              
-         getRez = self.select(
+        getRez = self.select(
     #                                'articles.article_id, FROM_BASE64(articles.article_title),  FROM_BASE64(articles.article_source) ',
                                 'articles.article_id, articles.article_title, articles.article_link, ' +
                                 'articles.article_annotation, articles.article_category_id, articles.revision_author_id, '+ 
                                 ' articles.article_template_id, articles.article_permissions ',
                                 '',
                                     {
-                                'whereStr': categoryStr, # строка набор условий для выбора строк
+                                'whereStr': whereStr, # строка набор условий для выбора строк
                                 'orderStr': ' articles.article_title ', # строка порядок строк
     #                                'orderStr': 'FROM_BASE64( articles.article_title )', # строка порядок строк
                                  }
                                 )
     
 #          logging.info( 'list:: getRez = ' + str(getRez))
-         if len(getRez) == 0:
-#             raise WikiException( ARTICLE_NOT_FOUND )
-            return []
+        if len(getRez) == 0:
+#            raise WikiException( ARTICLE_NOT_FOUND )
+           return []
          
 #          for oneObj in getRez:
 #              oneObj.article_title = base64.b64decode(oneObj.article_title).decode(encoding='UTF-8')
@@ -477,7 +477,7 @@ class Article(Model):
 #              oneObj.article_annotation =  base64.b64decode(oneObj.article_annotation).decode(encoding='UTF-8')
 #              logging.info( 'list:: After oneArt = ' + str(oneObj))
     
-         return getRez
+        return getRez
  
     def listByAutorId(self, authorId = 0, spectatorId = 0):
         """
