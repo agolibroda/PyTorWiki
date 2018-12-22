@@ -90,9 +90,12 @@ class Template(): #, tornado.web.RequestHandler):
         
         """
         file_name = str(templateId)
-        temptateDir = os.path.join(config.options.templateDir, config.options.tmpTplPath)
+#         temptateDir = os.path.join(config.options.templateDir, config.options.tmpTplPath)
+#         temptateDir = os.path.join(config.options.projectDir, config.options.tmpTplPath)
+        temptateDir = config.options.tmpTplPath
+#         logging.info( 'Template:: temptateDir =  ' + str(temptateDir))
         realFileName = os.path.join(temptateDir, str(file_name) + config.options.tplExtension)
-        logging.info( 'Template:: exists realFileName =  ' + str(realFileName))
+#         logging.info( 'Template::  realFileName =  ' + str(realFileName))
         return realFileName
     
     def exists(self, realFileName):
@@ -107,12 +110,16 @@ class Template(): #, tornado.web.RequestHandler):
         """
         Убрать файл шаблона (по его ИД) из директории,
         в которой лежат все "внутрисистемные" шиблоны
+        Не, уберу ВСЕ файлы!!!!!
         """
-        realFileName = self.realFileName(templateId)
-        logging.info( 'Template:: clean realFileName =  ' + str(realFileName))
-        logging.info( 'Template:: clean self.exists(realFileName) =  ' + str(self.exists(realFileName)))
-        if self.exists(realFileName):
-            os.remove(realFileName) 
+#         realFileName = self.realFileName(templateId)
+#         if self.exists(realFileName):
+#             os.remove(realFileName) 
+        _wrkDir = os.path.join(config.options.projectDir, config.options.templateDir, config.options.tmpTplPath)
+        logging.info( 'Template:: clean _wrkDir =  ' + str(_wrkDir))            
+        for file in os.listdir(_wrkDir):
+            logging.info( 'Template:: clean file =  ' + str(file)) 
+            os.remove(os.path.join(_wrkDir, file)) 
 
 
     def save(self, tmlFullName, tmplateTxt):
@@ -133,9 +140,13 @@ class Template(): #, tornado.web.RequestHandler):
         Подготовка шаблона выбирать его будем по ИД
     
         """
+        
+#         config.options.templateDir, #os.path.join(projectDir, config.options.templateDir),
         tmlFullName = self.realFileName(articleTemplateId)
-        logging.info( 'temtlatePrepare:: save 3 tmlFullName =  ' + str(tmlFullName))
-        if not self.exists(tmlFullName):
+#         logging.info( 'temtlatePrepare:: save 3 tmlFullName =  ' + str(tmlFullName))
+        _wrkFullName = os.path.join(config.options.projectDir, config.options.templateDir, tmlFullName)
+#         logging.info( 'temtlatePrepare:: save 3 _wrkFullName =  ' + str(_wrkFullName))
+        if not self.exists(_wrkFullName):
 #             (template, tlFile) = yield executor.submit( artHelper.getArticleById, article.article_template_id )
 
             artControl = Article()
@@ -144,7 +155,7 @@ class Template(): #, tornado.web.RequestHandler):
             #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
             template.article_source = self.temtlateParsing(template.article_source)
             
-            self.save(tmlFullName, template.article_source)
+            self.save(_wrkFullName, template.article_source)
         return tmlFullName
 
     def temtlatePrepareByName(self, articleTemplateName): # article_template_id
@@ -152,7 +163,7 @@ class Template(): #, tornado.web.RequestHandler):
         Шаблон выбирать будем по его ИМЕНИ, как статью. :-) 
     
         """
-        logging.info( 'temtlatePrepareByName:: articleTemplateName =  ' + str(articleTemplateName))
+#         logging.info( 'temtlatePrepareByName:: articleTemplateName =  ' + str(articleTemplateName))
         articleLink = articleTemplateName.strip().strip(" \t\n")
         artControl = Article()
         spectator = None
@@ -213,13 +224,15 @@ class TemplateParams:
         и пользоваться его данными
           
         """
-        logging.info( ' makeTplParametr:: author = ' + str(author))
+#         logging.info( ' make TplParametr:: author = ' + str(author))
 #         if not hasattr(self, 'autorGroupList'): 
 
 #         self.current_user = author
+        self.autorGroupList = list()
         groupModel = Group()
 #         self.autorGroupList = yield executor.submit( groupModel.grouplistForAutor, self.author.author_id )
-        self.autorGroupList = groupModel.grouplistForAutor( author.dt_header_id )
+        if author != None:# если автор вообще есть, и он
+            self.autorGroupList = groupModel.grouplistForAutor( author.dt_header_id )
          
 #         logging.info (' makeTplParametr:: self = ' + str( self ))
     def setAuthor (self, author):

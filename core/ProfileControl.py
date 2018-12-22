@@ -90,7 +90,8 @@ class AuthCreateHandler(BaseHandler):
             
             authorLoc.author_login = self.get_argument("login")
             authorLoc.author_email = self.get_argument("email")
-            authorLoc.author_pass = passwd
+            authorLoc.password_entered = passwd
+            authorLoc.author_old_pass = ''
             
             authorLoc.author_name = self.get_argument("name")
             authorLoc.author_surname = self.get_argument("surname")

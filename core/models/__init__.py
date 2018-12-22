@@ -408,7 +408,7 @@ class Model: #Connector:
                         whtreStr  = ' AND '.join(list)    
                         # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
                         sqlStr = "UPDATE " + self._dataStruct.getTableName() + " SET actual_flag = 'O' WHERE " + whtreStr
-#                         logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
+                        logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
                         _loDb.execute(sqlStr)
             
             operation_timestamp = datetime.now() 
@@ -429,8 +429,8 @@ class Model: #Connector:
             
             dataValue = self.getToInsertValue( self._dataStruct.getLisAttr())
             dataValue += ['A', autorId, operationFlag, sha_hash, operation_timestamp]
-#             logging.info(' SAVE:: 2 sqlStr = ' + str(sqlStr))  
-#             logging.info(' SAVE:: 2 dataValue = ' + str(dataValue))  
+            logging.info(' SAVE:: 2 sqlStr = ' + str(sqlStr))  
+            logging.info(' SAVE:: 2 dataValue = ' + str(dataValue))  
             _loDb.execute(sqlStr, tuple(dataValue))
 #             logging.error(' save AFTER SAVE self:: ' + str (self) )
             # если Это статьи, тогда нам нужнео сохранить статью, и получить ее ИД!

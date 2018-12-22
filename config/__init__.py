@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Alec Golibroda
 #
@@ -12,30 +13,33 @@ from tornado.options import define, options, parse_config_file
 # options.logging = debug #None
 
 define("logFileName", default= 'test.log', help="log File Name")
-
 #
-define("Project_Name", default= 'TorWiki', help="Project name")
+define("Project_Name", default= 'pyTorWiki', help="Project name")
 
-define("salt", default= '$2b$12$.b9454ab5a22859b68bb48a65ed3be7ab208c', help="Main salt")
-# define("salt", default= '$2b$12$.b9454ab5a22859b68bb48a65ed3be7ab208c080e86aaf518d376d9654beaddc53fb830e3bbf2bcc6bdb9a1fab7725a0d1761', help="Main salt")
+define("wikiTitleAdmin", default= 'pyTorWiki Admin layer', help="TorWiki Admin layer")
 
-define("cookie_secret", default= '64d1c3defc5f9e829010881cfae22db38732', help="Main cookie_secret")
+define("sidName", default= 'wiki_author', help="wiki author")
 
-# define("sessions_strategy", default= 'memory', help="Session strategy")
-# define("sessions_strategy", default= 'file', help="Session strategy")
-define("sessions_strategy", default= 'redis', help="Session strategy")
+define("salt", default= 'saltBy_pyTorWiki', help="Main salt")
+
+define("cookieSecret", default= 'cookieSecretBy_pyTorWiki', help="Main cookie secret")
+
+# Выбираем одну из стратегий работы с сессиями :-) 
+# define("sessionsStrategy", default= 'memory', help="Session strategy")
+# define("sessionsStrategy", default= 'file', help="Session strategy")
+define("sessionsStrategy", default= 'redis', help="Session strategy")
+define("sessionLifetime", default= 1800, help="Session Lifetime")
 
 
 ########################################################################
 define("postgreHost", default="localhost", help="postgreHost")
 define("postgrePort", default="5432", help="postgrePort")
 
-define("postgreBase", default="py_wiki", help="postgreBase")
+define("postgreBase", default="baseName", help="postgreBase")
 
-define("postgreUser", default="postgres", help="postgreUser")
-define("postgrePwd", default="123", help="postgrePwd")
+define("postgreUser", default="baseUser", help="postgreUser")
+define("postgrePwd", default="passwordUser", help="postgrePwd")
 ########################################################################
-
 
 define("main_port", default="8888", help="Main port 8888")
 define("main_title", default="Main WIKI Title", help="Main Wiki Title ")
@@ -47,11 +51,12 @@ define("to_out_path", default="filestorage/", help="Path to upload")
 define("adminPath", default=r"/admin", help="Path to Admin Area")
 define("adminTplPath", default=r"admin/", help="Path to Admin Area")
 
+define("projectDir", default=r"", help="Path to Project")
+define("staticDir", default=r"static", help="Static Dir")
+define("templateDir", default=r"templates", help="Template Dir")
+
 define("tmpTplPath", default=r"tmp", help="Path to user`s Template Area")
 define("tplExtension", default=r".html", help="Template file Extension")
-define("templateDir", default=r"", help="Template Dir")
-
-
 
 define("list_categofy_id", default=1, help="Information Page Category")
 
@@ -64,7 +69,24 @@ define("main_page_id", default=6, help="Id of Main User Page")
 
 
 
-# parse_config_file("./config/base.conf")
-# parse_config_file("./config/main.conf")
+# Эти параметры переопределим на "боевые" в файле dbase.conf
+# postgreHost = 'localhost'
+# postgrePort = '5432'
+# postgreBase = '?'
+# postgreUser ='?'
+# postgrePwd = '?'
+parse_config_file("./config/dbase.conf")
+
+
+# Эти параметры переопределим на "боевые" в файле main.conf
+# main_port = '8888' 
+# main_title ='titile'
+# Project_Name='TorWiki'
+# wikiTitleAdmin='TorWiki Admin layer'
+# salt = "?"
+# cookieSecret="?"
+
+parse_config_file("./config/main.conf")
+
 
 

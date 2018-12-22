@@ -126,7 +126,7 @@ class Author(Model):
         
         self._old_pass = bytes(self.author_old_pass, 'utf-8')
         self._pass_source = bytes(self.password_entered, 'utf-8')
-        self.author_pass = bytes(self.author_pass, 'utf-8')
+#         self.author_pass = bytes(self.author_pass, 'utf-8')
 
         logging.info(' save:: BEFORE work self = ' + str(self))
          
@@ -161,7 +161,7 @@ class Author(Model):
         # 1 - декодировать приватный ключ старым паролем,
         # 2 закодировать - новым, сделать новый ХЕШ, и - УРА!!!!
         if self._pass_source != b'' and self._old_pass != b'' and not isNotPubKey :
-            hashOldPass = bcrypt.hashpw( self._old_pass, bbsalt ) #.decode('utf-8')
+            hashOldPass = bcrypt.hashpw( self._old_pass, bbsalt ).decode('utf-8')
             logging.info(' save:: 2 work self.author_pass = ' + str(self.author_pass))
             logging.info(' save:: 2 work hashOldPass = ' + str(hashOldPass))
             if hashOldPass == self.author_pass:
@@ -473,5 +473,5 @@ class Author(Model):
         if self.public_key != None and self.public_key != b'':
             self._openPublicKey = cip.rsaPubUnSerialiation(self.public_key)
 
-        logging.info(' unSerializationAuthor:: END self = ' + str(self))   
+#         logging.info(' unSerializationAuthor:: END self = ' + str(self))   
 

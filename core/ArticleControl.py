@@ -94,6 +94,8 @@ class HomeHandler(BaseHandler):
             tplControl.page_name = article.article_title 
 # article=article, fileList=fileList, link='/compose', page_name='Редактирование'
 
+            logging.info( 'HomeHandler get templateName = ' + str(templateName))
+            logging.info( 'HomeHandler get tplControl = ' + str(tplControl))
             
             self.render(templateName, parameters=tplControl)
         except Exception as e:
@@ -189,6 +191,8 @@ class ArticleHandler(BaseHandler):
             tplControl.page_name = 'Редактирование' + article.article_title
             tplControl.link='/compose'
             tplControl.article=article
+            tplControl.fileList=fileList
+
 
 # article=article, fileList=fileList, link='/compose', page_name='Редактирование'
        # а вот тут я должен получить и распарсить шаблон - как - текст в статьях (особой категории!!!!)
@@ -367,18 +371,21 @@ class ComposeHandler(BaseHandler):
         except Exception as e:
             logging.info( 'ComposeHandler POST!!! (Save):: Exception as et = ' + str(e))
             logging.info( 'Post:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
-            artHelper = HelperArticle()
-            categoryList += yield executor.submit(artHelper.getListArticles, config.options.list_categofy_id)
-            tplControl.categoryList = categoryList
-            tplControl.selectedCategoryId = article.article_category_id
             
-            templatesList = [Article(0, 'Выберите значение ')]
-            templatesList += yield executor.submit(artHelper.getListArticles, config.options.tpl_categofy_id)
-            tplControl.templatesList = templatesList
-            tplControl.templateWrkId = article.article_template_id
-
-            logging.info( ' ComposeHandler: GET: tplControl = ' + toStr(tplControl))
-            self.render("compose.html", parameters= tplControl)
+            self.redirect("/compose")
+            
+#             artHelper = HelperArticle()
+#             categoryList += yield executor.submit(artHelper.getListArticles, config.options.list_categofy_id)
+#             tplControl.categoryList = categoryList
+#             tplControl.selectedCategoryId = article.article_category_id
+#             
+#             templatesList = [Article(0, 'Выберите значение ')]
+#             templatesList += yield executor.submit(artHelper.getListArticles, config.options.tpl_categofy_id)
+#             tplControl.templatesList = templatesList
+#             tplControl.templateWrkId = article.article_template_id
+# 
+#             logging.info( ' ComposeHandler: GET: tplControl = ' + toStr(tplControl))
+#             self.render("compose.html", parameters= tplControl)
 
 
 

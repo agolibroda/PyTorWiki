@@ -1,25 +1,21 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Alec Golibroda
 
-# что нужно добавить до ядра ритона для нормальной работы
-#
-#
-
-
-import tornado.web
-import tornado.httpserver
-import tornado.ioloop
-import torndsession
 
 
 # import .BaseHandler
 import logging
 
-
-
 # import pickle
 import json
+
+
+# import tornado.web
+# import tornado.httpserver
+# import tornado.ioloop
+# import torndsession
 
 import config
 
@@ -78,28 +74,15 @@ class Application(tornado.web.Application):
 
             (r"/([^/]+)", ArticleHandler), # (ArticleControl) Этим замыкаем список рутеров, так как он превнащает в название статьи ВСЕ!!!!
 
-# Это походу, надо вычистить - умерло.
-#             (r"/article/([^/]+)", ArticleHandler),
-#             (r"/my_articles", MyArticletHandler),
-#             (r"/my_group", MyGroupHandler),
-#             (r"/articles", ArticleListHandler),
-#             (config.options.adminPath, AdminHomeHandler, {"flag": "12345"}), # dict(flag=12345)
-#             (config.options.adminPath, AdminHomeHandler),
-#             (config.options.adminPath + r"/", AdminHomeHandler),
-#             (config.options.adminPath + r"/articles", AdminFeedHandler),
-#             (config.options.adminPath + r"/revisions", AdminRevisionsHandler),
-#             (config.options.adminPath + r"/compose", AdminComposeHandler),
-#             (config.options.adminPath + r"/revisionView", AdminRevisionViewHandler),
-#             (config.options.adminPath + r"/article/([^/]+)", AdminArticleHandler),
-
-        
         ]
         
+        projectDir = os.path.dirname(__file__)
         settings = dict(
             wiki_title = config.options.Project_Name,
-            wiki_title_admin ="TorWiki Admin layer",
-            template_path=os.path.join(os.path.dirname(__file__), "templates"),
-            static_path=os.path.join(os.path.dirname(__file__), "static"),
+            wiki_title_admin = config.options.wikiTitleAdmin,
+#             project_dir=projectDir,
+            template_path=config.options.templateDir, #os.path.join(projectDir, config.options.templateDir),
+            static_path=config.options.staticDir, #os.path.join(projectDir, config.options.staticDir),
             ui_modules={
                         "Article": ArticleModule, 
                         'Revision': RevisionModule, 
@@ -107,7 +90,7 @@ class Application(tornado.web.Application):
                         'FilesList': FilesListModule,
                         },
             xsrf_cookies=True,
-            cookie_secret= config.options.cookie_secret, #  "64d1c3defc5f9e829010881cfae22db38732",
+            cookie_secret=config.options.cookieSecret, #  "64d1c3defc5f9e829010881cfae22db38732",
             login_url="/auth/login",
             debug=True,
         )
@@ -115,7 +98,7 @@ class Application(tornado.web.Application):
         # sid_name, lifetime added in 1.1.5.0
         # sid_name: the name of session id in cookies.
         # lifetime: session default expires seconds.
-        if config.options.sessions_strategy == 'redis':
+        if config.options.sessionsStrategy == 'redis':
             driverValue="redis"
             driverSettings=dict(
                 host='localhost',
@@ -124,7 +107,7 @@ class Application(tornado.web.Application):
 #                 "pass"='',
                 max_connections=1024,
             )
-        elif config.options.sessions_strategy == 'file':
+        elif config.options.sessionsStrategy == 'file':
             driverValue="file"
             driverSettings=dict(host="#_sessions",)
         else:
@@ -137,13 +120,14 @@ class Application(tornado.web.Application):
             driver_settings=driverSettings,
 
             force_persistence=True,
-            sid_name='wiki_author',
-            session_lifetime=1800,
+            sid_name= config.options.sidName,
+            session_lifetime=config.options.sessionLifetime,
         )
         settings.update(session=session_settings)
         
         super(Application, self).__init__(handlers, **settings)
-        config.options.templateDir = settings['template_path']
+        config.options.projectDir = projectDir #settings['project_dir']
+        
 #         config.options.__setattr__('templateDir', settings['template_path']) 
 
         # Have one global connection to the wiki DB across all handlers
