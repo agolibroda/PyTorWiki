@@ -31,11 +31,15 @@ from core.DeskTopControls import *
 
 from core.RestControl import *
 
+
+hasattr(config.options, 'logFileName')
+
 if hasattr(config.options, 'logFileName'):
+    logging.info(" app  config.options.logFileName = " + str(config.options.logFileName))  
     logging.basicConfig(filename=config.options.logFileName, level=logging.INFO)
 FORMAT = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
 logging.basicConfig(format=FORMAT)
-
+logging.info(" app  hasattr(config.options, 'logFileName') = " + str(hasattr(config.options, 'logFileName')))  
 
 # from tornado.options import define, options
 
@@ -76,7 +80,6 @@ class Application(tornado.web.Application):
 
         ]
         
-        projectDir = os.path.dirname(__file__)
         settings = dict(
             wiki_title = config.options.Project_Name,
             wiki_title_admin = config.options.wikiTitleAdmin,
@@ -126,7 +129,8 @@ class Application(tornado.web.Application):
         settings.update(session=session_settings)
         
         super(Application, self).__init__(handlers, **settings)
-        config.options.projectDir = projectDir #settings['project_dir']
+        
+        config.options.projectDir = os.path.dirname(__file__)
         
 #         config.options.__setattr__('templateDir', settings['template_path']) 
 

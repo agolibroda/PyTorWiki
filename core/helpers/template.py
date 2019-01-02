@@ -39,7 +39,9 @@ import re
 
 ##############
 import config
+from core.models            import Model
 from core.models.article    import Article
+
 from core.models.file       import File
 from core.models.group      import Group
 
@@ -83,20 +85,6 @@ class Template(): #, tornado.web.RequestHandler):
         """
         pass
 
-
-    def realFileName(self, templateId):
-        """
-        Сделаем реальное имя файла.
-        
-        """
-        file_name = str(templateId)
-#         temptateDir = os.path.join(config.options.templateDir, config.options.tmpTplPath)
-#         temptateDir = os.path.join(config.options.projectDir, config.options.tmpTplPath)
-        temptateDir = config.options.tmpTplPath
-#         logging.info( 'Template:: temptateDir =  ' + str(temptateDir))
-        realFileName = os.path.join(temptateDir, str(file_name) + config.options.tplExtension)
-#         logging.info( 'Template::  realFileName =  ' + str(realFileName))
-        return realFileName
     
     def exists(self, realFileName):
         """
@@ -106,7 +94,7 @@ class Template(): #, tornado.web.RequestHandler):
         return os.path.exists(realFileName)
     
     
-    def clean(self, templateId):
+    def clean(self): #  , templateId):
         """
         Убрать файл шаблона (по его ИД) из директории,
         в которой лежат все "внутрисистемные" шиблоны
@@ -116,9 +104,10 @@ class Template(): #, tornado.web.RequestHandler):
 #         if self.exists(realFileName):
 #             os.remove(realFileName) 
         _wrkDir = os.path.join(config.options.projectDir, config.options.templateDir, config.options.tmpTplPath)
-        logging.info( 'Template:: clean _wrkDir =  ' + str(_wrkDir))            
         for file in os.listdir(_wrkDir):
-            logging.info( 'Template:: clean file =  ' + str(file)) 
+            os.remove(os.path.join(_wrkDir, file)) 
+        _wrkDir = os.path.join(config.options.projectDir, config.options.staticDir, config.options.siteDir)
+        for file in os.listdir(_wrkDir):
             os.remove(os.path.join(_wrkDir, file)) 
 
 
@@ -133,19 +122,64 @@ class Template(): #, tornado.web.RequestHandler):
         output_file = open( tmlFullName, 'wb')
         output_file.write(bytes(tmplateTxt, 'utf-8'))
         output_file.close()
+        
+
+    def realFileName(self, templateId, templateName, targetFlag):
+        """
+        Сделаем реальное имя файла.
+        
+        templateId = ИД статьи - шаблона  
+        templateName = имя статьи, по - идее, это что - то типа "base.html"
+        из имени надо выдрать расширение, и потом присовокупить его к "рабочему имени файла", с которым потом и работать!
+        """
+        file_name = str(templateId)
+        listTpl = templateName.split('.')
+        if len(listTpl)>1:
+            tplExtension = listTpl[len(listTpl)-1]
+        else:
+            tplExtension = config.options.tplExtension
+        realFileName =  ''
+        if targetFlag == "tmp":
+#             return os.path.join(config.options.tmpTplPath, str(file_name) + '.' + tplExtension)
+            return os.path.join(str(file_name) + '.' + tplExtension)
+        else:
+            return os.path.join(config.options.siteDir, str(file_name) + '.' + tplExtension)
+        
+        logging.info( 'realFileName:: realFileName =  ' + str(realFileName))
+        return realFileName
+        
+        
+    def setDirName(self, targetFlag ):
+        """
+        чисто собрать директорию, в которой или удалять файлы,
+        или туда заливать файлы,
+        название директории зависит от флага, флаг- от внешнего вида подстановки.
+        ("<!--%(\w+){1}%--!>" - это заливается в "статик" 
+        "<!--*main_site_menu*--!>" - Это кусок шаблона, и лежит в шаблонах!!!!)
+        """
+        if targetFlag == "tmp":
+            return os.path.join(config.options.projectDir, config.options.templateDir, config.options.tmpTplPath)
+        else:
+            return os.path.join(config.options.projectDir, config.options.staticDir)
 
 
-    def temtlatePrepareById(self, articleTemplateId): # article_template_id
+
+    def temtlatePrepareById(self, articleTemplateId, articleLink, targetFlag="tmp"): # article_template_id
         """
         Подготовка шаблона выбирать его будем по ИД
+        
+        куда будем выкладывать подготовленные шаблоны 
+        точки 2:
+        - в папку "шаблоны", если работаем с шаблонами ()
+        targetFlag= "tmp"
+        - в папку 
+        - в папку 'static' - если имеем 
+        
     
         """
-        
-#         config.options.templateDir, #os.path.join(projectDir, config.options.templateDir),
-        tmlFullName = self.realFileName(articleTemplateId)
-#         logging.info( 'temtlatePrepare:: save 3 tmlFullName =  ' + str(tmlFullName))
-        _wrkFullName = os.path.join(config.options.projectDir, config.options.templateDir, tmlFullName)
-#         logging.info( 'temtlatePrepare:: save 3 _wrkFullName =  ' + str(_wrkFullName))
+#         logging.info( 'temtlatePrepareById notComposeFlag =  ' + str(notComposeFlag))
+        _realFileName = self.realFileName(articleTemplateId, articleLink, targetFlag)
+        _wrkFullName = os.path.join(self.setDirName(targetFlag), _realFileName)
         if not self.exists(_wrkFullName):
 #             (template, tlFile) = yield executor.submit( artHelper.getArticleById, article.article_template_id )
 
@@ -153,65 +187,126 @@ class Template(): #, tornado.web.RequestHandler):
             template = artControl.getById( articleTemplateId )
             # проанализируем код полученного шаблона, и, если надо, тогда выгрузим все шаблоны, на которые ссылается текущий шаблон.
             #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
-            template.article_source = self.temtlateParsing(template.article_source)
+            self.temtlateParsing(template)
             
             self.save(_wrkFullName, template.article_source)
-        return tmlFullName
+            
+        return _realFileName
+    
+    
 
-    def temtlatePrepareByName(self, articleTemplateName): # article_template_id
+    def temtlatePrepareByName(self, articleTemplateName, targetFlag = 'tmp'): # article_template_id
         """
         Шаблон выбирать будем по его ИМЕНИ, как статью. :-) 
     
         """
 #         logging.info( 'temtlatePrepareByName:: articleTemplateName =  ' + str(articleTemplateName))
-        articleLink = articleTemplateName.strip().strip(" \t\n")
+#         articleLink = articleTemplateName.strip().strip(" \t\n")
         artControl = Article()
         spectator = None
-        template = artControl.get( articleLink, spectator )
-        # проанализируем код полученного шаблона, и, если надо, тогда выгрузим все шаблоны, на которые ссылается текущий шаблон.
-        #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
-        template.article_source = self.temtlateParsing(template.article_source)
-        tmlFullName = self.realFileName(template.article_id)
-        self.save(tmlFullName, template.article_source)
+        template = artControl.get( articleTemplateName, spectator )
+#         logging.info( 'temtlatePrepareByName:: template =  ' + str(template))
         
-        return template.article_id
+        _realFileName = self.realFileName(template.article_id, template.article_title, targetFlag)
+        _wrkFullName = os.path.join(self.setDirName(targetFlag), _realFileName)
+        if not self.exists(_wrkFullName):
+            # проанализируем код полученного шаблона, и, если надо, тогда выгрузим все шаблоны, на которые ссылается текущий шаблон.
+            #Всевызовы завершим заменами  tw_include на include с соответствующей выгрузкой шаблонов 
+            self.temtlateParsing(template)
+        
+        # тут надо добавить и директорию 
+        self.save(_wrkFullName, template.article_source)
+        
+        return _realFileName 
 
 
-    def temtlateParsing(self, templateSrc): # article_template_id
+
+    def temtlateConvert(self, targetFlag, pattern, template): # article_template_id
         """
-        Ситаксический разбор шаблона.  именно тут найдем всякие " tw_..." конструкции
+        Ситаксический разбор шаблона.  именно тут найдем всякие "<!--%(\w+){1}%--!>" конструкции
         
-        Подготовка шаблона - надо пройти по шаблону, и зменить все вызовы вида
-         "{% tw_include "main_site_menu" %}" на "{% include ".../tmp/334.html" %}" 
-         - с имененм файла, вместо имени шаблона, и, положить все шаблоны в даректорию, где лежат все шаблоны
-        Шаблон удаляется из хрнилища при редактировании, кладется  - при первом оращении.
+        ......................................................................................
+         <link type="text/css" rel="stylesheet" href="<!--%animate_template%--!>"> 
+         - конструкцию - <!--%animate_template_css%--!> - издать статью в ..../static/site_templates/12345.css 
+         
+         {% include "<!--*main_site_menu*--!>" %} 
+         - конструкцию <!--*main_site_menu*--!> - издать статью в ..../tmp/334.html
         
-        Пока меняем 2 типа операций  
-        include =>> tw_include  - включение одного файла - шаблона в другой шаблон
-        extends =>> tw_extends - расширение базового шаблона новыми плюшками.  
-        
-        Все остальное  - оставляем в рамках синтаксиса базового шаблонизатора 
-        описание  - https://www.tornadoweb.org/en/stable/template.html
-
-        и сделаем из них табличку. или, список объектов 
-        ParsingObject
-        
+        targetFlag: 
+            'tmp' -- <!--*(\w+){1}*--!> - 
+            'static' -- <!--%animate_template%--!>
+            
         """
 #         logging.info( 'temtlateParsing IN templateSrc = ' + str(templateSrc))
-        pattern = r"""\{\%[ \t]+tw_(\w+){1}[ \t]+[\'\"](.+)[\'\"][ \t]+\%\}""" 
-        result = re.finditer(pattern, templateSrc)
+#         pattern = r"""\"<!--*(\w+){1}*--!>" """ 
+# template.article_source, articleLink !!! templateSrc, articleLink
+        result = re.finditer(pattern, template.article_source)
         for item in result:
             try:
-                temtlateId = self.temtlatePrepareByName(item.group(2))
-                newTemplateName = str(temtlateId)+ '.html'
-                newOperator = '{% ' + item.group(1) + ' "' + newTemplateName + '" %}'
-                templateSrc = templateSrc.replace(item.group(0), newOperator)
+                logging.info(" temtlateConvert  item.group = " + str(item.group())) 
+                logging.info(" temtlateConvert  item.group(0) = " + str(item.group(0))) 
+                logging.info(" temtlateConvert  item.group(1) = " + str(item.group(1))) 
+                logging.info(" temtlateConvert  item.groups = " + str(item.groups())) 
+                
+#                 # Узнаем ИД шаблона по его названию (заодно и выложим шаблон в папку.) 
+                newTemplateName = self.temtlatePrepareByName(item.group(1), targetFlag)
+                 #str(temtlateId)+ '.html'
+#                 newFileName =  os.path.join(self.setDirName(targetFlag), newTemplateName)
+#                 '{% ' + item.group(1) + ' "' + newTemplateName + '" %}'
+#                 logging.info(" temtlateConvert 1 template.article_source = " + str(template.article_source))
+                logging.info(" temtlateConvert 1 item.group(0) = " + str(item.group(0))) 
+                logging.info(" temtlateConvert 1 newTemplateName = " + str(newTemplateName)) 
+
+                result = template.article_source.replace(item.group(0), '"' +newTemplateName + '"')
+#                 logging.info(" temtlateConvert 2 result = " + str(result))
+                template.article_source = result 
+                
             except WikiException as e:
-                templateSrc = templateSrc.replace(item.group(0), '')
-        return templateSrc
+                logging.info(" temtlateConvert WikiException item.group = " + str(item.group())) 
+                template.article_source = template.article_source.replace(item.group(0), '')
+
+
+    def temtlateParsing(self, template): 
+        """
+        Ситаксический разбор шаблона.  именно тут найдем всякие "<!--%(\w+){1}%--!>" конструкции
+        
+        ......................................................................................
+         <link type="text/css" rel="stylesheet" href="<!--%animate_template%--!>"> 
+         - конструкцию - <!--%animate_template_css%--!> - издать статью в ..../static/site_templates/12345.css 
+         
+         {% include "<!--*main_site_menu*--!>" %} 
+         - конструкцию <!--*main_site_menu*--!> - издать статью в ..../tmp/334.html
+        
+            targetFlag: 
+        'tmp' -- <!--*(\w+){1}*--!> - 
+        'static' -- <!--%animate_template%--!>
+
+        Делаю 2 прохода 
+        - сначала  - выбираем все  "include" и "extends" (выделеные символами "<!--*(\w+){1}*--!>" )
+        - и издаем их в tmp
+        
+        - торой поход - выбрать все шаблоны, которые будут загружаться по линкам (выделеные символами "<!--%(\w+){1}%--!>" ) 
+        - и издаем их в static/site_templates - тут по - дее, надо разбирать имя шаблона, брать поледний сегмент "css" и "js" 
+
+        Все остальное  - оставляем в рамках синтаксиса базового шаблонизатора 
+        описание  - https://www.tornadoweb.org/en/stable/template.html
+        
+        \\"\<\!--\*(\w+)\*--\!\>\"
+        
+        
+        """
+#         logging.info( 'temtlateParsing IN template = ' + str(template))
+#         pattern = r'\"\<\!\-\-\*(\w+)\*\-\-\!\>\"' 
+#         pattern = r'[\'\"]\*(.+)\*[\'\"]' 
+        pattern = r'[\'\"]<!--\*(.+)\*--!>[\'\"]' 
+        self.temtlateConvert('tmp', pattern, template)
+        
+        pattern = r'[\'\"]<!--%(.+)\%--!>[\'\"]' 
+        self.temtlateConvert('static', pattern, template)
+        
 
 # @singleton
-class TemplateParams:
+class TemplateParams(Model):
     """
      место хранения всех параметров, которые надо передавать в шаблон        
      

@@ -12,6 +12,7 @@ nocommit.txt
 
 # global sensitive config data
 config/base.conf
+config/dbase.conf 
 config/main.conf
 _host_configs/** 
 

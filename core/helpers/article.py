@@ -122,7 +122,7 @@ class HelperArticle():
             
 
         
-    def getArticleByName(self, spectator, articleName):
+    def getArticleByName(self, spectator, articleName, notComposeFlag=True):
         """
         получить статью по ее названию (не линка, а название!!!!! )
         хотя, по - идее, надо поредакитровать и сначала превратить навание в линку...
@@ -131,13 +131,19 @@ class HelperArticle():
         spectatorId - ИД пользователя, которые ищет/смотрит статью!!!!!
         
         """
+        logging.info( 'getArticleByName notComposeFlag = ' + str(notComposeFlag))
+        
         fileModel = File()
         articleLink = articleName.strip().strip(" \t\n")
         article = self.artModel.get( articleLink, spectator )
         
-        templator = Template()
-        templateName = templator.temtlatePrepareById(article.article_template_id) # article_template_id
-#         logging.info( 'getArticleByName 1 templateName = ' + str(templateName))
+        templateName = ''
+        
+        # показать статью в шаблоне нам нужно только для пользователя (НЕ для редактирования)
+        if notComposeFlag:
+            templator = Template()
+            templateName = templator.temtlatePrepareById(article.article_template_id, articleLink, "tmp") # article_template_id
+            logging.info( 'getArticleByName 1 templateName = ' + str(templateName))
 
         fileList =  fileModel.getFilesListForArticle( article.article_id, 
                                                     config.options.to_out_path)
@@ -177,7 +183,7 @@ class HelperArticle():
             # а вот сдесь я и грохну старый отрендериный шаблон!!!! и будет все НОРМ!!!!!
             if int(article.article_category_id) == int(config.options.tpl_categofy_id):
                 wrkTpl = Template()
-                wrkTpl.clean(article.article_id) #save(article.article_id, htmlTextOut, templateDir)
+                wrkTpl.clean() #save(article.article_id, htmlTextOut, templateDir)
                 
             
             if int(article_pgroipId) > 0 :

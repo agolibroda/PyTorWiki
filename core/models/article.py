@@ -252,7 +252,7 @@ class Article(Model):
         """
         outArt = artStructure
         unZipText = zlib.decompress(outArt.article_source)
-        logging.info( 'Decode:: unZipText = ' + str(unZipText))
+#         logging.info( 'Decode:: unZipText = ' + str(unZipText))
         
         if outArt.article_permissions == 'pbl':
             # все норм, статья  - паблик, бери- читай!

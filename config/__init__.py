@@ -4,10 +4,14 @@
 # Copyright 2015 Alec Golibroda
 #
 
+
+
 """ Config."""
 
 # from __future__ import absolute_import, division, print_function, with_statement
 
+import os
+import os.path
 
 from tornado.options import define, options, parse_config_file
 # options.logging = debug #None
@@ -25,9 +29,9 @@ define("salt", default= 'saltBy_pyTorWiki', help="Main salt")
 define("cookieSecret", default= 'cookieSecretBy_pyTorWiki', help="Main cookie secret")
 
 # Выбираем одну из стратегий работы с сессиями :-) 
-# define("sessionsStrategy", default= 'memory', help="Session strategy")
+define("sessionsStrategy", default= 'memory', help="Session strategy")
 # define("sessionsStrategy", default= 'file', help="Session strategy")
-define("sessionsStrategy", default= 'redis', help="Session strategy")
+# define("sessionsStrategy", default= 'redis', help="Session strategy")
 define("sessionLifetime", default= 1800, help="Session Lifetime")
 
 
@@ -51,12 +55,15 @@ define("to_out_path", default="filestorage/", help="Path to upload")
 define("adminPath", default=r"/admin", help="Path to Admin Area")
 define("adminTplPath", default=r"admin/", help="Path to Admin Area")
 
-define("projectDir", default=r"", help="Path to Project")
+define("projectDir", default=os.path.join(os.path.dirname(__file__), '../'), help="Path to Project")
 define("staticDir", default=r"static", help="Static Dir")
-define("templateDir", default=r"templates", help="Template Dir")
+define("siteDir", default=r"site_templates", help="Catalog for site files")
+ 
 
+define("templateDir", default=r"templates", help="Template Dir")
 define("tmpTplPath", default=r"tmp", help="Path to user`s Template Area")
-define("tplExtension", default=r".html", help="Template file Extension")
+
+define("tplExtension", default=r"html", help="Template file Extension")
 
 define("list_categofy_id", default=1, help="Information Page Category")
 
@@ -67,7 +74,10 @@ define("main_info_template", default=5, help="Main tmplate of inforation page")
 define("main_page_id", default=6, help="Id of Main User Page")
 
 
+# options.projectDir =  os.path.join(os.path.dirname(__file__), '../')
 
+
+# logging.info( 'config!!:: options.projectDir =  ' + str(options.projectDir))
 
 # Эти параметры переопределим на "боевые" в файле dbase.conf
 # postgreHost = 'localhost'
@@ -75,7 +85,7 @@ define("main_page_id", default=6, help="Id of Main User Page")
 # postgreBase = '?'
 # postgreUser ='?'
 # postgrePwd = '?'
-parse_config_file("./config/dbase.conf")
+parse_config_file(os.path.join( os.path.dirname(__file__), "dbase.conf"))
 
 
 # Эти параметры переопределим на "боевые" в файле main.conf
@@ -85,8 +95,10 @@ parse_config_file("./config/dbase.conf")
 # wikiTitleAdmin='TorWiki Admin layer'
 # salt = "?"
 # cookieSecret="?"
+# sessionsStrategy="?"
+# sessionLifetime=?
 
-parse_config_file("./config/main.conf")
+parse_config_file(os.path.join( os.path.dirname(__file__), "main.conf"))
 
 
 

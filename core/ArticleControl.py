@@ -177,13 +177,10 @@ class ArticleHandler(BaseHandler):
 #             logging.info( 'ArticleHandler get spectator = ' + str(spectator))
             
             artHelper = HelperArticle()
-            articleLink = articleName.strip().strip(" \t\n")
-            articleLink =  articleLink.lower().replace(' ','_')
-            articleLink =  articleLink.replace('__','_')
-
-#             logging.info( 'ArticleHandler get articleLink = ' + str(articleLink))
-            
-            (article, fileList, tmlFullName) = yield executor.submit( artHelper.getArticleByName, spectator, articleLink )
+            arr = articleName.lower().split()
+            articleLink = '_'.join(arr)# articleLink.lower().replace(' ','_')
+            notComposeFlag = True
+            (article, fileList, tmlFullName) = yield executor.submit( artHelper.getArticleByName, spectator, articleLink, notComposeFlag )
        
             tplControl = TemplateParams()
             tplControl.make(spectator)
@@ -199,6 +196,9 @@ class ArticleHandler(BaseHandler):
             if article.article_id == 0 : 
                 self.redirect("/compose/" + articleName ) 
     
+            logging.info( 'ArticleHandler get tmlFullName = ' + str(tmlFullName))
+#             logging.info( 'ArticleHandler get tplControl = ' + str(tplControl))
+            tmlFullName = os.path.join(config.options.tmpTplPath, tmlFullName)
             self.render(tmlFullName, parameters=tplControl)
         except Exception as e:
             logging.info( 'ArticleHandler Get:: Exception as et = ' + str(e))
@@ -226,6 +226,9 @@ class ComposeHandler(BaseHandler):
         можно искать серди ревизий нужную, и ее загружать - и название и аннотацию и текст.!!!!
         
         """
+        
+#         logging.info( 'ComposeHandler Get:: config.options. = ' + str(e))
+        
         try:
             hash = self.get_argument("hash", "")
             groupId = self.get_argument("gid", 0)
@@ -248,9 +251,8 @@ class ComposeHandler(BaseHandler):
                 articleLink = articleName.strip().strip(" \t\n")
                 articleLink =  articleLink.lower().replace(' ','_')
                 articleLink =  articleLink.replace('__','_')
-    
-                
-                (article, fileList, tplName) = yield executor.submit( artHelper.getArticleByName, self.autor, articleLink )
+                notComposeFlag = False
+                (article, fileList, tplName) = yield executor.submit( artHelper.getArticleByName, self.autor, articleLink, notComposeFlag )
                 
             elif hash != '':
                 """
