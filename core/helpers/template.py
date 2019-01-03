@@ -143,7 +143,7 @@ class Template(): #, tornado.web.RequestHandler):
 #             return os.path.join(config.options.tmpTplPath, str(file_name) + '.' + tplExtension)
             return os.path.join(str(file_name) + '.' + tplExtension)
         else:
-            return os.path.join(config.options.siteDir, str(file_name) + '.' + tplExtension)
+            return os.path.join(config.options.staticDir, config.options.siteDir, str(file_name) + '.' + tplExtension)
         
         logging.info( 'realFileName:: realFileName =  ' + str(realFileName))
         return realFileName
@@ -151,16 +151,16 @@ class Template(): #, tornado.web.RequestHandler):
         
     def setDirName(self, targetFlag ):
         """
-        чисто собрать директорию, в которой или удалять файлы,
-        или туда заливать файлы,
-        название директории зависит от флага, флаг- от внешнего вида подстановки.
-        ("<!--%(\w+){1}%--!>" - это заливается в "статик" 
-        "<!--*main_site_menu*--!>" - Это кусок шаблона, и лежит в шаблонах!!!!)
+        получить путь к директории, в которой находятся файлы шаблонов или расширений шаблона (js, css),
+        путь зависит от флага.
+        
+        @param param: targetFlag Флаг = "tmp" или "static" - в зависмости от того, какой путь для выгрузки файлов применяется.
+        @return: String - Путь в папке.
         """
         if targetFlag == "tmp":
             return os.path.join(config.options.projectDir, config.options.templateDir, config.options.tmpTplPath)
         else:
-            return os.path.join(config.options.projectDir, config.options.staticDir)
+            return os.path.join(config.options.projectDir)
 
 
 
@@ -243,19 +243,15 @@ class Template(): #, tornado.web.RequestHandler):
         result = re.finditer(pattern, template.article_source)
         for item in result:
             try:
-                logging.info(" temtlateConvert  item.group = " + str(item.group())) 
-                logging.info(" temtlateConvert  item.group(0) = " + str(item.group(0))) 
-                logging.info(" temtlateConvert  item.group(1) = " + str(item.group(1))) 
-                logging.info(" temtlateConvert  item.groups = " + str(item.groups())) 
+#                 logging.info(" temtlateConvert  item.group = " + str(item.group())) 
+#                 logging.info(" temtlateConvert  item.group(0) = " + str(item.group(0))) 
+#                 logging.info(" temtlateConvert  item.group(1) = " + str(item.group(1))) 
+#                 logging.info(" temtlateConvert  item.groups = " + str(item.groups())) 
                 
 #                 # Узнаем ИД шаблона по его названию (заодно и выложим шаблон в папку.) 
                 newTemplateName = self.temtlatePrepareByName(item.group(1), targetFlag)
-                 #str(temtlateId)+ '.html'
-#                 newFileName =  os.path.join(self.setDirName(targetFlag), newTemplateName)
-#                 '{% ' + item.group(1) + ' "' + newTemplateName + '" %}'
-#                 logging.info(" temtlateConvert 1 template.article_source = " + str(template.article_source))
-                logging.info(" temtlateConvert 1 item.group(0) = " + str(item.group(0))) 
-                logging.info(" temtlateConvert 1 newTemplateName = " + str(newTemplateName)) 
+#                 logging.info(" temtlateConvert 1 item.group(0) = " + str(item.group(0))) 
+#                 logging.info(" temtlateConvert 1 newTemplateName = " + str(newTemplateName)) 
 
                 result = template.article_source.replace(item.group(0), '"' +newTemplateName + '"')
 #                 logging.info(" temtlateConvert 2 result = " + str(result))

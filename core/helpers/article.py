@@ -60,7 +60,7 @@ class HelperArticle():
         article = self.artModel.getById( articleId )
         if not article: raise tornado.web.HTTPError(404)
         templator = Template()
-        templateName = templator.temtlatePrepareById(article.article_template_id) # article_template_id
+        templateName = templator.temtlatePrepareById(article.article_template_id, article.article_title) # article_template_id
         
         fileModel = File()
 # вот тут надо посмотреть - что - то не работает выбор файлов!!!!!!!

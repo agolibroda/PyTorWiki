@@ -106,7 +106,7 @@ class PersonalDeskTop(BaseHandler):
             tplControl.allAuthorsList = yield executor.submit( authorModel.list )
 
 #             logging.info( 'PersonalDeskTop get:: tplControl.allAuthorsList = ' + toStr(tplControl.allAuthorsList))
-            logging.info( 'PersonalDeskTop get:: tplControl = ' + toStr(tplControl))
+#             logging.info( 'PersonalDeskTop get:: tplControl = ' + toStr(tplControl))
 
             self.render("personal_dt.html", parameters= tplControl ) 
 

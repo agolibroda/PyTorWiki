@@ -92,12 +92,15 @@ class HomeHandler(BaseHandler):
             
             tplControl.tpl_categofy_id = config.options.tpl_categofy_id
             tplControl.page_name = article.article_title 
+            tplControl.project_start_data = config.options.Project_Start_Data
+
 # article=article, fileList=fileList, link='/compose', page_name='Редактирование'
 
-            logging.info( 'HomeHandler get templateName = ' + str(templateName))
-            logging.info( 'HomeHandler get tplControl = ' + str(tplControl))
+#             logging.info( 'HomeHandler get templateName = ' + str(templateName))
+#             logging.info( 'HomeHandler get tplControl = ' + str(tplControl))
+            tmlFullName = os.path.join(config.options.tmpTplPath, templateName)
             
-            self.render(templateName, parameters=tplControl)
+            self.render(tmlFullName, parameters=tplControl)
         except Exception as e:
             logging.info( 'HomeHandler:: GET Exception as et = ' + str(e))
             tplControl = TemplateParams()
@@ -189,6 +192,8 @@ class ArticleHandler(BaseHandler):
             tplControl.link='/compose'
             tplControl.article=article
             tplControl.fileList=fileList
+            tplControl.project_start_data = config.options.Project_Start_Data
+
 
 
 # article=article, fileList=fileList, link='/compose', page_name='Редактирование'
@@ -278,6 +283,8 @@ class ComposeHandler(BaseHandler):
             tplControl.link='/compose'
             
             tplControl.tpl_categofy_id = config.options.tpl_categofy_id
+            tplControl.project_start_data = config.options.Project_Start_Data
+            
             
             
             tplControl.page_name = pageName 
@@ -358,12 +365,17 @@ class ComposeHandler(BaseHandler):
             # стоит проерить, если мы сохранили шаблон, тогда ндо удалить старый шаблон из директории, где лежат все пользовательские шаблоны!!!!!
             if afterSaveArticle != None and int(afterSaveArticle.article_category_id) == int(config.options.tpl_categofy_id):
                 templateEnginer = Template()
-                templateEnginer.clean(afterSaveArticle.article_id)
+                templateEnginer.clean()
+            
+            logging.info( 'ComposeHandler:: afterSaveArticle = ' + str(afterSaveArticle))
             
             #  поучить ссылку н страничку, откуда был переход на нынешню...
-            if afterSaveArticle:
-#                self.redirect("/" + tornado.escape.url_escape(article_link))
-                self.redirect("/personal_desk_top")
+            if afterSaveArticle != None:
+#                self.redirect("/" + tornado.escape.url_escape(article_link)) 
+# 
+#                 self.redirect("/personal_desk_top" )
+                self.redirect("/compose/" + afterSaveArticle.article_title )
+                
             else:
                 logging.info( 'ComposeHandler:: rez = ' + str(rez))
     #             как - то надо передать данные и ошибку - что - то пошло же не так... 
@@ -414,6 +426,8 @@ class RevisionsHandler(BaseHandler):
             tplControl.article_title = revisions[0].article_title
             tplControl.page_name = 'Revisions List' # _("Revisions List")
             tplControl.link='/compose'
+            tplControl.project_start_data = config.options.Project_Start_Data
+            
             
             
             self.render("revisionses_dt.html", parameters=tplControl )
