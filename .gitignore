@@ -18,6 +18,8 @@ _host_configs/**
 
 # Uploaded files
 /static/filestorage/**
+/static/site_templates/**
+/templates/tmp/**
 
 
 /start.sh

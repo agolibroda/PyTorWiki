@@ -148,26 +148,15 @@ class AuthLoginHandler(BaseHandler):
     
             rezult = yield executor.submit( authorloginLoad.login, self.get_argument("login"), self.get_argument("password") )
             if rezult:
-#                 logging.info( 'AuthLoginHandler  post authorloginLoad = ' + str(authorloginLoad))
-                
-#                 RequestHandler.get_argument now raises MissingArgumentError (a subclass of tornado.web.HTTPError, which is what it raised previously) 
-#                 if the argument cannot be found
                 try:
-                    logging.info( 'AuthLoginHandler  post self.get_argument("remember_me") = ' + str(self.get_argument("remember_me")))
                     if self.get_argument("remember_me") == 'on':
-                        self.settings['session_lifetime'] = config.options.sessionLongLifetime
-                    
+                        session_settings = self.settings['session'] 
+                        session_settings['session_lifetime'] = config.options.sessionLongLifetime
+#                         logging.info( 'AuthLogoutHandler POST 2 session_settings = ' + str(session_settings))
+                        self.settings.update(session=session_settings)
                 except MissingArgumentError:
                     pass
-                
                 self.current_user = authorloginLoad
-                
-#                             =config.options.sessionLifetime, || config.options.sessionLongLifetime
-#         config.options.__setattr__('templateDir', 
-# settings['session_lifetime'] = ????? 
-# post self.get_argument("remember_me") = on
-
-#                 logging.info( 'AuthLoginHandler  post 1 authorloginLoad.serializationAuthor() = ' + str(authorloginLoad.serializationAuthor()))
                 self.session['author'] = authorloginLoad.serializationAuthor()
                 self.redirect(self.get_argument("next", "/personal_desk_top"))
             else:

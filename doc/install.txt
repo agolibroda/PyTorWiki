@@ -14,10 +14,16 @@
  	
  	pip3 install py-postgresql -- http://pythonhosted.org/py-postgresql/
  	
- 	pip3 install torndsession - пока не потавлено на Хостинге!!!!!
- 	pip3 install redis        - пока не потавлено на Хостинге!!!!!
+ 	pip3 install torndsession 
+ 	pip3 install redis        
  	
- проверить, (и создать, если нет) директорию "filestorage" в "static" - туда будут складываться загружаемые файлы
+
+необходимо проверть наличие папок и создать, если их нет
+/static/filestorage/**
+/static/site_templates/**
+/templates/tmp/**
+- в эти папки загружаются шалоны для последущего использования в клиенте системы
+ 
  
  - инсталляция базы данных
  сервер баз данных  PostgreSQL  

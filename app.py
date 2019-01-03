@@ -82,6 +82,7 @@ class Application(tornado.web.Application):
         
         settings = dict(
             wiki_title = config.options.Project_Name,
+            project_description = config.options.Project_Description,
             wiki_title_admin = config.options.wikiTitleAdmin,
 #             project_dir=projectDir,
             template_path=config.options.templateDir, #os.path.join(projectDir, config.options.templateDir),
