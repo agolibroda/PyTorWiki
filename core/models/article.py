@@ -690,3 +690,27 @@ class Article(Model):
 
 
 
+    def getIdListOfNames(self, nemesArticlesList):
+        """
+         получить список статей
+          по списку имен, 
+                 
+        """
+        logging.info(" getIdListOfNames  nemesArticlesList = " + str(nemesArticlesList)) 
+        
+        whereStr = " articles.article_title in( '" + "', '".join(nemesArticlesList) + "' )"
+        
+        whereStr += " AND articles.actual_flag = 'A' "
+             
+        getRez = self.select(
+                                'articles.article_id, articles.article_title ' ,
+                                '',
+                                    {
+                                'whereStr': whereStr, # строка набор условий для выбора строк
+                                'orderStr': ' articles.article_title ', # строка порядок строк
+                                 }
+                                )
+        if len(getRez) == 0:
+           return []
+        return getRez
+

@@ -76,9 +76,6 @@ class HomeHandler(BaseHandler):
             articleId = config.options.main_page_id
             self.get_current_user()
             spectator = self.current_user
-
-
-#             logging.info( 'HomeHandler get article articleId = ' + str(articleId))
             
             (article, fileList, templateName) = yield executor.submit( artHelper.getArticleById, articleId)
 #             logging.info( 'HomeHandler get article = ' + str(article))
@@ -96,9 +93,12 @@ class HomeHandler(BaseHandler):
 
 # article=article, fileList=fileList, link='/compose', page_name='Редактирование'
 
-#             logging.info( 'HomeHandler get templateName = ' + str(templateName))
 #             logging.info( 'HomeHandler get tplControl = ' + str(tplControl))
+#             logging.info( 'HomeHandler get templateName = ' + str(templateName))
+#             logging.info( 'HomeHandler get config.options.tmpTplPath = ' + str(config.options.tmpTplPath))
             tmlFullName = os.path.join(config.options.tmpTplPath, templateName)
+
+#             logging.info( 'HomeHandler get tmlFullName = ' + str(tmlFullName))
             
             self.render(tmlFullName, parameters=tplControl)
         except Exception as e:

@@ -38,19 +38,18 @@ class TestArticle(unittest.TestCase):
 
     def setUp(self): 
         
-        self.articleTemplateId = 7 
-        self.articleLink = 'base.html' # 'основной_шаблон_информационной_страницы'
-        self.targetFlag = "tmp"
+        self.listNames2serch = ['base.html', 'menu_site.html']
 
-        self.template = Template()
+        self.artControl = Article()
         
 
     def test_article_get2(self):
 #         article = core.models.Article()
  
+        print( 'Template self.listNames2serch = ' + str(self.listNames2serch) )
         
-        realFileName = self.template.temtlatePrepareById(self.articleTemplateId, self.articleLink, self.targetFlag)
-        print( 'Template realFileName = ' + str(realFileName) )
+        listResult = self.artControl.getIdListOfNames( self.listNames2serch )
+        print( 'Template listResult = ' + str(listResult) )
 
 
         
