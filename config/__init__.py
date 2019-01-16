@@ -36,7 +36,7 @@ define("sessionsStrategy", default= 'memory', help="Session strategy")
 # define("sessionsStrategy", default= 'file', help="Session strategy")
 # define("sessionsStrategy", default= 'redis', help="Session strategy")
 define("sessionLifetime", default= 1800, help="Session Lifetime")
-define("sessionLongLifetime", default= 0, help="Session Lifetime")
+define("sessionLongLifetime", default= 3600*24*365, help="Session Lifetime")
 
 
 ########################################################################

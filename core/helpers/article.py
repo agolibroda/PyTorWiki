@@ -56,16 +56,24 @@ class HelperArticle():
 
 
     def getArticleById(self, articleId):
-        logging.info( ' getArticleById:: articleId = ' + str(articleId))
+#         logging.info( ' getArticleById:: articleId = ' + str(articleId))
         article = self.artModel.getById( articleId )
         if not article: raise tornado.web.HTTPError(404)
+        targetFlag="tmp"
         templator = Template()
-        templateName = templator.temtlatePrepareById(article.article_template_id, article.article_title) # article_template_id
+        templateName = templator.temtlatePrepareById(article.article_template_id, article.article_title, targetFlag) # article_template_id
+#         logging.info( 'getArticleById:: tplateName = ' + str(templateName))
+#         logging.info( 'getArticleById:: article.article_template_id = ' + str(article.article_template_id))
+#         logging.info( 'getArticleById:: article.article_title = ' + str(article.article_title))
+        
+        if targetFlag == "tmp":
+            templateName =  os.path.join(config.options.tmpTplPath, templateName)
         
         fileModel = File()
 # вот тут надо посмотреть - что - то не работает выбор файлов!!!!!!!
         fileList = fileModel.getFilesListForArticle( articleId, config.options.to_out_path)
             
+#         logging.info( 'getArticleById:: tplateName = ' + str(templateName))
 #             logging.info( 'getArticleById:: article = ' + str(article))
 #             logging.info( 'getArticleById:: fileList = ' + str(fileList))
         return (article, fileList, templateName)
@@ -131,22 +139,26 @@ class HelperArticle():
         spectatorId - ИД пользователя, которые ищет/смотрит статью!!!!!
         
         """
-        logging.info( 'getArticleByName notComposeFlag = ' + str(notComposeFlag))
+#         logging.info( 'getArticleByName notComposeFlag = ' + str(notComposeFlag))
         
         fileModel = File()
         articleLink = articleName.strip().strip(" \t\n")
         article = self.artModel.get( articleLink, spectator )
         
         templateName = ''
+        targetFlag = "tmp"
         
         # показать статью в шаблоне нам нужно только для пользователя (НЕ для редактирования)
         if notComposeFlag:
             templator = Template()
-            templateName = templator.temtlatePrepareById(article.article_template_id, articleLink, "tmp") # article_template_id
-            logging.info( 'getArticleByName 1 templateName = ' + str(templateName))
+            templateName = templator.temtlatePrepareById(article.article_template_id, articleLink, targetFlag) # article_template_id
+#             logging.info( 'getArticleByName 1 templateName = ' + str(templateName))
 
         fileList =  fileModel.getFilesListForArticle( article.article_id, 
                                                     config.options.to_out_path)
+        
+        if targetFlag == "tmp":
+            templateName =  os.path.join(config.options.tmpTplPath, templateName)
         
 #         logging.info( 'getArticleByName article = ' + str(article))
 #         logging.info( 'getArticleByName fileList = ' + str(fileList))

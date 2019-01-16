@@ -188,6 +188,9 @@ class Template(Model): #, tornado.web.RequestHandler):
         templateName = имя статьи, по - идее, это что - то типа "base.html"
         из имени надо выдрать расширение, и потом присовокупить его к "рабочему имени файла", с которым потом и работать!
         """
+#         logging.info(" doFileName  templateId = " + str(templateId))
+#         logging.info(" doFileName  tplExtension = " + str(tplExtension))
+#         logging.info(" doFileName  targetFlag = " + str(targetFlag))
         file_name = str(templateId)
         if targetFlag == "tmp":
 #             return os.path.join(config.options.tmpTplPath, str(file_name) + '.' + tplExtension)
@@ -205,9 +208,10 @@ class Template(Model): #, tornado.web.RequestHandler):
         @return: String - Путь в папке.
         """
         if targetFlag == "tmp":
-            return os.path.join(config.options.projectDir, config.options.templateDir, config.options.tmpTplPath)
-        else:
-            return os.path.join(config.options.projectDir)
+#             return os.path.join(config.options.projectDir, config.options.templateDir, config.options.tmpTplPath)
+            return os.path.join(config.options.templateDir, config.options.tmpTplPath)
+#         else:
+#             return os.path.join(config.options.projectDir)
 
 
     def temtlateParsing(self, articleTemplateObj):
@@ -254,8 +258,9 @@ class Template(Model): #, tornado.web.RequestHandler):
 #         logging.info(" temtlateParsing  template = " + str(template)) 
 
         _realFileName = self.realFileName(template.article_id, template.article_title, articleTemplateObj.targetFlag)
+#         logging.info(" temtlateParsing  _realFileName = " + str(_realFileName) ) 
         _wrkFullName = os.path.join(self.setDirName(articleTemplateObj.targetFlag), _realFileName)
-#         logging.info(" temtlateParsing  _wrkFullName = " + str(_wrkFullName) + "; not self.exists(_wrkFullName) = " + str(not self.exists(_wrkFullName))) 
+#         logging.info(" temtlateParsing  _wrkFullName = " + str(_wrkFullName) ) 
         if not self.exists(_wrkFullName):
             listNames = {} # словарь словарь расширений шаблона собраный по именам
             listNames2serch = [] # [] - #список имен шаблонов для выборки их ИД
@@ -297,17 +302,24 @@ class Template(Model): #, tornado.web.RequestHandler):
                     
             listResult = artControl.getIdListOfNames(listNames2serch)
             for oneRow in listResult:
+#                 logging.info(" temtlateParsing  oneRow = " + str(oneRow)) 
                 tmpTpl = listNames[oneRow.article_title]
                 tmpTpl.tplId = oneRow.article_id
                 if not tmpTpl.tplId in self.lexemId:
                     self.lexemDict[tmpTpl.tplId] = tmpTpl
                     self.lexemId.append(tmpTpl)
+                    
+#                 logging.info(" temtlateParsing  tmpTpl = " + str(tmpTpl)) 
 
-                _lockFileName = self.realFileName(tmpTpl.tplId, tmpTpl.tplNane, tmpTpl.targetFlag)
-                _lockFullName = os.path.join(self.setDirName( tmpTpl.targetFlag ), _lockFileName)
-                result = template.article_source.replace(tmpTpl.expression, '"' +_lockFullName + '"')
+                _fn2Replase = self.realFileName(tmpTpl.tplId, tmpTpl.tplNane, tmpTpl.targetFlag)
+#                 logging.info(" temtlateParsing  replace _fn2Replase = " + str(_fn2Replase)) 
+                result = template.article_source.replace(tmpTpl.expression, '"' +_fn2Replase + '"')
+#                 _fullName2replase = os.path.join(self.setDirName( tmpTpl.targetFlag ), _fn2Replase)
+#                 logging.info(" temtlateParsing  replace _fullName2replase = " + str(_fullName2replase)) 
+#                 result = template.article_source.replace(tmpTpl.expression, '"' +_fullName2replase + '"')
                 template.article_source = result
                 
+#             logging.info(" temtlateParsing  self.lexemDict = " + str(self.lexemDict)) 
 #             logging.info(" temtlateParsing  _wrkFullName = " + str(_wrkFullName)) 
 #             logging.info(" temtlateParsing  template.article_source = " + str(template.article_source)) 
             self.save(_wrkFullName, template.article_source)
@@ -337,14 +349,13 @@ class Template(Model): #, tornado.web.RequestHandler):
 #         logging.info(" temtlatePrepareById  self.lexemId = " + str(self.lexemId)) 
         while True:
             try:
-                logging.info(" temtlatePrepareById  self.lexemId = " + str(self.lexemId)) 
                 self.temtlateParsing(self.lexemId.pop())
             except:
                 break
 
         _realFileName = self.realFileName(articleTemplateId, articleLink, targetFlag)
-        _wrkFullName = os.path.join(self.setDirName(targetFlag), _realFileName)
-        return _wrkFullName
+#         _wrkFullName = os.path.join(self.setDirName(targetFlag), _realFileName)
+        return _realFileName
 
 
           

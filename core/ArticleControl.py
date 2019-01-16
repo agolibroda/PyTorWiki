@@ -94,13 +94,13 @@ class HomeHandler(BaseHandler):
 # article=article, fileList=fileList, link='/compose', page_name='Редактирование'
 
 #             logging.info( 'HomeHandler get tplControl = ' + str(tplControl))
-#             logging.info( 'HomeHandler get templateName = ' + str(templateName))
+            logging.info( 'HomeHandler get templateName = ' + str(templateName))
 #             logging.info( 'HomeHandler get config.options.tmpTplPath = ' + str(config.options.tmpTplPath))
-            tmlFullName = os.path.join(config.options.tmpTplPath, templateName)
+#             tmlFullName = os.path.join(config.options.tmpTplPath, templateName)
 
 #             logging.info( 'HomeHandler get tmlFullName = ' + str(tmlFullName))
             
-            self.render(tmlFullName, parameters=tplControl)
+            self.render(templateName, parameters=tplControl)
         except Exception as e:
             logging.info( 'HomeHandler:: GET Exception as et = ' + str(e))
             tplControl = TemplateParams()
@@ -201,9 +201,9 @@ class ArticleHandler(BaseHandler):
             if article.article_id == 0 : 
                 self.redirect("/compose/" + articleName ) 
     
-            logging.info( 'ArticleHandler get tmlFullName = ' + str(tmlFullName))
+#             logging.info( 'ArticleHandler get tmlFullName = ' + str(tmlFullName))
 #             logging.info( 'ArticleHandler get tplControl = ' + str(tplControl))
-            tmlFullName = os.path.join(config.options.tmpTplPath, tmlFullName)
+#             tmlFullName = os.path.join(config.options.tmpTplPath, tmlFullName)
             self.render(tmlFullName, parameters=tplControl)
         except Exception as e:
             logging.info( 'ArticleHandler Get:: Exception as et = ' + str(e))
