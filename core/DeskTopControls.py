@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Alec Golibroda
 
@@ -25,7 +26,7 @@ import pickle
 
 import config
 
-# import core.Helpers
+import core.Helpers
 from core.Helpers           import *
 # from core.Helpers           import SingletonDecorator
 
@@ -41,7 +42,7 @@ from core.helpers.article   import HelperArticle
 
 from core.helpers.template  import Template, TemplateParams
 
-from core.BaseHandler       import *
+from core.BaseHandlers       import *
 from core.WikiException     import *
 
 

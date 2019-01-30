@@ -5,12 +5,13 @@
  
  - торнадо 
  	
- 	pip install tornado
- 	pip install bcrypt
+ 	pip3 install tornado
+ 	pip3 install bcrypt
 
- 	pip install cryptography -- Доки https://cryptography.io/en/latest/
+ 	pip3 install cryptography -- Доки https://cryptography.io/en/latest/
  	
  	pip3 install psycopg2 
+ 	pip3 install psycopg2-binary
  	
  	pip3 install py-postgresql -- http://pythonhosted.org/py-postgresql/
  	
@@ -23,7 +24,8 @@
 /static/site_templates/**
 /templates/tmp/**
 - в эти папки загружаются шалоны для последущего использования в клиенте системы
- 
+
+
  
  - инсталляция базы данных
  сервер баз данных  PostgreSQL  
@@ -37,6 +39,19 @@
  Дополнительные файлы, необходимые для исправления схемы данных  
  находятся в файлах вида "upd_XXX.SQL" применять файлы стоит последовательно,  
  от младших номеров к старшим.
+
+psql -U <postgres_user> -d <dbname> -f <file.sql>
+
+в нашем случае:
+1:
+psql -U <postgres_user> -d <dbname> -f ver_170403.sql
+2:
+psql -U <postgres_user> -d <dbname> -f upd_170923.sql
+
+и остальные команды, может почитать отсюда:
+https://proft.me/2013/06/9/postgresql-spravochnik-po-komandam-psql-pg_dump/
+
+
  
 в настоящее время внешний вид веб- представления основывается на открытом шаблоне "KAdmin" 
 думаю, его возможностей мне хватит.  

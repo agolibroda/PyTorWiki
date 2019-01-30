@@ -19,7 +19,10 @@ from tornado.options import define, options, parse_config_file
 define("logFileName", default= 'test.log', help="log File Name")
 #
 define("Project_Name", default= 'pyTorWiki', help="Project name")
+define("DomenName", default= 'pyTorWiki.org', help="Domen Name")
+
 define("Project_Description", default= 'Вики система, реализованная на языке Python & FW Tornado', help="Project Description")
+define("Project_Keywords", default= 'Вики система, язык Python, FW Tornado', help="Project_Keywords")
 
 define("Project_Start_Data", default= '2016', help="Project Start Data")
 

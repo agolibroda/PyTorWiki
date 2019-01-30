@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Alec Goliboda
 #

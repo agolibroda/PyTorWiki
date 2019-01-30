@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
 #
 # Работа с Шаблонами!!! 
 #
@@ -78,16 +80,6 @@ class Template(Model): #, tornado.web.RequestHandler):
         - флаг, что шаблон отработан, и строка для замены (<!--*main_site_menu*--!>) - типа того
         
         """
-#         def __init__(self, **kwargs):
-#             if 'expression' in kwargs: self.expression = kwargs['expression']
-#             if 'tplNane' in kwargs: self.tplNane = kwargs['tplNane']
-#             if 'tplId' in kwargs: self.tplId = kwargs['tplId']
-#             if 'tplExtent' in kwargs: self.tplExtent = kwargs['tplExtent'] 
-#             else: self.tplExtent = 'html'
-#             if 'targetFlag' in kwargs: self.targetFlag = kwargs['targetFlag']
-#             if 'flagOfEnd' in kwargs: self.flagOfEnd = kwargs['flagOfEnd'] 
-#             else: self.flagOfEnd = 0  # 0 - cтарт; 200 - нормальное окончание; 500 ошибка;
-
         def __init__(self, options):
             if 'expression' in options: self.expression = options['expression']
             if 'tplNane' in options: self.tplNane = options['tplNane']
@@ -210,8 +202,9 @@ class Template(Model): #, tornado.web.RequestHandler):
         if targetFlag == "tmp":
 #             return os.path.join(config.options.projectDir, config.options.templateDir, config.options.tmpTplPath)
             return os.path.join(config.options.templateDir, config.options.tmpTplPath)
-#         else:
+        else:
 #             return os.path.join(config.options.projectDir)
+            return ""
 
 
     def temtlateParsing(self, articleTemplateObj):
@@ -257,10 +250,12 @@ class Template(Model): #, tornado.web.RequestHandler):
         template = artControl.getById( articleTemplateObj.tplId )
 #         logging.info(" temtlateParsing  template = " + str(template)) 
 
+#         logging.info(" temtlateParsing  template.article_id = " + str(template.article_id)) 
+#         logging.info(" temtlateParsing  template.article_title = " + str(template.article_title)) 
         _realFileName = self.realFileName(template.article_id, template.article_title, articleTemplateObj.targetFlag)
 #         logging.info(" temtlateParsing  _realFileName = " + str(_realFileName) ) 
         _wrkFullName = os.path.join(self.setDirName(articleTemplateObj.targetFlag), _realFileName)
-#         logging.info(" temtlateParsing  _wrkFullName = " + str(_wrkFullName) ) 
+#         logging.info(" temtlateParsing  _wrkFullName = " + str(_wrkFullName) + "; not self.exists(_wrkFullName) = " + str(not self.exists(_wrkFullName)) ) 
         if not self.exists(_wrkFullName):
             listNames = {} # словарь словарь расширений шаблона собраный по именам
             listNames2serch = [] # [] - #список имен шаблонов для выборки их ИД
@@ -323,6 +318,12 @@ class Template(Model): #, tornado.web.RequestHandler):
 #             logging.info(" temtlateParsing  _wrkFullName = " + str(_wrkFullName)) 
 #             logging.info(" temtlateParsing  template.article_source = " + str(template.article_source)) 
             self.save(_wrkFullName, template.article_source)
+#         тут нужен цыкл проверки все ли добавленные в словарь "self.lexemDict" обработаны. 
+        while True:
+            try:
+                self.temtlateParsing(self.lexemId.pop())
+            except:
+                break
 
 
 
@@ -344,14 +345,7 @@ class Template(Model): #, tornado.web.RequestHandler):
 #         tets = 'asdasasdasdasd'
         tplOne = Template.ParsingObject(opt)
         self.lexemDict[articleTemplateId] = tplOne
-        self.lexemId.append(tplOne)
-#         тут нужен цыкл проверки все ли добавленные в словарь "self.lexemDict" обработаны. 
-#         logging.info(" temtlatePrepareById  self.lexemId = " + str(self.lexemId)) 
-        while True:
-            try:
-                self.temtlateParsing(self.lexemId.pop())
-            except:
-                break
+        self.temtlateParsing(tplOne)
 
         _realFileName = self.realFileName(articleTemplateId, articleLink, targetFlag)
 #         _wrkFullName = os.path.join(self.setDirName(targetFlag), _realFileName)

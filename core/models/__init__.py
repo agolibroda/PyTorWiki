@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Alec Goliboda
 #
@@ -51,7 +52,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import *
 
 
-from _ast import Try
+# from _ast import Try
 # from json.decoder import NaN
 
 
@@ -66,7 +67,7 @@ import config
 
 from core.Helpers      import *
 from core.WikiException import *
-from core.Helpers      import *
+# from core.Helpers      import *
 
 # sys.path.pop()
 

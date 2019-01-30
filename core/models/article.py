@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Alec Goliboda
 #
@@ -36,11 +37,11 @@ from . import Model, CipherWrapper
 from .. import WikiException 
 
 
-from core.Helpers      import *
+# from core.Helpers           import *
 
 from core.WikiException     import *
 
-from ..constants.data_base import * 
+from ..constants.data_base  import * 
 
 
 # def parse_utf8(self, bytes, length_size):
@@ -351,7 +352,10 @@ class Article(Model):
 
     
         if len(getRez) == 0:
-            raise WikiException( ARTICLE_NOT_FOUND )
+            logging.info( 'Article :::  ARTICLE_NOT_FOUND get articleLink  = ' + str(articleLink))
+            locEx = ArticleNotFound()
+            logging.info( 'Article :::  locEx  = ' + str(locEx))
+            raise ArticleNotFound()
         elif len(getRez) == 1:   
             outArt = self.articleDecode(getRez[0], spectatorAuthor)
 #             logging.info( 'Article ::: >>>>> get outArt  = ' + str(outArt))
@@ -378,7 +382,8 @@ class Article(Model):
                                 )
     
          if len(getRez) == 0:
-            raise WikiException( ARTICLE_NOT_FOUND )
+            logging.info( 'Article :::  ARTICLE_NOT_FOUND getById articleId  = ' + str(articleId))
+            raise ArticleNotFound()
          elif len(getRez) == 1:   
 #              logging.info( ' getById getRez = ' + str(getRez[0]))
             outArt = self.articleDecode(getRez[0])
@@ -426,7 +431,8 @@ class Article(Model):
         getRez = self.rowSelect(str(strSelect)) 
     
         if len(getRez) == 0:
-            raise WikiException( ARTICLE_NOT_FOUND )
+            logging.info( 'getByUsingHash :::  ARTICLE_NOT_FOUND getByUsingHash hash  = ' + str(hash))
+            raise ArticleNotFound()
         elif len(getRez) == 1:   
             outArt = self.articleDecode(getRez[0])
             return outArt
@@ -680,7 +686,8 @@ class Article(Model):
                                )
 
         if len(getRez) == 0:
-            raise WikiException( ARTICLE_NOT_FOUND )
+            logging.info( 'getByUsingHash :::  ARTICLE_NOT_FOUND getRevisionsList articleId  = ' + str(articleId))
+            raise ArticleNotFound()
         
         for oneObj in getRez:
             oneObj = self.articleDecode(oneObj)

@@ -1,3 +1,7 @@
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
+
+
 # test_articles_create_sol.py
 #  сохраним персональную статью.
 

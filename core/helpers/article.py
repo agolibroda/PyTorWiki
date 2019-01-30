@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
 #
 # Copyright 2016 Alec Goliboda
 #
@@ -85,7 +86,7 @@ class HelperArticle():
         try:
             rezult = self.artModel.list (categoryId)
             if not rezult: rezult = []
-            logging.info( 'getListArticles:: rezult = ' + str(rezult))
+#             logging.info( 'getListArticles:: rezult = ' + str(rezult))
             return  rezult #.result()
         except Exception as e:
             logging.info( 'getListArticles:: Exception as et = ' + str(e))

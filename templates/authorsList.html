@@ -1,0 +1,72 @@
+<!-- authorsList.html -->
+
+{% extends "base.html" %}
+
+{% block body %}
+
+
+ <!--BEGIN CONTENT-->
+  <div class="page-content">
+      <div id="tab-general">
+
+		<div class="col-lg-12">
+          <div id="generalTabContent" class="tab-content">
+          
+      
+   {% if len(parameters.authorsList) > 0 %}
+      
+	 <table class="table table-hover table-bordered">
+	     <thead>
+	     <tr>
+	         <th>{{_("First Name")}}</th>
+	         <th>{{_("Last Name")}}</th>
+	         <th> AuthorId </th>
+	         <th> </th>
+	     </tr>
+	     </thead>
+	     <tbody>
+                                    
+  {% for autor in parameters.authorsList %}
+			
+			 <tr>
+			     <td><a href="/profile_view/{{autor.dt_header_id }}">{{autor.author_name}}</a></td>
+			     <td>{{autor.author_surname}}</td>
+			     <td> {{autor.dt_header_id}} </td>
+			     <td><span class="label label-sm label-success">Approved</span></td>
+			 </tr>
+			
+  {% end %}
+ 
+  {% else %} 
+  	{{ _("Member yet") }}  &nbsp;&nbsp;&nbsp;&nbsp; 
+  {% end %}
+ 
+                                    
+	     </tbody>
+	 </table>
+				
+
+
+
+      </div>
+</div>
+
+<br>              
+<br>              
+<br>              
+              
+              
+          </div>
+      </div>
+  </div>
+  <!--END CONTENT-->
+
+{% end %}
+
+
+{% block bottom %}
+
+
+{% end %}
+
+<!-- / authorsList.html -->

@@ -19,16 +19,17 @@ import json
 
 import config
 
-from core.FilesControl import *
+# import core
 
-from core.ProfileControl import *
-from core.ArticleControl import *
-from core.ProfileControl import *
-from core.DeskTopControls import *
+from core.FilesControls     import *
 
+from core.ProfileControls   import *
+from core.ArticleControls   import *
+from core.ProfileControls   import *
+from core.DeskTopControls   import *
+from core.GroupHandlers     import *
 
-
-from core.RestControl import *
+from core.RestControls      import *
 
 
 hasattr(config.options, 'logFileName')
@@ -73,9 +74,15 @@ class Application(tornado.web.Application):
             (r"/group_desk_top/([0-9]+)", GroupDeskTop), # (DeskTopControls) рабочий стол участника группы
             (r"/sys_adm_desk_top", SysAdmDeskTop), # (DeskTopControls) РС Админа СИСТЕМЫ 
 
-            (r"/rest/([^/]+)/([0-9]+)",  RestMinHandler), # (RestControl.py) все, что вызывается из клиента AJAX... 
+            (r"/groups", GroupListHandler), # (GroupHandlers) Список всех групп в системе -
+#             (r"/group/([0-9]+)", GroupProfile), # (GroupHandlers) Публичная часть группы. -
+             
+            (r"/authors", AuthorsList), # (ProfileControl) Список всех Авторов в системе -
+#             (r"/author/([0-9]+", AuthorProfile), # (ProfileControl) Список всех Авторов в системе -
 
-            (r"/([^/]+)", ArticleHandler), # (ArticleControl) Этим замыкаем список рутеров, так как он превнащает в название статьи ВСЕ!!!!
+#             (r"/rest/([^/]+)/([0-9]+)",  RestMinHandler), # (RestControl.py) все, что вызывается из клиента AJAX... 
+
+            (r"/([^/]+)", ArticleHandler), # (ArticleControl) Этим замыкаем список рутеров, так как он превращает в название статьи ВСЕ!!!!
 
         ]
         
@@ -142,6 +149,7 @@ def main():
 #     logging.basicConfig(filename='torViki.log', level=logging.INFO)
 
     logging.info('Server start at .main_port = ' + str(config.options.main_port))
+    logging.info('Надо сделать проверку, есть ли в системе Постгрис- сервер - и можно ли к нему прицепиться :-) ')
     
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(config.options.main_port)
