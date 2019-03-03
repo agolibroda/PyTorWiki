@@ -78,7 +78,9 @@ class Author(Model):
         self.author_role = ''
         self.author_phon = '' 
         self.author_email = ''
-
+        
+        self.author_yourself_story = '' #  просто аннотация к автору, не архивим, не закрываем, отдаём как есть :-) 
+        
         self.dt_header_type ='author'
         self.public_key = None
         self.private_key = None

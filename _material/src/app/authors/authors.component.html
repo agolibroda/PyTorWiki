@@ -1,0 +1,18 @@
+<div class="main-content">
+  <div class="container-fluid">
+      <div class="row">
+      <!-- Начало раздела тумбочек -->
+      
+          <div class="col-md-4" *ngFor="let author of authorsList">
+			 
+			 <app-author-thumb [authorThumbData]= "author">
+				 <!-- вот тут возникает одна Авторская тумбочка!!!!! -->
+			 </app-author-thumb>
+			 
+           </div>
+      
+      <!--  конец списка тумбочек!!! -->
+      </div>
+
+  </div>
+</div>

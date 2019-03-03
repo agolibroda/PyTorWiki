@@ -1,0 +1,18 @@
+<!-- Это такой глобальный список группешников, он виден "как страница"ы, и всех радует.! -->
+<div class="main-content">
+  <div class="container-fluid">
+      <div class="row" >
+      <!-- Начало раздела тумбочек -->
+          <div class="col-md-4" *ngFor="let group of groupsList">
+          <!-- "{name: 'ОнеГруппа', description: 'Некое злобственное описание', hColor: 'card-header-success'| json }" -->
+			 
+			 <app-group-thumb [groupThumbData]= "group">
+				 <!-- вот тут возникает одна групповая тумбочка!!!!! -->
+			 </app-group-thumb>
+			 
+           </div>
+      <!--  конец списка тумбочек!!! -->
+      </div>
+
+  </div>
+</div>

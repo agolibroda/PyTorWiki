@@ -1,0 +1,90 @@
+<div class="main-content"> <!-- app-group -->
+  <div class="container-fluid">
+      <div class="row" >
+          <div class="col-md-8">
+              <div class="card">
+                  <div class="card-header card-header-danger">
+                      <h4 class="card-title">{{groupData.group_title}}</h4>
+                  </div>
+                  <div class="card-body">
+                          <div class="row">
+                              <div class="col-md-12">
+                                {{groupData.group_annotation}}
+                              </div>
+                          </div>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-4">
+              <div class="card card-profile">
+                  <div class="card-photo-profile"> <!--  -->
+                          <img class="img" src="./assets/img/faces/marc.jpg" />
+                  </div>
+                  <div class="card-body">
+                      <p class="card-description">
+                          возможно, фотке нужна будет подписдь! 
+                      </p>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <!-- вставим материалы группы -->
+      
+         <div class="col-md-12">
+              <div class="card card-plain">
+                  <div class="card-header card-header-warning">
+                      <h4 class="card-title mt-0"> Статьи группы </h4>
+                       <a href="/article">
+                          <i class="material-icons">tab</i> Написать новую статью
+                      </a>
+                  </div>
+                  <div class="card-body">
+                      <div class="table-responsive">
+                  </div>
+              </div>
+          </div>
+      </div>
+      <!--  Вставим список стаей -->
+      <div class="row">
+      <!-- Начало раздела тумбочек -->
+      
+          <div class="col-md-4" *ngFor="let article of articlesList">
+			 
+			<app-article-thumb [articleThumbData]= "article">
+			<!-- вот тут возникает одна Статейная тумбочка!!!!! -->
+			</app-article-thumb>
+			 
+           </div>
+          
+      <!--  конец списка Статей!!! -->
+     </div>
+
+      <!-- вставим список Авторов!!!! -->
+      
+         <div class="col-md-12">
+              <div class="card card-plain">
+                  <div class="card-header card-header-success">
+                      <h4 class="card-title mt-0"> Авторы, которые пишут для группы </h4>
+                  </div>
+                  <div class="card-body">
+                      <div class="table-responsive">
+                  </div>
+              </div>
+          </div>
+      </div>
+      <!--  dfsdfsdf -->
+      <div class="row">
+      <!-- Начало раздела тумбочек -->
+          <div class="col-md-4" *ngFor="let author of authorsList">
+          
+	          <app-author-thumb [authorThumbData]="author">
+	          <!-- Тумбочка из одного аффтара! -->
+	          </app-author-thumb>
+          </div>
+          
+      <!--  конец списка Авторов!!! -->
+     </div>
+      
+      
+  </div>
+</div>

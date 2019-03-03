@@ -1,0 +1,124 @@
+<div class="main-content">
+  <div class="container-fluid">
+      <div class="row">
+          <div class="col-md-8">
+              <div class="card">
+                  <div class="card-header card-header-danger">
+                      <h4 class="card-title">Edit Profile</h4>
+                      <p class="card-category">{{authorData.author_name}} {{authorData.author_surname}}</p>
+                  </div>
+                  <div class="card-body">
+                      <form>
+                          <div class="row">
+                              <div class="col-md-3">
+                                  <mat-form-field class="example-full-width">
+                                    <input matInput placeholder="Username">
+                                  </mat-form-field>
+                              </div>
+                              <div class="col-md-4">
+                                  <mat-form-field class="example-full-width">
+                                    <input matInput placeholder="Email address" type="email">
+                                  </mat-form-field>
+                              </div>
+                          </div>
+                          <div class="row">
+                              <div class="col-md-6">
+                                <mat-form-field class="example-full-width">
+                                  <input matInput placeholder="Fist Name" type="text">
+                                </mat-form-field>
+                              </div>
+                              <div class="col-md-6">
+                                <mat-form-field class="example-full-width">
+                                  <input matInput placeholder="Last Name" type="text">
+                                </mat-form-field>
+                              </div>
+                          </div>
+                          <div class="row">
+                              <div class="col-md-12">
+                                <label>Несколько слов от Автора: </label>
+                                  <div class="form-group">
+                                      <div class="form-group">
+                                      {{authorData.author_yourself_story}}
+                                          <textarea class="form-control" rows="5"></textarea>
+                                      </div>
+                                  </div> 
+                              </div>
+                          </div>
+                          <button mat-raised-button type="submit" class="btn btn-danger pull-right">Update Profile</button>
+                          <div class="clearfix"></div>
+                      </form>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-4">
+              <div class="card card-profile">
+                  <div class="card-photo-profile"> <!--  -->
+                          <img class="img" src="./assets/img/faces/marc.jpg" />
+                  </div>
+                  <div class="card-body">
+                      <h4 class="card-title">{{authorData.author_name}} {{authorData.author_surname}}</h4>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Список статей, которые написал Благородный Дон. -->
+
+         <div class="col-md-12">
+              <div class="card card-plain">
+                  <div class="card-header card-header-warning">
+                      <h4 class="card-title mt-0"> Статьи Автора </h4>
+                      <a href="/article">
+                          <i class="material-icons">tab</i> Написать новую статью
+                      </a>
+                  </div>
+                  <div class="card-body">
+                      <div class="table-responsive">
+                  </div>
+              </div>
+          </div>
+      </div>
+
+
+      <div class="row">
+      <!-- Начало раздела тумбочек -->
+      
+          <div class="col-md-4" *ngFor="let article of articlesList">
+			 
+			<app-article-thumb [articleThumbData]= "article">
+			<!-- вот тут возникает одна Статейная тумбочка!!!!! -->
+			</app-article-thumb>
+			 
+           </div>
+
+      <!--  конец списка Статей!!! -->
+     </div>
+     
+         <div class="col-md-12">
+              <div class="card card-plain">
+                  <div class="card-header card-header-success">
+                      <h4 class="card-title mt-0"> Группы, интересные Автору </h4>
+                  </div>
+                  <div class="card-body">
+                      <div class="table-responsive">
+                  </div>
+              </div>
+          </div>
+      </div>
+      
+     <div class="row">
+      <!-- Начало раздела тумбочек -->
+
+          <div class="col-md-4" *ngFor="let group of groupsList">
+			 
+			 <app-group-thumb [groupThumbData]= "group">
+				 <!-- вот тут возникает одна групповая тумбочка!!!!! -->
+			 </app-group-thumb>
+			 
+           </div>
+
+      <!--  конец списка Группей!!! -->
+     </div>
+       
