@@ -21,16 +21,17 @@ import config
 
 # import core
 
-from core.FilesControls     import *
+from core.FilesControls         import *
 
-from core.ProfileControls   import *
-from core.ArticleControls   import *
-from core.ProfileControls   import *
-from core.DeskTopControls   import *
-from core.GroupHandlers     import *
+from core.ProfileControls       import *
+from core.ArticleControls       import *
+from core.ProfileControls       import *
+from core.DeskTopControls       import *
+from core.GroupHandlers         import *
 
-from core.RestControls      import *
-
+from core.RestAuthorsColtrols   import *
+from core.RestArticlesColtrols  import *
+from core.RestGroupsColtrols    import *
 
 hasattr(config.options, 'logFileName')
 
@@ -75,14 +76,21 @@ class Application(tornado.web.Application):
             (r"/sys_adm_desk_top", SysAdmDeskTop), # (DeskTopControls) РС Админа СИСТЕМЫ 
 
             (r"/groups", GroupListHandler), # (GroupHandlers) Список всех групп в системе -
-#             (r"/group/([0-9]+)", GroupProfile), # (GroupHandlers) Публичная часть группы. -
-             
-            (r"/authors", AuthorsList), # (ProfileControl) Список всех Авторов в системе -
-#             (r"/author/([0-9]+", AuthorProfile), # (ProfileControl) Список всех Авторов в системе -
+            (r"/group/([0-9]+)", GroupProfile), # (GroupHandlers) Публичная часть группы. -
 
-#             (r"/rest/([^/]+)/([0-9]+)",  RestMinHandler), # (RestControl.py) все, что вызывается из клиента AJAX... 
+#################################################################################################
 
-            (r"/([^/]+)", ArticleHandler), # (ArticleControl) Этим замыкаем список рутеров, так как он превращает в название статьи ВСЕ!!!!
+            (r"/rest/authors",          RestAuthorsListColtrolHandler), # (RestAuthorsColtrols.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/authors/([0-9]+)", RestAuthorColtrolHandler), # (RestAuthorsColtrols.py) все, что вызывается из клиента AJAX... 
+
+            (r"/rest/groups",          RestGroupsListColtrolHandler), # (RestGroupsColtrols.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/groups/([0-9]+)", RestGroupColtrolHandler), # (RestGroupsColtrols.py) все, что вызывается из клиента AJAX... 
+
+            (r"/rest/articles",         RestArticlesListColtrolHandler), # (RestArticlesColtrols.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/articles/([^/]+)", RestArticleColtrolHandler), # (RestArticlesColtrols.py) все, что вызывается из клиента AJAX... 
+
+#################################################################################################
+            (r"/([^/]+)",               ArticleHandler), # (ArticleControl) Этим замыкаем список роутеров, так как он превращает в название статьи ВСЕ!!!!
 
         ]
         

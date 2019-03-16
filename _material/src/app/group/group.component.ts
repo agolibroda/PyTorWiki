@@ -18,8 +18,12 @@ import { Article } 	from 	'../_models/article';
 import { Author } 	from 	'../_models/author';
 
 import { GroupDataService } from '../_data_services/group-data.service';
-import { ArticlesListDataService } from '../lists/_services/article-list-data.service';
-import { AthorsListDataService } from '../lists/_services/athors-list-data.service';
+
+//import { ArticlesListDataService } from '../_data_services/lists/article-list-data.service';
+//import { AthorsListDataService } from '../_data_services/lists/athors-list-data.service';
+
+import { AuthorDataService } 	from '../_data_services/author-data.service';
+import { ArticleDataService } 	from '../_data_services/article-data.service';
 
 
 import { MAIN_COLOR, COLORS, ColorSelector } from '../_config/colors';
@@ -39,38 +43,26 @@ export class GroupComponent implements OnInit {
 
 	itemColor: ColorSelector;
 
-	groupDataService: GroupDataService;
-	articlesListDataService: ArticlesListDataService;
-	authorsListDataService: AthorsListDataService;
+//	groupDataService: GroupDataService;
+//	articlesListDataService: ArticleDataService;
+//	authorsListDataService: AuthorDataService;
 
-	courseId: number;
-
-//	constructor( private route: ActivatedRoute, private location: Location) { 
 	constructor(
-		    private readonly route: ActivatedRoute,
+			private groupDataService: GroupDataService,
+			private readonly route: ActivatedRoute,
+		    private articleDataService: ArticleDataService,
+		    private authorsListDataService: AuthorDataService,
 		    private readonly router: Router,
 		  ) {		
 		
 		this.itemColor = new ColorSelector();
 		
-		this.articlesListDataService = new ArticlesListDataService();
-
-		this.authorsListDataService = new AthorsListDataService();
-
-		this.groupDataService = new GroupDataService();
-	
-		this.route.params.subscribe(
-				params =>{
-					this.courseId = parseInt(params['id']);
-				}
-		);
-		console.log('constructor this.courseId = ' + JSON.stringify(this.courseId, null, 4));
 	}
 		
 
 	ngOnInit(): void {
 		let testId = +this.route.snapshot.paramMap.get("id");
-		console.log('ngOnInit testId = ' + JSON.stringify(testId, null, 4));
+//		console.log('ngOnInit testId = ' + JSON.stringify(testId, null, 4));
 		
 		this.getGroup(testId);
 	}
@@ -87,41 +79,40 @@ export class GroupComponent implements OnInit {
 	 */
 	getGroup(groupId: number): void {
 		// public groupId: number
-				console.log('getGroup Start!!!  ' );
-				
-//				const groupId = 0 ; //+this.route.snapshot.paramMap.get('id');
-
 				console.log('getGroup groupId = ' + JSON.stringify(groupId, null, 4));
 
 				if (groupId > 0) {
-					this.groupDataService.getGroupData(groupId)
-					.then(_groupData => {
+					this.groupDataService.getById(groupId)
+					.subscribe((_groupData: Group) => {
+						console.log('getGroup _groupData = ' + JSON.stringify(_groupData, null, 4));
 						// Заберем описание группы
-						this.groupData = _groupData
-//						console.log('this.groupData = ' + JSON.stringify(this.groupData, null, 4));
-						// Заберем список статей, которые есть в ЭТОЙ группе
-						return this.articlesListDataService.getArticlesGroupList(groupId);
-					}).then(_articlesList => {
-						// вот тут нужно перебрать все элементы списка статей, и в каждую всунуть цвет, который стоит взять из
-						// списка цветов, о которых знает система.
-						this.articlesList = _articlesList.map((article) => {
-							article.color = this.itemColor.get();//'primary';
-							return article;
-						});
-						// Заберем авторов, которые связаны с группой
-						return this.authorsListDataService.getGroupAuthorsList(groupId);
-					})
-					.then(_authorsList => {
-						// вот тут нужно перебрать все элементы списка статей, и в каждую всунуть цвет, который стоит взять из
-						// списка цветов, о которых знает система.
-						this.authorsList = _authorsList.map((author) => {
-							author.color = this.itemColor.get();
-							return author;
-						});
+						this.groupData = _groupData;
+						// А вот теперь надо добавить список статей в группе  
+						// и список авторов!!!!!
 						
-//						this.authorsList = this.itemColor.setColors(_authorsList);
-						// положим авторов "куда надо"
-					});
+						this.articleDataService.getArticleInGroup(groupId)
+						.subscribe((_articlesList: Article[]) => {
+							// вот тут нужно перебрать все элементы списка статей, и в каждую всунуть цвет, который стоит взять из
+							// списка цветов, о которых знает система.
+							this.articlesList = _articlesList.map((article) => {
+								article.color = this.itemColor.get();//'primary';
+								return article;
+							});
+							
+//							console.log('AuthorViewComponent::: getAuthor this.articlesList = ' + JSON.stringify(this.articlesList, null, 4));
+							// Заберем всех АВТОРОВ этой группы!!!!!!
+							this.authorsListDataService.getAuthorsInGroup(groupId)
+							.subscribe((_authorsList: Author[]) => {
+								// вот тут нужно перебрать все элементы списка статей, и в каждую всунуть цвет, который стоит взять из
+								// списка цветов, о которых знает система.
+								this.authorsList = _authorsList.map((author) => {
+									author.color = this.itemColor.get();//'primary';
+									return author;
+								});
+							})
+						})
+						
+					})
 					
 				} else {
 					// тут надо перейти к редактированию новой группы

@@ -7,10 +7,10 @@
  */
 
 import { Component, OnInit } from '@angular/core';
-//import * as Chartist from 'chartist';
 
 import { Group } from '../_models/group';
-import { GroupListDataService } from '../lists/_services/group-list-data.service';
+import { GroupDataService } from '../_data_services/group-data.service';
+
 
 import { MAIN_COLOR, COLORS, ColorSelector } from '../_config/colors';
 
@@ -28,7 +28,7 @@ export class GroupsComponent implements OnInit {
 	groupsList: Group[];
 	itemColor: ColorSelector;
 	
-	constructor(private groupListDataService: GroupListDataService) { 
+	constructor(private groupListDataService: GroupDataService) { 
 		this.itemColor = new ColorSelector();
 	}
 
@@ -42,11 +42,11 @@ export class GroupsComponent implements OnInit {
 	 */
 	ngOnInit(): void {
 		
-		this.groupListDataService.getGroupsList().then(groupsList => {
-			
+		this.groupListDataService.getAll()
+		.subscribe((_groupsList: Group[]) => {
 			// вот тут нужно перебрать все элементы списка групп, а в каждую всунуть цвет, который стоит взять из
 			// списка цветов, о которых знает система.
-			this.groupsList = groupsList.map((group) => {
+			this.groupsList = _groupsList.map((group) => {
 				group.color = this.itemColor.get();//'primary';
 				return group;
 			});

@@ -10,7 +10,8 @@
 import { Component, OnInit } from '@angular/core';
 
 import { Author } from '../_models/author';
-import { AthorsListDataService } from '../lists/_services/athors-list-data.service';
+import { AuthorDataService } 		from '../_data_services/author-data.service';
+
 
 import { MAIN_COLOR, COLORS, ColorSelector } from '../_config/colors';
 
@@ -26,7 +27,9 @@ export class AuthorsComponent implements OnInit {
 	authorsList: Author[];
 	itemColor: ColorSelector;
 
-constructor(private authorsListDataService: AthorsListDataService) { 
+constructor(
+		private authorDataService: AuthorDataService
+		) { 
 	this.itemColor = new ColorSelector();
 }
 
@@ -40,8 +43,8 @@ constructor(private authorsListDataService: AthorsListDataService) {
  */
 ngOnInit(): void {
 	
-	this.authorsListDataService.getAuthorsList().then(authorsList => {
-		
+	this.authorDataService.getAll()
+	.subscribe(authorsList => {
 		// вот тут нужно перебрать все элементы списка групп, а в каждую всунуть цвет, который стоит взять из
 		// списка цветов, о которых знает система.
 		this.authorsList = authorsList.map((group) => {

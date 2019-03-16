@@ -45,7 +45,7 @@ from core.models.group      import Group
 from core.helpers.template import Template, TemplateParams
 
 
-from core.BaseHandlers import *
+from core.BaseHandler import *
 from core.WikiException import *
 
 # A thread pool to be used for password hashing with bcrypt.

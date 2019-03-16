@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
+import { REST_SERVER_URL, MAIN_MENU } 			from '../../_config/main';
+
 declare const $: any;
 declare interface RouteInfo {
     path: string;
@@ -8,11 +10,11 @@ declare interface RouteInfo {
     class: string;
 }
 export const ROUTES: RouteInfo[] = [
-    { path: '/groups', title: 'Види і форми дозвілля',  icon: 'dashboard', class: '' },
-    { path: '/authors', title: 'Автори',  icon:'group', class: '' },
-    { path: '/author-profile', title: 'User Profile(убрать!)',  icon:'person', class: '' },
-    { path: '/article', title: 'Нова Стаття',  icon:'tab', class: '' },
-    { path: '/group', title: 'Новi: вид або форма дозвілля',  icon:'list_alt', class: '' },
+    { path: '/groups', 		title: MAIN_MENU.groups.title,  icon: MAIN_MENU.groups.icon, class: '' },
+    { path: '/authors', 	title: MAIN_MENU.authors.title,  icon: MAIN_MENU.authors.icon, class: '' },
+    { path: '/author-profile', 	title: 'User Profile(убрать!)',  icon:'person', class: '' },
+    { path: '/article', 	title: MAIN_MENU.newArticle.title, icon: MAIN_MENU.newArticle.icon, class: '' },
+    { path: '/group', 		title: MAIN_MENU.newGroup.title,  icon: MAIN_MENU.newGroup.icon, class: '' },
     
 ];
 

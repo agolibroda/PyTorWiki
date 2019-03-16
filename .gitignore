@@ -21,6 +21,11 @@ _host_configs/**
 /static/site_templates/**
 /templates/tmp/**
 
+*.jpg
+*.jpeg
+*.png
+
+_material/node_modules/
 
 /start.sh
 /stop.sh

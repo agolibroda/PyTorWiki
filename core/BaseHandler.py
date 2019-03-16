@@ -4,10 +4,7 @@
 # Copyright 2015 Alec Golibroda
 
 
-#  Впринцепе, Это "тулБокс" - ящик с инструментами просто пользователя 
-# надо сюда добавить 
-# список ПОльзователей
-# список Групп 
+# from core.BaseHandler       import *
 
 
 import bcrypt
@@ -36,26 +33,17 @@ import pickle
 
 import config
 
-
 from core.Helpers           import *
-
-
+# 
 import core.models
 
 from core.models.author     import Author
-
-# from core.models.article import Article
-# from core.models.article import Revision
-# from core.models.file import File
-# from core.models.template import Template
-# 
-# from core.control.article import ControlArticle 
-
 
 
 @singleton
 class SingletonAuthor(Author):
     pass
+
 
 class BaseHandler(SessionBaseHandler):
 

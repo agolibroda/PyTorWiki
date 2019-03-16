@@ -42,7 +42,7 @@ from core.helpers.article   import HelperArticle
 
 from core.helpers.template  import Template, TemplateParams
 
-from core.BaseHandlers       import *
+from core.BaseHandler       import *
 from core.WikiException     import *
 
 

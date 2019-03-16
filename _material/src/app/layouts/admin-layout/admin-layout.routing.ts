@@ -70,10 +70,9 @@ export const AdminLayoutRoutes: Routes = [
     
     { path: 'author-profile',   component: AuthorProfileComponent }, // редактировать СОБСТВЕННЫЙ профиль!
     { path: 'author/:id',   component: AuthorViewComponent }, // просмотреть станицу автора
-//    { path: 'author-view',   component: AuthorViewComponent }, // просмотреть станицу автора
     
     { path: 'article',   component: ArticleComponent }, // новая статья
-//  { path: 'article/:title',   component: ArticleComponent },  // чтение (редактирование) одной статьи
+    { path: 'article/:title',   component: ArticleComponent },  // чтение (редактирование) одной статьи
 
     { path: 'group',		component: GroupComponent},  // новая группа
     { path: 'group/:id',	component: GroupComponent},  // // просмотр (и редактирование??) одной групы

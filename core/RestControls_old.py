@@ -11,7 +11,7 @@ import concurrent.futures
 import os.path
 import re
 import subprocess
-# import torndb
+
 import tornado.escape
 from tornado import gen
 import tornado.httpserver
@@ -36,7 +36,7 @@ from core.helpers.article import HelperArticle
 from core.models.group      import Group
 
 
-from core.BaseHandlers import *
+from core.BaseHandler import *
 
 
 # A thread pool to be used for password hashing with bcrypt.

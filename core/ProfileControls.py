@@ -43,7 +43,7 @@ import core.models
 
 from core.models.author         import Author
 
-from core.BaseHandlers           import *
+from core.BaseHandler           import *
 from core.WikiException         import *
 
 from core.models.article import Article
