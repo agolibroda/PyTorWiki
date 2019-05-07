@@ -1,13 +1,14 @@
 #!/usr/bin/env python3.6
 # -*- coding: utf-8 -*-
-
-
+#
+#
 # RestAuthorsColtrols
-
+#
 # Copyright 2019 Alec Golibroda
-
+#
 # from core.RestAuthorsColtrols   import *
-
+#
+#
 
 
 import bcrypt
@@ -19,35 +20,30 @@ import subprocess
 
 import json
 
-import tornado.escape
-from tornado import gen
-# import tornado.httpserver
-# import tornado.ioloop
-# import tornado.options
-# import tornado.web
-
-from tornado.web import Application, RequestHandler
-from tornado.ioloop import IOLoop
+# import tornado.escape
+# from tornado import gen
+# # import tornado.httpserver
+# # import tornado.ioloop
+# # import tornado.options
+# # import tornado.web
+# 
+# from tornado.web import Application, RequestHandler
+# from tornado.ioloop import IOLoop
 
 
 import unicodedata
 
 import logging
-import json
 
 import config
 
 import core.models
 
-from core.BaseRestHandler       import *
+from core.BaseHandler   import *
 from core.WikiException     import *
 
-from core.models.author import Author
-# from core.models.article import Article
-# from core.models.file import File
-# from core.models.group      import Group
-# 
-# 
+from core.models.author     import Author
+
 
 # A thread pool to be used for password hashing with bcrypt.
 executor = concurrent.futures.ThreadPoolExecutor(2)
@@ -68,7 +64,7 @@ souList = [
                 ]
 
 
-class RestAuthorsListColtrolHandler(BaseRestHandler):
+class RestAuthorsListColtrolHandler(BaseHandler):
 # class RestAuthorsListColtrolHandler(BaseHandler):
     """
     Сервис о получении списка Авторов
@@ -88,24 +84,24 @@ class RestAuthorsListColtrolHandler(BaseRestHandler):
         """
         Получим список Авторов, возможно, список прикрутим к Группе - 
         может, попробуем забрать ещё какие  - то параметры...
-        
+         
         """
-
+ 
         self.get_current_user()
         self.curentAuthor = self.current_user
- 
+  
         logging.info( 'getPersonalArticlesList:: get self.curentAuthor = ' + str(self.curentAuthor))
-         
+          
 #         groupId=0 #None
-        
+         
         groupId = self.get_argument("groupId", False)
         logging.info( 'getPersonalArticlesList:: get groupId = ' + str(groupId))
-        
+         
         try:
-                 
+                  
 #             label=self.get_argument('label')
 #             selector=self.get_argument('selector')
-             
+              
 #             if int(curentParameter) == 0:
 #                 curentParameter = config.options.main_info_template
 #                 articles = [Article(0, 'Выберите значение ')]
@@ -114,14 +110,14 @@ class RestAuthorsListColtrolHandler(BaseRestHandler):
 #             
 #             artHelper = HelperArticle()
 #             articles += yield executor.submit(artHelper.getListArticles, config.options.tpl_categofy_id)
-     
+      
 #             self.set_default_headers()
-            
+             
             self.write(json.dumps(souList))
 #             self.get()
-
-            
-
+ 
+             
+ 
         except Exception as e:
             logging.info( 'commandName:: '+ str(commandName)+' Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
@@ -130,7 +126,7 @@ class RestAuthorsListColtrolHandler(BaseRestHandler):
 
 
 
-class RestAuthorColtrolHandler(BaseRestHandler):
+class RestAuthorColtrolHandler(BaseHandler):
 # class RestAuthorsListColtrolHandler(BaseHandler):
     """
     
@@ -143,17 +139,10 @@ class RestAuthorColtrolHandler(BaseRestHandler):
     """
 
     @gen.coroutine
-    def get(self, authorId=None):
- 
-        # , commandName, curentParameter, label="" 
-#         logging.info('RestAuthorsListColtrolHandler:: commandName '+ str(commandName))
-#         logging.info('RestAuthorsListColtrolHandler:: curentParameter '+ str(curentParameter))
-# 
-#         link=self.get_argument('link', '')
-#         logging.info('RestAuthorsListColtrolHandler:: link = '+ str(link))
+    def get(self, authorId=None ): # 
         
-        logging.info( 'RestAuthorColtrolHandler:: get authorId = ' + str(authorId))
-         
+        super().get()
+        
         self.get_current_user()
         self.curentAuthor = self.current_user
  
@@ -161,18 +150,7 @@ class RestAuthorColtrolHandler(BaseRestHandler):
         
         try:
                  
-#             label=self.get_argument('label')
-#             selector=self.get_argument('selector')
-             
-#             if int(curentParameter) == 0:
-#                 curentParameter = config.options.main_info_template
-#                 articles = [Article(0, 'Выберите значение ')]
-#             else:
-#                 articles = []
-#             
-#             artHelper = HelperArticle()
-#             articles += yield executor.submit(artHelper.getListArticles, config.options.tpl_categofy_id)
-#             id = authorId 
+            id = authorId 
             logging.info( 'RestAuthorColtrolHandler:: authorId = ' + str(authorId))
             foundValue = None
             for item in souList:

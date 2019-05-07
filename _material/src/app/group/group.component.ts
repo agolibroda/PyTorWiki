@@ -102,14 +102,14 @@ export class GroupComponent implements OnInit {
 //							console.log('AuthorViewComponent::: getAuthor this.articlesList = ' + JSON.stringify(this.articlesList, null, 4));
 							// Заберем всех АВТОРОВ этой группы!!!!!!
 							this.authorsListDataService.getAuthorsInGroup(groupId)
-							.subscribe((_authorsList: Author[]) => {
-								// вот тут нужно перебрать все элементы списка статей, и в каждую всунуть цвет, который стоит взять из
-								// списка цветов, о которых знает система.
-								this.authorsList = _authorsList.map((author) => {
-									author.color = this.itemColor.get();//'primary';
-									return author;
-								});
-							})
+//							.subscribe((_authorsList: Author[]) => {
+//								// вот тут нужно перебрать все элементы списка статей, и в каждую всунуть цвет, который стоит взять из
+//								// списка цветов, о которых знает система.
+//								this.authorsList = _authorsList.map((author) => {
+//									author.color = this.itemColor.get();//'primary';
+//									return author;
+//								});
+//							})
 						})
 						
 					})

@@ -39,7 +39,7 @@ import config
 
 import core.models
 
-from core.BaseRestHandler       import *
+from core.BaseHandler       import *
 from core.WikiException     import *
 
 from core.models.article import Article
@@ -69,7 +69,7 @@ souList = [
 
 
 
-class RestArticlesListColtrolHandler(BaseRestHandler):
+class RestArticlesListColtrolHandler(BaseHandler):
 # class RestArticlesListColtrolHandler(BaseHandler):
     """
     Сервис о получении списка Авторов
@@ -84,7 +84,8 @@ class RestArticlesListColtrolHandler(BaseRestHandler):
  
         logging.info( 'RestArticlesListColtrolHandler:: get self.curentAuthor = ' + str(self.curentAuthor))
         
-        groupId = self.get_argument("groupId", False)
+        # получить ИД группы, для которой требуется собрать список статей
+        groupId = self.get_argument("groupId", False) #
          
         logging.info( 'RestArticlesListColtrolHandler:: get groupId = ' + str(groupId)) 
         #  можно придумать, что делать для загрузки списка статей группы 
@@ -118,13 +119,11 @@ class RestArticlesListColtrolHandler(BaseRestHandler):
 
 
 
-class RestArticleColtrolHandler(BaseRestHandler):
+class RestArticleColtrolHandler(BaseHandler):
 # class RestArticlesListColtrolHandler(BaseHandler):
     """
-    Сервис для работы со статьями
-    - поучить данные одного, 
-    - создать
-    - отредактировать
+    Сервис получить одну статью 
+    по её заголовку.
     
     """
 

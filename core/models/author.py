@@ -4,6 +4,11 @@
 # Copyright 2015 Alec Goliboda
 #
 # authors.py
+#
+#
+# from core.models.author     import Author
+#
+#
 
 # from models.model import Model
 # from model import Model
@@ -454,6 +459,17 @@ class Author(Model):
 
         return pickle.dumps(newAuthor.__dict__)    
  
+ 
+    def getPublicProfile(self):
+        newAuthor = Author()
+        newAuthor = self.preparingForPicked (self)
+        newAuthor.public_key = None
+        newAuthor.private_key = None
+        newAuthor.private_key_hash = None
+        newAuthor._openPublicKey = None
+        newAuthor._openPrivateKey = None
+        
+        
  
     def unSerializationAuthor(self, authorPicle):
         """

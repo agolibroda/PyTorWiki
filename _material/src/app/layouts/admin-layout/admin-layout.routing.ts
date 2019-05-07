@@ -61,26 +61,24 @@ export const AdminLayoutRoutes: Routes = [
     //         component: UpgradeComponent
     //     }]
     // }
-    { path: '',      component: HomeComponent },
-    { path: 'home',      component: HomeComponent },
-    { path: 'home/:id',      component: HomeComponent },
+    { path: '',      			component: HomeComponent },
+    { path: 'home',      		component: HomeComponent },
+    { path: 'home/:id', 		component: HomeComponent },
 
-    { path: 'authors',   component: AuthorsComponent }, // список авторов
-    { path: 'groups',      component: GroupsComponent }, // список групп
+    { path: 'authors', 			component: AuthorsComponent }, // список авторов
+    { path: 'groups', 			component: GroupsComponent }, // список групп
     
-    { path: 'author-profile',   component: AuthorProfileComponent }, // редактировать СОБСТВЕННЫЙ профиль!
-    { path: 'author/:id',   component: AuthorViewComponent }, // просмотреть станицу автора
+    { path: 'author-profile', 	component: AuthorProfileComponent }, // редактировать СОБСТВЕННЫЙ профиль!
+    { path: 'author/:id', 		component: AuthorViewComponent }, // просмотреть станицу автора
     
-    { path: 'article',   component: ArticleComponent }, // новая статья
+    { path: 'article', 			component: ArticleComponent }, // новая статья
     { path: 'article/:title',   component: ArticleComponent },  // чтение (редактирование) одной статьи
 
-    { path: 'group',		component: GroupComponent},  // новая группа
-    { path: 'group/:id',	component: GroupComponent},  // // просмотр (и редактирование??) одной групы
-//    { path: 'group_22',	component: GroupComponent},  // // просмотр (и редактирование??) одной групы
+    { path: 'group',			component: GroupComponent},  // новая группа
+    { path: 'group/:id',		component: GroupComponent},  // // просмотр (и редактирование??) одной групы
     
+    { path: 'login', 			component: LoginComponent },
     
-    { path: 'login',   component: LoginComponent },
-    
-    { path: '**', component: PageNotFoundComponent },
+    { path: '**', 				component: PageNotFoundComponent },
   
   ];

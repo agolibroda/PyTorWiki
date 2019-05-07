@@ -39,7 +39,7 @@ import config
 
 import core.models
 
-from core.BaseRestHandler       import *
+from core.BaseHandler       import *
 from core.WikiException         import *
 
 from core.models.group          import Group
@@ -69,7 +69,7 @@ souList = [
 
 
 
-class RestGroupsListColtrolHandler(BaseRestHandler):
+class RestGroupsListColtrolHandler(BaseHandler):
 # class RestGroupsListColtrolHandler(BaseHandler):
     """
     Сервис о получении списка Авторов
@@ -115,7 +115,7 @@ class RestGroupsListColtrolHandler(BaseRestHandler):
 
 
 
-class RestGroupColtrolHandler(BaseRestHandler):
+class RestGroupColtrolHandler(BaseHandler):
 # class RestGroupsListColtrolHandler(BaseHandler):
     """
     Сервис для работы с группами

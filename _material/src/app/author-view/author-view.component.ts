@@ -52,9 +52,9 @@ export class AuthorViewComponent implements OnInit {
 	constructor(
 			private authorDataService: AuthorDataService,
 			private articleDataService: ArticleDataService,
-			private groupsDataService: GroupDataService;
+			private groupsDataService: GroupDataService,
 	        private route: ActivatedRoute,
-	        private router: Router,
+	        private router: Router
 			
 		  ) {		
 		
@@ -117,14 +117,14 @@ export class AuthorViewComponent implements OnInit {
 						// Заберем все группы автора
 //						return this.groupsListDataService.getAuthorGroupsList(authorId);
 						this.groupsDataService.getAuthorGroups(authorId)
-						.subscribe((_groupsList: Author[]) => {
-							// вот тут нужно перебрать все элементы списка статей, и в каждую всунуть цвет, который стоит взять из
-							// списка цветов, о которых знает система.
-							this.groupsList = _groupsList.map((group) => {
-								group.color = this.itemColor.get();//'primary';
-								return group;
-							});
-						})
+//						.subscribe((_groupsList: Author[]) => {
+//							// вот тут нужно перебрать все элементы списка статей, и в каждую всунуть цвет, который стоит взять из
+//							// списка цветов, о которых знает система.
+//							this.groupsList = _groupsList.map((group) => {
+//								group.color = this.itemColor.get();//'primary';
+//								return group;
+//							});
+//						})
 						
 					})
 					

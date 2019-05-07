@@ -21,17 +21,15 @@ import config
 
 # import core
 
-from core.FilesControls         import *
-
-from core.ProfileControls       import *
-from core.ArticleControls       import *
-from core.ProfileControls       import *
-from core.DeskTopControls       import *
-from core.GroupHandlers         import *
-
 from core.RestAuthorsColtrols   import *
 from core.RestArticlesColtrols  import *
 from core.RestGroupsColtrols    import *
+from core.RestProfileColtrols   import *
+
+from core.RestTokenControls   import *
+
+
+
 
 hasattr(config.options, 'logFileName')
 
@@ -54,94 +52,76 @@ executor = concurrent.futures.ThreadPoolExecutor(2)
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/", HomeHandler),
-            (r"/index.html", HomeHandler),
-
-            (r"/compose", ComposeHandler), # (ArticleControl) редактор - в зависимости от роли запускателя (или, откуда оно запускается?) такой набор инструментов и покажем.
-            (r"/compose/([^/]+)", ComposeHandler), # (ArticleControl)
-            (r"/upload/([0-9]+).html",  UploadHandler), # (FilesControl) upload #filesupl
-
-            (r"/revisionse/([0-9]+)", RevisionsHandler),# (ArticleControl) Список ревизий как отдельный список (???) 
-            (r"/revision_view", RevisionViewHandler), # (ArticleControl) просмотр одной рвизи????
-
-            (r"/auth/create", AuthCreateHandler), # (ProfileControl.py)
-            (r"/auth/login", AuthLoginHandler), # (ProfileControl.py)
-            (r"/auth/logout", AuthLogoutHandler), # (ProfileControl.py)
-            (r"/profile", MyProfileHandler), # (ProfileControl.py) мой собственный профиль - что бы поредактировать
-            (r"/profile/([0-9]+)", AuthorProfile), # (ProfileControl.py) профиль любого пользователя - по ИД - ну надо же поглядеть!
-
-            (r"/personal_desk_top", PersonalDeskTop), # (DeskTopControls) персональный рабочий стол пользователя - 
-            (r"/group_desk_top", GroupDeskTop), # (DeskTopControls) рабочий стол участника группы
-            (r"/group_desk_top/([0-9]+)", GroupDeskTop), # (DeskTopControls) рабочий стол участника группы
-            (r"/sys_adm_desk_top", SysAdmDeskTop), # (DeskTopControls) РС Админа СИСТЕМЫ 
-
-            (r"/groups", GroupListHandler), # (GroupHandlers) Список всех групп в системе -
-            (r"/group/([0-9]+)", GroupProfile), # (GroupHandlers) Публичная часть группы. -
-
 #################################################################################################
-
             (r"/rest/authors",          RestAuthorsListColtrolHandler), # (RestAuthorsColtrols.py) все, что вызывается из клиента AJAX... 
             (r"/rest/authors/([0-9]+)", RestAuthorColtrolHandler), # (RestAuthorsColtrols.py) все, что вызывается из клиента AJAX... 
 
-            (r"/rest/groups",          RestGroupsListColtrolHandler), # (RestGroupsColtrols.py) все, что вызывается из клиента AJAX... 
-            (r"/rest/groups/([0-9]+)", RestGroupColtrolHandler), # (RestGroupsColtrols.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/groups",           RestGroupsListColtrolHandler), # (RestGroupsColtrols.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/groups/([0-9]+)",  RestGroupColtrolHandler), # (RestGroupsColtrols.py) все, что вызывается из клиента AJAX... 
 
             (r"/rest/articles",         RestArticlesListColtrolHandler), # (RestArticlesColtrols.py) все, что вызывается из клиента AJAX... 
-            (r"/rest/articles/([^/]+)", RestArticleColtrolHandler), # (RestArticlesColtrols.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/articles/([^/]+)", RestArticleColtrolHandler), # (RestArticlesColtrols.py) все, что вызывается из клиента AJAX...
 
+            (r"/rest/login",            RestLoginHandler), # (RestProfileColtrols.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/logout",           RestLogoutHandler), # (RestProfileColtrols.py) все, что вызывается из клиента AJAX... 
+
+            (r"/rest/token",            RestTokenHandler), # (RestTokenControls.py) все, что ... 
+            
+            (r"/rest/check_token/([^/]+)",      RestCheckTokenHandler), # (RestTokenControls.py) все, что ... 
+             
 #################################################################################################
-            (r"/([^/]+)",               ArticleHandler), # (ArticleControl) Этим замыкаем список роутеров, так как он превращает в название статьи ВСЕ!!!!
 
         ]
         
         settings = dict(
-            wiki_title = config.options.Project_Name,
-            project_description = config.options.Project_Description,
-            wiki_title_admin = config.options.wikiTitleAdmin,
-#             project_dir=projectDir,
-            template_path=config.options.templateDir, #os.path.join(projectDir, config.options.templateDir),
-            static_path=config.options.staticDir, #os.path.join(projectDir, config.options.staticDir),
-            ui_modules={
-                        "Article": ArticleModule, 
-                        'Revision': RevisionModule, 
-                        "SimpleArticle": SimpleArticleModule,
-                        'FilesList': FilesListModule,
-                        },
-            xsrf_cookies=True,
+#             wiki_title = config.options.Project_Name,
+#             project_description = config.options.Project_Description,
+#             wiki_title_admin = config.options.wikiTitleAdmin,
+# #             project_dir=projectDir,
+#             template_path=config.options.templateDir, #os.path.join(projectDir, config.options.templateDir),
+#             static_path=config.options.staticDir, #os.path.join(projectDir, config.options.staticDir),
+#             ui_modules={
+#                         "Article": ArticleModule, 
+#                         'Revision': RevisionModule, 
+#                         "SimpleArticle": SimpleArticleModule,
+#                         'FilesList': FilesListModule,
+#                         },
+#             xsrf_cookies=True,
             cookie_secret=config.options.cookieSecret, #  "64d1c3defc5f9e829010881cfae22db38732",
-            login_url="/auth/login",
+#             login_url="/auth/login",
             debug=True,
         )
         
         # sid_name, lifetime added in 1.1.5.0
         # sid_name: the name of session id in cookies.
         # lifetime: session default expires seconds.
-        if config.options.sessionsStrategy == 'redis':
-            driverValue="redis"
-            driverSettings=dict(
-                host='localhost',
-                port=6379,
-                db=14,
-#                 "pass"='',
-                max_connections=1024,
-            )
-        elif config.options.sessionsStrategy == 'file':
-            driverValue="file"
-            driverSettings=dict(host="#_sessions",)
-        else:
-            # memory
-            driverValue='memory'
-            driverSettings={'host': self}
-        
-        session_settings = dict(
-            driver=driverValue,
-            driver_settings=driverSettings,
-
-            force_persistence=True,
-            sid_name= config.options.sidName,
-            session_lifetime=config.options.sessionLifetime,
-        )
-        settings.update(session=session_settings)
+#         if config.options.sessionsStrategy == 'redis':
+#             driverValue="redis"
+#             driverSettings=dict(
+#                 host=config.options.redisHost,
+#                 port=config.options.redisPort,
+#                 db=config.options.redisDb,
+# #                 "pass"='',
+#                 max_connections=config.options.redisMaxConnections,
+#             )
+#             
+#         elif config.options.sessionsStrategy == 'file':
+#             driverValue="file"
+#             driverSettings=dict(host="#_sessions",)
+#         else:
+#             # memory
+#             driverValue='memory'
+#             driverSettings={'host': self}
+#         
+#         session_settings = dict(
+#             driver=driverValue,
+#             driver_settings=driverSettings,
+# 
+#             force_persistence=True,
+#             sid_name= config.options.sidName,
+#             session_lifetime=config.options.sessionLifetime,
+#         )
+#         settings.update(session=session_settings)
         
         super(Application, self).__init__(handlers, **settings)
         

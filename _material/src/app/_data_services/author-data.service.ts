@@ -160,11 +160,13 @@ export class AuthorDataService {
         return this.http.put(`${REST_SERVER_URL}/rest/authors/${author.author_id}`, author);
     }  
     
-    public login(authorname: string, password: string) {
-        return this.http.post<any>(`${REST_SERVER_URL}/rest/authors/login`, { authorname, password })
+    public login(authorname: string, password: string, saveMe: boolean, tag: string) {
+        return this.http.post<any>(`${REST_SERVER_URL}/rest/login`, { authorname: authorname, password: password, saveMe: saveMe, tag: tag })
             .pipe(map(_author => {
-                // login successful if there's a jwt token in the response
-                if (_author && _author.token) {
+                //login successful if there's a jwt token in the response
+            	console.log('login::: _author = ' + JSON.stringify(_author, null, 4));
+            	
+                if (_author) {
                     // store author details and jwt token in local storage to keep author logged in between page refreshes
                     localStorage.setItem('_currentAuthor', JSON.stringify(_author));
                     this.currentAuthorSubject.next(_author);

@@ -7,23 +7,40 @@
                       <h4 class="card-title">Войти в систему</h4>
                   </div>
                   <div class="card-body">
-                      <form>
+                      <form #formLogin ="ngForm" novalidate  (ngSubmit)="makeLogin(formLogin)">
                           <div class="row">
                               <div class="col-md-3">
                                   <mat-form-field class="example-full-width">
-                                    <input matInput placeholder="Username">
+                                    <input matInput name="username" [(ngModel)]="username"  placeholder="Username">
                                   </mat-form-field>
                               </div>
                               <div class="col-md-4">
                                   <mat-form-field class="example-full-width">
-                                    <input matInput placeholder="Password" type="email">
+                                    <input matInput name= "password" [(ngModel)]="password"  placeholder="Password" type="password">
                                   </mat-form-field>
                               </div>
                           </div>
-                          <div class="clearfix"></div>
-                          <button mat-raised-button type="submit" class="btn btn-danger ">Войти</button>
-                          &nbsp;&nbsp;&nbsp;
-                          <button mat-raised-button class="btn btn-warning">Регистрация</button>
+                          <div  class="row">
+                              <div class="col-md-4">
+	                           <div class="form-check">
+	                                <label class="form-check-label"> Запомнить меня
+	                                  <input class="form-check-input" type="checkbox" value="" checked name= "saveMe" [(ngModel)]="saveMe">
+	                                  <span class="form-check-sign">
+	                                    <span class="check"></span>
+	                                  </span>
+	                                </label>
+	                              </div>
+	                          </div>
+                          </div>
+						  <div  class="row">
+	                          <div class="clearfix"></div>
+	                          <div class="col-md-3">
+		                          <button  mat-raised-button type="submit" class="btn btn-danger ">Войти</button>
+	                          </div>
+	                          <div class="col-md-4">
+		                          <button mat-raised-button class="btn btn-warning">Регистрация</button>
+	                          </div>
+                          </div>
                       </form>
                   </div>
               </div>

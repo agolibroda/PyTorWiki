@@ -15,8 +15,11 @@
  	
  	pip3 install py-postgresql -- http://pythonhosted.org/py-postgresql/
  	
- 	pip3 install torndsession 
- 	pip3 install redis        
+ 	pip3 uninstall torndsession - уже не использую.
+ 	 
+ 	pip3 install redis    -- https://redis-py.readthedocs.io/en/latest/  
+ 	
+ 	pip3 install hiredis - Некая ускорялка для редиски - пока еще не стоит.    
  	
 
 необходимо проверть наличие папок и создать, если их нет
@@ -53,13 +56,9 @@ https://proft.me/2013/06/9/postgresql-spravochnik-po-komandam-psql-pg_dump/
 
 
  
-в настоящее время внешний вид веб- представления основывается на открытом шаблоне "KAdmin" 
-думаю, его возможностей мне хватит.  
-
 про "torndsession" - работу с сессиями - и, возможно, как сессии держать на иных средах
 Доки, в общем:
 https://pypi.org/project/torndsession/
 https://github.com/MitchellChu/torndsession/blob/master/demos/redis_session.py
-  
   
   

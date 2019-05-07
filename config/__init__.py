@@ -35,21 +35,29 @@ define("salt", default= 'saltBy_pyTorWiki', help="Main salt")
 define("cookieSecret", default= 'cookieSecretBy_pyTorWiki', help="Main cookie secret")
 
 # Выбираем одну из стратегий работы с сессиями :-) 
-define("sessionsStrategy", default= 'memory', help="Session strategy")
+# define("sessionsStrategy", default= 'memory', help="Session strategy")
 # define("sessionsStrategy", default= 'file', help="Session strategy")
 # define("sessionsStrategy", default= 'redis', help="Session strategy")
+
 define("sessionLifetime", default= 1800, help="Session Lifetime")
 define("sessionLongLifetime", default= 3600*24*365, help="Session Lifetime")
 
 
 ########################################################################
-define("postgreHost", default="localhost", help="postgreHost")
-define("postgrePort", default="5432", help="postgrePort")
+define("postgreHost",   default="localhost",        help="postgreHost")
+define("postgrePort",   default="5432",             help="postgrePort")
 
-define("postgreBase", default="baseName", help="postgreBase")
+define("postgreBase",   default="baseName",         help="postgreBase")
 
-define("postgreUser", default="baseUser", help="postgreUser")
-define("postgrePwd", default="passwordUser", help="postgrePwd")
+define("postgreUser",   default="baseUser",         help="postgreUser")
+define("postgrePwd",    default="passwordUser",     help="postgrePwd")
+########################################################################
+
+########################################################################
+define("redisHost",             default="localhost",    help="redisHost")
+define("redisPort",             default="6379",         help="redisPort")
+define("redisDb",               default="14",           help="redisDb")
+define("redisMaxConnections",   default="1024",         help="redisMaxConnections")
 ########################################################################
 
 define("main_port", default="8888", help="Main port 8888")
@@ -79,7 +87,6 @@ define("tpl_categofy_id", default=4, help="Template Page Category")
 
 define("main_info_template", default=5, help="Main tmplate of inforation page")
 define("main_page_id", default=6, help="Id of Main User Page")
-
 
 # options.projectDir =  os.path.join(os.path.dirname(__file__), '../')
 
