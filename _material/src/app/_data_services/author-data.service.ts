@@ -168,8 +168,7 @@ export class AuthorDataService {
             	
                 if (_author) {
                     // store author details and jwt token in local storage to keep author logged in between page refreshes
-                    localStorage.setItem('_currentAuthor', JSON.stringify(_author));
-                    this.currentAuthorSubject.next(_author);
+                    localStorage.setItem('lsCurrentAuthor', JSON.stringify(_author));
                 }
 
                 return _author;

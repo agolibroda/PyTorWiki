@@ -220,7 +220,7 @@ class Author(Model):
             raise WikiException(PASSWD_IS_ENPTY)
 
 #         cur = self.db().cursor()
-        selectStr = 'dt_headers.dt_header_id, author_login, author_name,  author_surname, author_pass, author_role, author_phon, author_email, author_create, dt_headers.public_key, authors.private_key, authors.private_key_hash' # строка - чего хотим получить из селекта
+        selectStr = 'dt_headers.dt_header_id, author_login, author_name,  author_surname, author_pass, author_role, author_phon, author_email, dt_headers.public_key, authors.private_key, authors.private_key_hash' # строка - чего хотим получить из селекта
         fromStr = 'dt_headers' #'authors'
         anyParams = {
                     'whereStr': " dt_headers.dt_header_id = authors.dt_header_id AND authors.actual_flag = 'A' AND  " + 
@@ -235,12 +235,11 @@ class Author(Model):
                     self.__setattr__(objValue,resList[0].__getattribute__(objValue) )
             #  вот тут надо посмотреть - что у нс с данными пользователя происходит - и посмотреть - что ложится в сесию. :-) 
             
-            logging.info(' login:: After Load self = ' + str(self))
+#             logging.info(' login:: After Load self = ' + str(self))
             
             try:
                 cip = CipherWrapper()
 #                 .decode('utf-8')
-
                 self.public_key = bytes(self.public_key)#.decode(encoding="utf-8") #.decode('utf-8') 
                 self.private_key = bytes(self.private_key)#.decode(encoding="utf-8") #.decode('utf-8') 
                 self.private_key_hash = bytes(self.private_key_hash)#.decode(encoding="utf-8") #.decode('utf-8') 
@@ -460,14 +459,14 @@ class Author(Model):
         return pickle.dumps(newAuthor.__dict__)    
  
  
-    def getPublicProfile(self):
+    def getPublicProfile(self, authorModel):
         newAuthor = Author()
-        newAuthor = self.preparingForPicked (self)
+        newAuthor = self.preparingForPicked(authorModel)
+        newAuthor.author_pass = None
         newAuthor.public_key = None
         newAuthor.private_key = None
         newAuthor.private_key_hash = None
-        newAuthor._openPublicKey = None
-        newAuthor._openPrivateKey = None
+        return newAuthor
         
         
  

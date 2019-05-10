@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { NgForm} from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { AuthorDataService } from '../_data_services/author-data.service';
 
@@ -13,7 +14,8 @@ export class LoginComponent implements OnInit {
 
 	
 	constructor(
-			private authorLoginService: AuthorDataService
+			private authorLoginService: AuthorDataService,
+			private router: Router
 			) { }
 
   ngOnInit() {
@@ -22,10 +24,10 @@ export class LoginComponent implements OnInit {
   
   public makeLogin (formData: NgForm) {
 
-	  console.log(formData.value.username);
-	  console.log(formData.value.password);
-	  console.log(formData.value.saveMe);
-	  console.log(formData);
+//	  console.log(formData.value.username);
+//	  console.log(formData.value.password);
+//	  console.log(formData.value.saveMe);
+//	  console.log(formData);
 	  
 	  this.authorLoginService.login(
 			  			formData.value.username, 
@@ -35,14 +37,11 @@ export class LoginComponent implements OnInit {
 			  			)
 		 .subscribe((_afterLoginRezult) => {
 			 console.log(_afterLoginRezult);
-			 // _afterLoginRezult - Это объект, его надо сериализовать, и положить в локалСторедж.
-			 localStorage.setItem('author', <string>_afterLoginRezult);
-        			});
-	  
-//		 this.helpers.makeLogin()
-//		 .subscribe((_token) => {
-//        				localStorage.setItem('token', <string>_token);
-//        			});
+			 // А, вот тут надо перепрыгнуть на какую - то другую страницу!!!!
+			 // и, кстати, надо поменять ленку в шиблоне - с "логина" на мой профиль!!!!
+			 // 	и, кстати, стоит перекинуть на главную. 
+			 this.router.navigate(['/']);
+		 });
 	  
   }
   

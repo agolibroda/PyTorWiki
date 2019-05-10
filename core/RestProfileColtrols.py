@@ -71,9 +71,9 @@ class RestLoginHandler(BaseHandler):
                 
             self.curentAuthor = self.current_user
             
-            outAuthor = authorControl.getPublicProfile()
-            logging.info( 'RestLoginHandler:: outAuthor = ' + str(outAuthor))
-            self.write(json.dumps(outAuthor))
+            outAuthor = authorControl.getPublicProfile( self.curentAuthor )
+#             logging.info( 'RestLoginHandler:: outAuthor.__dict__ = ' + str(outAuthor.__dict__))
+            self.write(json.dumps(outAuthor.__dict__))
             
         except Exception as e:
             logging.info('RestLoginHandler:: post:: Have Error!!! '+ str(e))

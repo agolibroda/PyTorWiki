@@ -103,10 +103,10 @@ class Token:
         Если нет, тогда вернуть False 
           
         """
-        logging.info('checkToken locTokenHeader = '+ locTokenHeader)
+#         logging.info('checkToken locTokenHeader = '+ locTokenHeader)
         try:
             self.tokenBody = self.redisConnector.get(locTokenHeader)
-            logging.info('checkToken self.tokenBody = '+ str(self.tokenBody))
+#             logging.info('checkToken self.tokenBody = '+ str(self.tokenBody))
             # Переставим время жизни, каждый токен имеет параметр "leftTime", в котором хранится время его жизни :-) 
             self.redisConnector.expire(locTokenHeader, self.tokenBody['leftTime'] ) # вроде как считаем в секундах.
             # по- идее, токен
@@ -126,9 +126,9 @@ class Token:
           
         """
         try:
-            logging.info( 'RestCheckTokenHandler set self.tokenHeader = ' + str(self.tokenHeader))
+#             logging.info( 'RestCheckTokenHandler set self.tokenHeader = ' + str(self.tokenHeader))
             self.tokenBody = self.redisConnector.get(self.tokenHeader)
-            logging.info( 'RestCheckTokenHandler set self.tokenBody = ' + str(self.tokenBody))
+#             logging.info( 'RestCheckTokenHandler set self.tokenBody = ' + str(self.tokenBody))
             self.tokenBody[name] = data;
             self.redisConnector.expire(self.tokenHeader, self.tokenBody['leftTime'] ) # вроде как считаем в секундах.
             self.redisConnector.set(self.tokenHeader, self.tokenBody )
@@ -146,10 +146,10 @@ class Token:
         получим по-имени, если они там есть :-)  
           
         """
-        logging.info('checkToken token = '+ token)
+#         logging.info('checkToken token = '+ token)
         try:
             self.tokenBody = self.redisConnector.get(token)
-            logging.info('checkToken self.tokenBody = '+ str(self.tokenBody))
+#             logging.info('checkToken self.tokenBody = '+ str(self.tokenBody))
             self.redisConnector.expire(token, self.tokenBody['leftTime'] ) # вроде как считаем в секундах.
             # по- идее, токен
             return self.tokenBody[name]
