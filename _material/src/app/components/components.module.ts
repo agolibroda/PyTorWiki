@@ -5,7 +5,9 @@ import { RouterModule } from '@angular/router';
 import { FooterComponent } from './footer/footer.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
-import { AuthorMenuComponent } from './author-menu/author-menu.component';
+
+import { MenuAuthorLoginComponent } from './menu-author-login/menu-author-login.component';
+import { MenuAuthorProfileComponent } from './menu-author-profile/menu-author-profile.component';
 
 @NgModule({
   imports: [
@@ -16,7 +18,9 @@ import { AuthorMenuComponent } from './author-menu/author-menu.component';
     FooterComponent,
     NavbarComponent,
     SidebarComponent,
-    AuthorMenuComponent
+    
+    MenuAuthorLoginComponent,
+    MenuAuthorProfileComponent
   ],
   exports: [
     FooterComponent,

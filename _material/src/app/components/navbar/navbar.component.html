@@ -38,10 +38,10 @@
                         <a class="dropdown-item" href="#">Another One</a>
                     </div>
                 </li>
-                
-				<app-author-menu>
-					<!-- вот тут возникает Авторское меню (login - author-profile - logout )!!!!! -->
-				</app-author-menu>                
+				<app-menu-author-login  *ngIf="isLogin">
+				</app-menu-author-login>
+				<app-menu-author-profile *ngIf = "isProfile">
+				</app-menu-author-profile>
             </ul>
         </div>
     </div>

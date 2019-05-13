@@ -92,7 +92,7 @@ class Token:
 
     def setHeader(self, tokenHeader):
         """
-        Вернуть заголовок, который, "uuid" типа "cacc3eb6-bc56-4a1d-aff7-aea936ed68b4"
+        Установить заголовок, который, "uuid" типа "cacc3eb6-bc56-4a1d-aff7-aea936ed68b4"
         """
         self.tokenHeader = tokenHeader
     
@@ -160,4 +160,12 @@ class Token:
             return False
   
   
+    def delete(self, tokenHeader):
+        """
+        Удалить токен, если он есть :-)  
+          
+        """
+        logging.info('delete tokenHeader = '+ tokenHeader)
+        self.redisConnector.delete(tokenHeader)
+        
         

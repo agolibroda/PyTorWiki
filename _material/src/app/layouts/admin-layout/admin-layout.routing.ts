@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 
-import { AuthorProfileComponent } 	from '../../author-profile/author-profile.component'; // редактирование автора
 import { AuthorViewComponent } 		from '../../author-view/author-view.component'; // просмотр профиля автора
+import { AuthorProfileComponent } 	from '../../author-profile/author-profile.component'; // Редактирование Автором собственного профиля
+
 
 import { AuthorsComponent } 		from '../../authors/authors.component'; // список авторов
 import { GroupsComponent } 			from '../../groups/groups.component'; // список групп
@@ -14,6 +15,7 @@ import { PageNotFoundComponent } 	from '../../page-not-found/page-not-found.comp
 import { HomeComponent } 			from '../../home/home.component'; // главная страница
 
 import { LoginComponent } 			from '../../login/login.component'; // Логин
+import { LogoutComponent } 			from '../../logout/logout.component'; // logout
 
 // import { TypographyComponent } from '../../typography/typography.component';
 
@@ -78,6 +80,7 @@ export const AdminLayoutRoutes: Routes = [
     { path: 'group/:id',		component: GroupComponent},  // // просмотр (и редактирование??) одной групы
     
     { path: 'login', 			component: LoginComponent },
+    { path: 'logout', 			component: LogoutComponent },
     
     { path: '**', 				component: PageNotFoundComponent },
   

@@ -5,32 +5,37 @@
               <div class="card">
                   <div class="card-header card-header-danger">
                       <h4 class="card-title">Edit Profile</h4>
-                      <p class="card-category">{{authorData.author_name}} {{authorData.author_surname}}</p>
+                      <p class="card-category">{{authorProfile.author_name}} {{authorProfile.author_surname}}</p>
                   </div>
-                  <div class="card-body">
+                     <div class="card-body">
                       <form>
+                          <div class="row">
+                              <div class="col-md-6">
+                                <mat-form-field class="example-full-width">
+                                  <input matInput placeholder="Fist Name" type="text" name="author_name" value="{{authorProfile.author_name}}">
+                                </mat-form-field>
+                              </div>
+                              <div class="col-md-6">
+                                <mat-form-field class="example-full-width">
+                                  <input matInput placeholder="Last Name" type="text" name="author_surname" value="{{authorProfile.author_surname}}">
+                                </mat-form-field>
+                              </div>
+                          </div>
                           <div class="row">
                               <div class="col-md-3">
                                   <mat-form-field class="example-full-width">
-                                    <input matInput placeholder="Username">
+                                    <input matInput placeholder="Login" name="author_login" value="{{authorProfile.author_login}}">
                                   </mat-form-field>
                               </div>
                               <div class="col-md-4">
                                   <mat-form-field class="example-full-width">
-                                    <input matInput placeholder="Email address" type="email">
+                                    <input matInput placeholder="Email address" type="email" name="author_email" value="{{authorProfile.author_email}}">
                                   </mat-form-field>
                               </div>
-                          </div>
-                          <div class="row">
-                              <div class="col-md-6">
-                                <mat-form-field class="example-full-width">
-                                  <input matInput placeholder="Fist Name" type="text">
-                                </mat-form-field>
-                              </div>
-                              <div class="col-md-6">
-                                <mat-form-field class="example-full-width">
-                                  <input matInput placeholder="Last Name" type="text">
-                                </mat-form-field>
+                              <div class="col-md-4">
+                                  <mat-form-field class="example-full-width">
+                                    <input matInput placeholder="Phon" type="phon" name="author_phon" value="{{authorProfile.author_phon}}">
+                                  </mat-form-field>
                               </div>
                           </div>
                           <div class="row">
@@ -38,16 +43,19 @@
                                 <label>Несколько слов от Автора: </label>
                                   <div class="form-group">
                                       <div class="form-group">
-                                      {{authorData.author_yourself_story}}
-                                          <textarea class="form-control" rows="5"></textarea>
+                                      {{authorProfile.author_yourself_story}}
+                                          <textarea class="form-control" rows="5" name="author_yourself_story"></textarea>
                                       </div>
                                   </div> 
                               </div>
                           </div>
                           <button mat-raised-button type="submit" class="btn btn-danger pull-right">Update Profile</button>
                           <div class="clearfix"></div>
+                      	<input type="hidden" id="dt_header_id" name="dt_header_id" value="{{authorProfile.dt_header_id}}">
+					                      
                       </form>
                   </div>
+                  
               </div>
           </div>
           <div class="col-md-4">
@@ -56,7 +64,7 @@
                           <img class="img" src="./assets/img/faces/marc.jpg" />
                   </div>
                   <div class="card-body">
-                      <h4 class="card-title">{{authorData.author_name}} {{authorData.author_surname}}</h4>
+                      <h4 class="card-title">{{authorProfile.author_name}} {{authorProfile.author_surname}}</h4>
                   </div>
               </div>
           </div>

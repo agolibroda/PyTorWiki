@@ -157,7 +157,7 @@ export class AuthorDataService {
     }
 
     public update(author: Author) {
-        return this.http.put(`${REST_SERVER_URL}/rest/authors/${author.author_id}`, author);
+        return this.http.put(`${REST_SERVER_URL}/rest/authors/${author.dt_header_id}`, author);
     }  
     
     public login(authorname: string, password: string, saveMe: boolean, tag: string) {
@@ -175,10 +175,15 @@ export class AuthorDataService {
             }));
     }
 
-    public logout() {
+    public logout(tag: string) {
         // remove author from local storage to log author out
-        localStorage.removeItem('currentAuthor');
-        this.currentAuthorSubject.next(null);
+    	console.log('logout::: tag = ' + JSON.stringify(tag, null, 4));
+        return this.http.post<any>(`${REST_SERVER_URL}/rest/logout`, { tag: tag })
+        .pipe(map(() => {
+            localStorage.removeItem('lsCurrentAuthor');
+            localStorage.removeItem('token');
+            return true;
+        }));
     }    
   
 }

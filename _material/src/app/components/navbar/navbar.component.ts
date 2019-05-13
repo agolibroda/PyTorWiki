@@ -1,6 +1,10 @@
 import { Component, OnInit, ElementRef } from '@angular/core';
 import { ROUTES } from '../sidebar/sidebar.component';
-import { AuthorMenuComponent } from '../author-menu/author-menu.component';
+
+import { MenuAuthorLoginComponent } from '../menu-author-login/menu-author-login.component';
+import { MenuAuthorProfileComponent } from '../menu-author-profile/menu-author-profile.component';
+import { Author } from '../../_models/author';
+
 
 
 import {Location, LocationStrategy, PathLocationStrategy} from '@angular/common';
@@ -17,6 +21,9 @@ export class NavbarComponent implements OnInit {
       mobile_menu_visible: any = 0;
     private toggleButton: any;
     private sidebarVisible: boolean;
+	private authorProfile: Author; // Автор
+	public isLogin: boolean; // 
+	public isProfile: boolean; // 
 
     constructor(location: Location, private element: ElementRef, private router: Router) {
       this.location = location;
@@ -35,6 +42,12 @@ export class NavbarComponent implements OnInit {
            this.mobile_menu_visible = 0;
          }
      });
+      
+		this.authorProfile = JSON.parse(localStorage.getItem('lsCurrentAuthor'));
+		this.isLogin = !(this.authorProfile && this.authorProfile.hasOwnProperty('dt_header_id') 
+				&& +this.authorProfile.dt_header_id > 0);
+		this.isProfile = this.authorProfile && this.authorProfile.hasOwnProperty('dt_header_id') 
+				&& +this.authorProfile.dt_header_id > 0;
     }
 
     sidebarOpen() {

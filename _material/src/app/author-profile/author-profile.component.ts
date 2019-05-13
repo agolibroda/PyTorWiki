@@ -48,7 +48,7 @@ export class AuthorProfileComponent implements OnInit {
 		
 		this.itemColor = new ColorSelector();
 		
-		this.currentAuthor = new Author();
+		this.authorProfile = new Author();
 		this.articlesList = [];
 		this.groupsList = [];
 	
@@ -58,10 +58,10 @@ export class AuthorProfileComponent implements OnInit {
 	
 		this.groupsListDataService = new GroupListDataService();
 	
-		this.currentAuthorSubscription = this.authorDataService.currentAuthor.subscribe(_author => {
-			this.currentAuthor = _author;
-		});
- 		console.log('AuthorProfileComponent:: constructor this.currentAuthor = ' + JSON.stringify(this.currentAuthor, null, 4));
+//		this.currentAuthorSubscription = this.authorDataService.currentAuthor.subscribe(_author => {
+//			this.currentAuthor = _author;
+//		});
+// 		console.log('AuthorProfileComponent:: constructor this.currentAuthor = ' + JSON.stringify(this.currentAuthor, null, 4));
 	}
 	
 	
@@ -69,11 +69,14 @@ export class AuthorProfileComponent implements OnInit {
 		// вот тут все несколько иначе - 
 		// надо выдернуть ИД да и все данные из сессии - из редиски
 		// и разместить данные в полях для редактирования.
-		let testId = +this.route.snapshot.paramMap.get("id");
-		console.log('ngOnInit testId = ' + JSON.stringify(testId, null, 4));
+//		let testId = +this.route.snapshot.paramMap.get("id");
+//		console.log('ngOnInit testId = ' + JSON.stringify(testId, null, 4));
 //		let testId = 6
 		
-		this.getAuthor(testId);
+//		this.getAuthor(testId);
+		
+		this.authorProfile = JSON.parse(localStorage.getItem('lsCurrentAuthor'));
+		
 	}
 	
 	

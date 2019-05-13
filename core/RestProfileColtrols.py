@@ -85,26 +85,27 @@ class RestLoginHandler(BaseHandler):
 
 
 
-
-
-
-
 class RestLogoutHandler(BaseHandler):
     """
-    
     Выход из системы
     Удалить данные из редиски.   
-      
-     
     """
     
     @gen.coroutine
-    def get(self):
+    def post(self):
         
-        super(RestLogoutHandler, self).get()
-        self.redisConnector.delete(self.token)
 
+        try:
+            data = tornado.escape.json_decode(self.request.body)
+            logging.info( 'RestLoginHandler:: data = ' + str(data))
+            # Если при get_current_user пришел "ложь", значит пользователя нету, и надоо его логинить.
+            if self.tokenControl.checkToken(data['tag']):
+                self.tokenControl.delete(data['tag'])
+                
+            self.write(json.dumps(True))
+            
+        except Exception as e:
+            logging.info('RestLogoutHandler:: post:: Have Error!!! '+ str(e))
+            
+            self.write(json.dumps("Произошло что - то печальное"))
 
-
-
-# RestProfileColtrolHandler

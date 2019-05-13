@@ -9,9 +9,12 @@
 
 export class Author {
 	
-	author_id: number;
+	dt_header_id: number;
+	author_login: string;
 	author_name: string;
 	author_surname: string;
+	author_phon: string;
+	author_email: string;
 
 	author_yourself_story: string; // story about yourself
 //Количество статей, уже существующих в группе
@@ -20,7 +23,6 @@ export class Author {
 
 //цвет плашки автора, штука случайная, ее надо выбрать из "конфига" случайным образом (или перебором")
 	color: string; 
-
 
 
 //	grop_picture: {

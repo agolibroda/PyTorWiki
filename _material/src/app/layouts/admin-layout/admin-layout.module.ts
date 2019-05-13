@@ -19,7 +19,9 @@ import { PageNotFoundComponent } from '../../page-not-found/page-not-found.compo
 import { HomeComponent } from '../../home/home.component';
 
 
-import { LoginComponent } from '../../login/login.component';
+import { LoginComponent }  from '../../login/login.component';
+import { LogoutComponent } from '../../logout/logout.component'; // logout
+
 
 import { AuthorThumbComponent } from '../../lists/author-thumb/author-thumb.component';
 import { ArticleThumbComponent } from '../../lists/article-thumb/article-thumb.component';
@@ -62,7 +64,9 @@ import {
     
     PageNotFoundComponent,
 	HomeComponent,
+	
 	LoginComponent,
+	LogoutComponent,
 	
     AuthorThumbComponent,
     ArticleThumbComponent,
