@@ -12,7 +12,7 @@
 */
 
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output } from '@angular/core';
 import { NgForm} from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -28,7 +28,11 @@ export class LogoutComponent implements OnInit {
   constructor(
 			private authorLoginService: AuthorDataService,
 			private router: Router
-  			) { }
+  			) { 
+    
+//    this.successfulLogout$ = new EventEmitter<boolean>();
+    
+  }
 
   ngOnInit() {
 	  // удалить из ЛокалСтореджа данные о теге и о пользователе
@@ -37,14 +41,13 @@ export class LogoutComponent implements OnInit {
 		  this.authorLoginService.logout(
 		  			localStorage.getItem('token')
 		  			)
-	 .subscribe(() => {
-		 // А, вот тут надо перепрыгнуть на какую - то другую страницу!!!!
-		 // и, кстати, надо поменять ленку в шиблоне - с "логина" на мой профиль!!!!
-		 // 	и, кстати, стоит перекинуть на главную. 
-		 this.router.navigate(['/']);
-	 });
-		 
-
+    	 .subscribe(() => {
+    		 // А, вот тут надо перепрыгнуть на какую - то другую страницу!!!!
+    		 // и, кстати, надо поменять ленку в шиблоне - с "логина" на мой профиль!!!!
+    		 // 	и, кстати, стоит перекинуть на главную. 
+    	   
+    		 this.router.navigate(['/']);
+    	 });
   }
 
 }

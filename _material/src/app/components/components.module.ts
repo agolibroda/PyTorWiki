@@ -6,9 +6,6 @@ import { FooterComponent } from './footer/footer.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 
-import { MenuAuthorLoginComponent } from './menu-author-login/menu-author-login.component';
-import { MenuAuthorProfileComponent } from './menu-author-profile/menu-author-profile.component';
-
 @NgModule({
   imports: [
     CommonModule,
@@ -17,10 +14,8 @@ import { MenuAuthorProfileComponent } from './menu-author-profile/menu-author-pr
   declarations: [
     FooterComponent,
     NavbarComponent,
-    SidebarComponent,
+    SidebarComponent
     
-    MenuAuthorLoginComponent,
-    MenuAuthorProfileComponent
   ],
   exports: [
     FooterComponent,

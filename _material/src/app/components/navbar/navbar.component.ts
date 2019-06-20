@@ -1,9 +1,24 @@
+/**
+ * 
+ * 
+ * 
+ * import { NavbarComponent } from '../components/navbar/navbar.component';
+ * 
+ */
+
+
 import { Component, OnInit, ElementRef } from '@angular/core';
 import { ROUTES } from '../sidebar/sidebar.component';
 
-import { MenuAuthorLoginComponent } from '../menu-author-login/menu-author-login.component';
-import { MenuAuthorProfileComponent } from '../menu-author-profile/menu-author-profile.component';
+//import { LoginComponent }     from '../../login/login.component';
+//import { LogoutComponent }    from '../../logout/logout.component'; // logout
+
+import { AuthorDataService } from '../../_data_services/author-data.service';
+
 import { Author } from '../../_models/author';
+
+//import * as myGlobals from '../../globals';
+//import { globals } from '../../globals';
 
 
 
@@ -15,22 +30,30 @@ import { Router } from '@angular/router';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent implements OnInit {
-    private listTitles: any[];
-    location: Location;
-      mobile_menu_visible: any = 0;
-    private toggleButton: any;
-    private sidebarVisible: boolean;
-	private authorProfile: Author; // Автор
-	public isLogin: boolean; // 
-	public isProfile: boolean; // 
 
-    constructor(location: Location, private element: ElementRef, private router: Router) {
-      this.location = location;
-          this.sidebarVisible = false;
+export class NavbarComponent implements OnInit {
+  private listTitles: any[];
+  private mobile_menu_visible: any = 0;
+  private toggleButton: any;
+  private sidebarVisible: boolean;
+	private authorProfile: Author; // Автор
+  private isLogin: boolean; // 
+  private isProfile: boolean; // 
+
+    constructor(
+              private authorDataService: AuthorDataService,
+              private location: Location, 
+              private element: ElementRef, 
+              private router: Router
+              ) {
+        this.location = location;
+        this.sidebarVisible = false;
+        this.authorDataService.isLogin$.subscribe(value => this.setIsLogin(value));
+        
     }
 
     ngOnInit(){
+      
       this.listTitles = ROUTES.filter(listTitle => listTitle);
       const navbar: HTMLElement = this.element.nativeElement;
       this.toggleButton = navbar.getElementsByClassName('navbar-toggler')[0];
@@ -44,12 +67,30 @@ export class NavbarComponent implements OnInit {
      });
       
 		this.authorProfile = JSON.parse(localStorage.getItem('lsCurrentAuthor'));
-		this.isLogin = !(this.authorProfile && this.authorProfile.hasOwnProperty('dt_header_id') 
+		this.isLogin = (this.authorProfile && this.authorProfile.hasOwnProperty('dt_header_id') 
 				&& +this.authorProfile.dt_header_id > 0);
 		this.isProfile = this.authorProfile && this.authorProfile.hasOwnProperty('dt_header_id') 
 				&& +this.authorProfile.dt_header_id > 0;
+				
+	      console.log('NavbarComponent ::: ngOnInit this.authorProfile = ' + this.authorProfile);
+	      console.log('NavbarComponent ::: setIsLogin isLogin = ' + this.isLogin);
+	      
+				
     }
 
+    setIsLogin(value) {
+      console.log('NavbarComponent ::: setIsLogin value = ' + value);
+      
+      this.isLogin = value !== null;
+      this.isProfile = value !== null;
+      
+      this.authorProfile = value;
+      
+      console.log('NavbarComponent ::: setIsLogin authorProfile = ' + this.authorProfile);
+      console.log('NavbarComponent ::: setIsLogin isLogin = ' + this.isLogin);
+
+    }
+    
     sidebarOpen() {
         const toggleButton = this.toggleButton;
         const body = document.getElementsByTagName('body')[0];

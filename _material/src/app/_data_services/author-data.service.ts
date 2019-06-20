@@ -10,7 +10,7 @@
  */
 
 
-import { Injectable } from '@angular/core';
+import { Injectable, EventEmitter } from '@angular/core';
 
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { first } from 'rxjs/operators';
@@ -37,6 +37,8 @@ export class AuthorDataService {
     private currentAuthorSubject: BehaviorSubject<Author>;
     public currentAuthor: Observable<Author>;
   
+    public isLogin$: EventEmitter<Author> = new EventEmitter();
+    
 
     constructor(private http: HttpClient) { 
         this.currentAuthorSubject = new BehaviorSubject<Author>(JSON.parse(localStorage.getItem('currentAuthor')));
@@ -171,6 +173,9 @@ export class AuthorDataService {
                     localStorage.setItem('lsCurrentAuthor', JSON.stringify(_author));
                 }
 
+                 
+                this.isLogin$.emit(_author);
+                
                 return _author;
             }));
     }
@@ -182,6 +187,8 @@ export class AuthorDataService {
         .pipe(map(() => {
             localStorage.removeItem('lsCurrentAuthor');
             localStorage.removeItem('token');
+            this.isLogin$.emit(null);
+
             return true;
         }));
     }    

@@ -1,5 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { ReactiveFormsModule } from '@angular/forms';
+
 import { AuthorProfileComponent } from './author-profile.component';
 
 describe('AuthorProfileComponent', () => {
@@ -8,7 +10,8 @@ describe('AuthorProfileComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AuthorProfileComponent ]
+      declarations: [ AuthorProfileComponent ],
+      imports: [ReactiveFormsModule], 
     })
     .compileComponents();
   }));

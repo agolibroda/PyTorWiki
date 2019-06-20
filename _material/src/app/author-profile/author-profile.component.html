@@ -7,35 +7,64 @@
                       <h4 class="card-title">Edit Profile</h4>
                       <p class="card-category">{{authorProfile.author_name}} {{authorProfile.author_surname}}</p>
                   </div>
-                     <div class="card-body">
-                      <form>
+                     <div class="card-body"> 
+                      <form  #authorProfileForm = "ngForm" (ngSubmit)="onSubmit()" >
                           <div class="row">
                               <div class="col-md-6">
-                                <mat-form-field class="example-full-width">
-                                  <input matInput placeholder="Fist Name" type="text" name="author_name" value="{{authorProfile.author_name}}">
+                                <mat-form-field class="example-full-width"> <!--  value="{{authorProfile.author_name}}" -->
+                                  <input matInput placeholder="Fist Name" type="text" [(ngModel)] ="authorProfile.author_name" name="author_name">
                                 </mat-form-field>
                               </div>
                               <div class="col-md-6">
                                 <mat-form-field class="example-full-width">
-                                  <input matInput placeholder="Last Name" type="text" name="author_surname" value="{{authorProfile.author_surname}}">
+                                  <input matInput placeholder="Last Name" type="text" [(ngModel)] ="authorProfile.author_surname" name="author_surname">
                                 </mat-form-field>
                               </div>
                           </div>
                           <div class="row">
                               <div class="col-md-3">
                                   <mat-form-field class="example-full-width">
-                                    <input matInput placeholder="Login" name="author_login" value="{{authorProfile.author_login}}">
+                                    <input matInput placeholder="Login" [(ngModel)] ="authorProfile.author_login" name="author_login">
+                                  </mat-form-field>
+                                    <!-- <div class="error" *ngIf="isControlInvalid('author_login')">
+                                                 Логин может состоять только из букви цифр
+                                                </div> -->
+                              </div>
+                              <div class="col-md-4">
+                                  <mat-form-field class="example-full-width">
+                                    <input matInput placeholder="Email address" [(ngModel)] ="authorProfile.author_email" name="author_email">
                                   </mat-form-field>
                               </div>
                               <div class="col-md-4">
                                   <mat-form-field class="example-full-width">
-                                    <input matInput placeholder="Email address" type="email" name="author_email" value="{{authorProfile.author_email}}">
+                                    <input matInput placeholder="Phon" type="phon" [(ngModel)] ="authorProfile.author_phon" name="author_phon">
+                                  </mat-form-field>
+                              </div>
+                          </div>
+                          <!--  Ндо, если isPwdEdit == false показать кнопочку, 
+                                И, когда на кнопочку нажимаем, тогда появляется строчечка... -->
+                          <div class="row" *ngIf="authorProfile.dt_header_id > 0">
+	                                <button *ngIf="!isPwdEdit" mat-raised-button (click)="endEditPwd(true)" class="btn btn-danger pull-right">Password edit</button>
+	                                <button *ngIf="isPwdEdit" mat-raised-button (click)="endEditPwd(false)" class="btn btn-danger pull-right">End password edit</button>
+                          </div>
+                          <!-- если нам надо немного поправить пароль, тогда нажимаем на кнопочку, и открывается строчечка! -->
+                          <div class="row" *ngIf="isPwdEdit || authorProfile.dt_header_id == 0">
+                              <div class="col-md-3" *ngIf="authorProfile.dt_header_id > 0" >
+                                  <mat-form-field class="example-full-width">
+                                    <input matInput placeholder="Old passord" type="password" [(ngModel)] ="authorProfile.oldPwd" name="oldPwd">
                                   </mat-form-field>
                               </div>
                               <div class="col-md-4">
                                   <mat-form-field class="example-full-width">
-                                    <input matInput placeholder="Phon" type="phon" name="author_phon" value="{{authorProfile.author_phon}}">
+                                    <input matInput placeholder="New password" type="password" [(ngModel)] ="authorProfile.newPwd" name="newPwd">
                                   </mat-form-field>
+                              </div>
+                              <div class="col-md-4">
+                                  <mat-form-field class="example-full-width">
+                                    <input matInput placeholder="re entry password" type="password" [(ngModel)] ="authorProfile.reEntryPwd" name="reEntryPwd">
+                                  </mat-form-field>
+                              </div>
+                              <div class="col-md-4">
                               </div>
                           </div>
                           <div class="row">
@@ -43,16 +72,16 @@
                                 <label>Несколько слов от Автора: </label>
                                   <div class="form-group">
                                       <div class="form-group">
-                                      {{authorProfile.author_yourself_story}}
-                                          <textarea class="form-control" rows="5" name="author_yourself_story"></textarea>
+                                          <textarea class="form-control" rows="5" [(ngModel)] ="authorProfile.author_yourself_story" name="author_yourself_story"></textarea>
                                       </div>
                                   </div> 
                               </div>
                           </div>
                           <button mat-raised-button type="submit" class="btn btn-danger pull-right">Update Profile</button>
                           <div class="clearfix"></div>
-                      	<input type="hidden" id="dt_header_id" name="dt_header_id" value="{{authorProfile.dt_header_id}}">
-					                      
+                          <input type="hidden" id="dt_header_id" [(ngModel)] ="authorProfile.dt_header_id"  name="dt_header_id">
+                          <input type="hidden" id="token" [(ngModel)] ="authorProfile.token"  name="token">
+                                          
                       </form>
                   </div>
                   
@@ -74,31 +103,31 @@
 
 <!-- Список статей, которые написал Благородный Дон. -->
 
-         <div class="col-md-12">
-              <div class="card card-plain">
-                  <div class="card-header card-header-warning">
+    <div class="col-md-12">
+        <div class="card card-plain">
+            <div class="card-header card-header-warning">
                       <h4 class="card-title mt-0"> Статьи Автора </h4>
                       <a href="/article">
                           <i class="material-icons">tab</i> Написать новую статью
                       </a>
-                  </div>
-                  <div class="card-body">
-                      <div class="table-responsive">
-                  </div>
-              </div>
-          </div>
-      </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                </div>
+            </div>
+        </div>
+    </div>
 
 
       <div class="row">
       <!-- Начало раздела тумбочек -->
       
           <div class="col-md-4" *ngFor="let article of articlesList">
-			 
-			<app-article-thumb [articleThumbData]= "article">
-			<!-- вот тут возникает одна Статейная тумбочка!!!!! -->
-			</app-article-thumb>
-			 
+             
+            <app-article-thumb [articleThumbData]= "article">
+            <!-- вот тут возникает одна Статейная тумбочка!!!!! -->
+            </app-article-thumb>
+             
            </div>
 
       <!--  конец списка Статей!!! -->
@@ -120,11 +149,11 @@
       <!-- Начало раздела тумбочек -->
 
           <div class="col-md-4" *ngFor="let group of groupsList">
-			 
-			 <app-group-thumb [groupThumbData]= "group">
-				 <!-- вот тут возникает одна групповая тумбочка!!!!! -->
-			 </app-group-thumb>
-			 
+             
+             <app-group-thumb [groupThumbData]= "group">
+                 <!-- вот тут возникает одна групповая тумбочка!!!!! -->
+             </app-group-thumb>
+             
            </div>
 
       <!--  конец списка Группей!!! -->

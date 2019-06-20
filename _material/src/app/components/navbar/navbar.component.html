@@ -38,10 +38,33 @@
                         <a class="dropdown-item" href="#">Another One</a>
                     </div>
                 </li>
-				<app-menu-author-login  *ngIf="isLogin">
-				</app-menu-author-login>
-				<app-menu-author-profile *ngIf = "isProfile">
-				</app-menu-author-profile>
+                <li *ngIf="isLogin;then profile else login"></li>
+                <ng-template #profile>
+	                <li class="nav-item dropdown">
+	                 <!--  вот тут надо сделать двойное связывание данных форма - контроллер!!!  а может, пока не надо?? -->
+				        <a class="nav-link" href="#Profile" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				            {{authorProfile.author_name}} 
+				            <p>
+				                <span class="d-lg-none d-md-block">Account</span>
+				            </p>
+				        </a>
+				        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+				                <a class="dropdown-item" href="/author-profile">Edit {{authorProfile.author_name}} Profile</a>
+				                <a class="dropdown-item" href="/logout">Logout</a>
+				        </div>
+				    </li>
+                </ng-template>
+                <ng-template #login>
+	                <li class="nav-item">
+				        <a class="nav-link" href="/login">
+				            <i class="material-icons">person</i>
+				            <p>
+				                <span class="d-lg-none d-md-block">Account</span>
+				            </p>
+				        </a>
+				        {{isHide}}
+				    </li>
+				</ng-template>
             </ul>
         </div>
     </div>
