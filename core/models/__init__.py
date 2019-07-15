@@ -650,7 +650,7 @@ class Model: #Connector:
     
     
 
-    def splitAttributes2Str(self):
+    def _splitAttributes2Str(self):
         """
         разделить собственные параметры (без параметров с подчеркиваниями ) на 2 списка - 
         1 - список имен параметров
@@ -681,7 +681,7 @@ class Model: #Connector:
 
 
     def __str__(self): 
-        attribList = self.splitAttributes2Str()
+        attribList = self._splitAttributes2Str()
         className = str(self.__class__)
         itemsList = map(lambda x, y: ' "' + str(x) + '"' + ': "' + str(y) + '" ', attribList.listAttrNames, attribList.listAttrValues) 
         objValuesNameList = '\n'+ className + ': { \n\t' + ', \n\t'.join(itemsList) + '\n}'
@@ -690,7 +690,7 @@ class Model: #Connector:
 
     def preparingForPicked (self, modelObject):
         """
-        Подготовить модель для последующей сериаизаии
+        Подготовить модель для последующей сериализации
         (удаляем всякую служебку - все, что начинается с "_...") 
         :param Объект, который нужно подготовить к сериализации 
         :Return: отдаем ОБЪЕКТ, в котором нет ничего, кроме данных 
@@ -704,12 +704,25 @@ class Model: #Connector:
         return model2Picled
 
 
-    def parsingOfPicked (self, modelDict):
+    def preparingForDict (self, modelObject):
         """
-        Подготовить модель для последующей сериаизаии
+        Подготовить модель для последующей сериализации
         (удаляем всякую служебку - все, что начинается с "_...") 
         :param Объект, который нужно подготовить к сериализации 
-        :Return: отдаем ОБЪЕКТ, в котором нет ничего, кроме данных 
+        :Return: отдаем СЛОВАРЬ, в котором нет ничего, кроме данных 
+        """
+        class Local:pass
+        dict2Picled = {}
+        objValuesNameList = list(modelObject.__dict__.keys())
+        for objValue in objValuesNameList:
+            if objValue.find('_') != 0:
+                dict2Picled[objValue] = modelObject.__getattribute__(objValue) 
+#         logging.info( 'preparingForDict:: dict2Picled = ' + str(dict2Picled))        
+        return dict2Picled
+
+    def parsingOfPicked (self, modelDict):
+        """
+        ????  
         """
 #         logging.info(' parsingOfPicked:: modelDict = ' + str(modelDict))   
              

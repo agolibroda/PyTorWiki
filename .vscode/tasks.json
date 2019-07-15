@@ -1,0 +1,23 @@
+{
+// Документацию по формату tasks.json см.
+    // по адресу https://go.microsoft.com/fwlink/?LinkId=733558
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "npm",
+            "script": "build",
+            "path": "_material/",
+            "problemMatcher": []
+        },
+        {
+            "label": "TornadoServerStart",
+            "type": "shell",
+            "command": "cd ~/PythonPrj/_py_151110/__PyTorWiki_180925; python3 app.py"
+        },
+        {
+            "label": "AngularUI",
+            "type": "shell",
+            "command": "cd ~/PythonPrj/_py_151110/__PyTorWiki_180925/_material; ng serve --open"
+        }        
+    ]
+}

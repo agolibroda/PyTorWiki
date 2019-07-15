@@ -85,10 +85,10 @@ export class AuthorViewComponent implements OnInit {
 	
 
 	/**
-	 *  "просмотр описания группы"
+	 *  "просмотр описания Автора"
 	 * 
 	 *  Происходят следующие везчи:
-	 *   - выбрать надо описание группы (по номеру группы, естественно!)
+	 *   - выбрать надо описание Автора (по номеру Автора, естественно!)
 	 *   - выбрать весь (или первую страницу?) списка статей, которых есть в группе 
 	 *   - выбрать первую страницу Авторов, которые состоят в Группе.
 	 * 
@@ -96,12 +96,14 @@ export class AuthorViewComponent implements OnInit {
 	 */
 	getAuthor(authorId: number): void {
 
+		console.log('AuthorViewComponent::: getAuthor authorId = ' + JSON.stringify(authorId, null, 4));
+
 		if (authorId > 0) {
 
 			this.authorDataService.getById(authorId)
 			.pipe(catchError(this.authorDataService.handleError) )
 			.subscribe((_currentAuthor: Author) => {
-//					console.log('AuthorViewComponent::: getAuthor _currentAuthor = ' + JSON.stringify(_currentAuthor, null, 4));
+					console.log('AuthorViewComponent::: getAuthor _currentAuthor = ' + JSON.stringify(_currentAuthor, null, 4));
 					this.currentAuthor = <Author>_currentAuthor;
 					// Заберем список статей, Автора
 //					this.articlesListDataService.getArticlesAutorList(authorId)
@@ -114,7 +116,7 @@ export class AuthorViewComponent implements OnInit {
 							return article;
 						});
 //						console.log('AuthorViewComponent::: getAuthor this.articlesList = ' + JSON.stringify(this.articlesList, null, 4));
-						// Заберем все группы автора
+						// Заберем все Автора автора
 //						return this.groupsListDataService.getAuthorGroupsList(authorId);
 						this.groupsDataService.getAuthorGroups(authorId)
 //						.subscribe((_groupsList: Author[]) => {
@@ -131,7 +133,7 @@ export class AuthorViewComponent implements OnInit {
 			})
 			
 		} else {
-			// тут надо перейти к редактированию новой группы
+			// тут надо перейти к редактированию новой Автора
 //					this.currentAuthor = new Author();
 //					this.articlesList = [];
 //					this.groupsList = [];

@@ -209,17 +209,21 @@ export class AuthorProfileComponent implements OnInit {
             // Это новый пользователь, this.authorProfile.oldPwd - тут не нужен
             this.authorProfile.oldPwd = '';
             
-            return this.authorDataService.register(this.authorProfile)
-                      .pipe(catchError(this.authorDataService.handleError) )
-                      .subscribe((_authorProfile: Author) => {
+            // return 
+            this.authorDataService.register(this.authorProfile)
+//                      .pipe(catchError(this.authorDataService.handleError) )
+//                      .subscribe((_authorProfile: Author) => {
+                      .subscribe((_authorProfile) => {
                          return true;
                       });
             
           } else {
             // пользователь уже есть, и его данные надо обновить!
-            return this.authorDataService.update(this.authorProfile)
-                      .pipe(catchError(this.authorDataService.handleError) )
-                      .subscribe((_authorProfile: Author) => {
+            // return 
+            this.authorDataService.update(this.authorProfile)
+//                      .pipe(catchError(this.authorDataService.handleError) )
+//                      .subscribe((_authorProfile: Author) => {
+                      .subscribe((_authorProfile) => {
                          return true;
                       });
 

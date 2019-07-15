@@ -41,24 +41,24 @@ class HelperArticle():
     """
     
     def __init__(self):
-        self.artModel = Article()
+        self.articleModel = Article()
         
     def setArticleTitle(self, articleName):
-        self.artModel.article_title = articleName
+        self.articleModel.article_title = articleName
         
     def setArticleCategiry(self, articleCategoryId):
-        self.artModel.category_article_id = articleCategoryId
+        self.articleModel.category_article_id = articleCategoryId
         
     def getModel(self):
-        return self.artModel
+        return self.articleModel
     
     def setModel(self, article):
-        self.artModel = article
+        self.articleModel = article
 
 
     def getArticleById(self, articleId):
 #         logging.info( ' getArticleById:: articleId = ' + str(articleId))
-        article = self.artModel.getById( articleId )
+        article = self.articleModel.getById( articleId )
         if not article: raise tornado.web.HTTPError(404)
         targetFlag="tmp"
         templator = Template()
@@ -82,12 +82,18 @@ class HelperArticle():
      
     
     def getListArticles(self, categoryId = 0):
-    
+        """
+        Вообще, похоже, это просто мписок, но, надо будет сделать и более сложные структуры
+        - выбрать все статьи одной группы.... например.
+        """
         try:
-            rezult = self.artModel.list (categoryId)
-            if not rezult: rezult = []
-#             logging.info( 'getListArticles:: rezult = ' + str(rezult))
-            return  rezult #.result()
+            _rezult = self.articleModel.list (categoryId)
+            if not _rezult: return []
+            _outData = [] 
+            for _item in _rezult:
+                one = self.articleModel.preparingForDict(_item)
+                _outData.append(one)
+            return  _outData #.result()
         except Exception as e:
             logging.info( 'getListArticles:: Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
@@ -99,7 +105,7 @@ class HelperArticle():
         получить список статей одного автора
         
         """
-        rezult = self.artModel.listByAutorId (authorId, spectatorId)
+        rezult = self.articleModel.listByAutorId (authorId, spectatorId)
         if not rezult: rezult = []
 #         logging.info( 'getListArticles:: rezult = ' + str(rezult))
         return  rezult #.result()
@@ -110,7 +116,7 @@ class HelperArticle():
         получить Полный список статей для одного зрителя
         
         """
-        rezult = self.artModel.getListArticlesAll (spectatorId)
+        rezult = self.articleModel.getListArticlesAll (spectatorId)
         if not rezult: rezult = []
 #         logging.info( 'getListArticles:: rezult = ' + str(rezult))
         return  rezult #.result()
@@ -124,7 +130,7 @@ class HelperArticle():
  
         if articleId and revId:
             fileModel = File()
-            article =  self.artModel.get2Edit(articleId, revId)
+            article =  self.articleModel.get2Edit(articleId, revId)
            
             fileList = fileModel.getFilesListForArticle( articleId, config.options.to_out_path)
             return (article, fileList)
@@ -144,7 +150,7 @@ class HelperArticle():
         
         fileModel = File()
         articleLink = articleName.strip().strip(" \t\n")
-        article = self.artModel.get( articleLink, spectator )
+        article = self.articleModel.get( articleLink, spectator )
         
         templateName = ''
         targetFlag = "tmp"
@@ -174,7 +180,7 @@ class HelperArticle():
         
         """
         fileModel = File()
-        article = self.artModel.getByUsingHash( spectator, articleHash )
+        article = self.articleModel.getByUsingHash( spectator, articleHash )
         fileList =  fileModel.getFilesListForArticle( article.article_id, 
                                                     config.options.to_out_path)
         return (article, fileList)
@@ -186,9 +192,9 @@ class HelperArticle():
         
         """
         try:
-            self.artModel.begin()
+            self.articleModel.begin()
 
-            article = self.artModel.save(author, templateDir)
+            article = self.articleModel.save(author, templateDir)
 #             logging.info( 'сomposeArticleSave:: author = ' + str(author))
 #             logging.info( 'сomposeArticleSave:: article_pgroipId = ' + str(article_pgroipId))
 #             logging.info( 'сomposeArticleSave:: article.article_id = ' + str(article.article_id))
@@ -203,7 +209,7 @@ class HelperArticle():
                 groupModel = Group()
                 groupModel.librarySave(int(authorId), int(article_pgroipId), int(article.article_id), 'W')
                 
-            self.artModel.commit()                
+            self.articleModel.commit()                
             return article
         except WikiException as e:   
 #             WikiException( ARTICLE_NOT_FOUND )

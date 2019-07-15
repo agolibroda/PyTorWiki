@@ -42,7 +42,8 @@ import core.models
 from core.BaseHandler       import *
 from core.WikiException     import *
 
-from core.models.article import Article
+# from core.models.article import Article
+from core.helpers.article import HelperArticle
 # from core.models.article import Article
 # from core.models.file import File
 # from core.models.group      import Group
@@ -72,7 +73,7 @@ souList = [
 class RestArticlesListColtrolHandler(BaseHandler):
 # class RestArticlesListColtrolHandler(BaseHandler):
     """
-    Сервис о получении списка Авторов
+    Сервис о получении списка Статей????
     
     """
 
@@ -96,24 +97,24 @@ class RestArticlesListColtrolHandler(BaseHandler):
 #             label=self.get_argument('label')
 #             selector=self.get_argument('selector')
              
-#             if int(curentParameter) == 0:
-#                 curentParameter = config.options.main_info_template
-#                 articles = [Article(0, 'Выберите значение ')]
-#             else:
-#                 articles = []
-#             
-#             artHelper = HelperArticle()
-#             articles += yield executor.submit(artHelper.getListArticles, config.options.tpl_categofy_id)
+            artHelper = HelperArticle()
+            articles = yield executor.submit(artHelper.getListArticles, groupId)
+            
+#             listOut = []
+#             for article in articles:
+#                 logging.info( 'RestArticlesListColtrolHandler:: get article = ' + str(article)) 
+#                 listOut += article.__dict__
      
 #             self.set_default_headers()
             
-            self.write(json.dumps(souList))
+#             self.write(json.dumps(souList))
+            self.write(json.dumps(articles))
 #             self.get()
 
             
 
         except Exception as e:
-            logging.info( 'cRestArticlesListColtrolHandler get ommandName:: '+ str(commandName)+' Exception as et = ' + str(e))
+#             logging.info( 'cRestArticlesListColtrolHandler get ommandName:: '+ str(commandName)+' Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
             self.write(json.dumps(error))
 

@@ -79,17 +79,53 @@ export class AuthorDataService {
     }
 
     // delete $http.defaults.headers.common['X-Requested-With'];
+
+//    .pipe(map(() => {
+//      localStorage.removeItem('lsCurrentAuthor');
+//      localStorage.removeItem('token');
+//      this.isLogin$.emit(null);
+//
+//      return true;
+//  }));
+    
     
     getById(id: number): Observable<Author> {
-		console.log('AuthorDataService::: getById id = ' + JSON.stringify(id, null, 4));
-        return this.http.get<Author>(`${REST_SERVER_URL}/rest/authors/${id}`)
-//        			.pipe(catchError(this.handleError) )
-//        			.pipe(first())
-//        			.then(_authorData => {
-//        				console.log('AuthorDataService::: getById _authorData = ' + JSON.stringify(_authorData, null, 4));
-//        				return _authorData;
-//        			});
+      console.log('AuthorDataService::: getById id = ' + JSON.stringify(id, null, 4));
+      return this.http.get<Author>(`${REST_SERVER_URL}/rest/authors/${id}`)
+              .pipe(catchError(this.handleError) )
+              .pipe(map(_author => {
+                //login successful if there's a jwt token in the response
+            	console.log('login::: _author = ' + JSON.stringify(_author, null, 4));
+            	
+                if (_author) {
+                    // store author details and jwt token in local storage to keep author logged in between page refreshes
+                    localStorage.setItem('lsCurrentAuthor', JSON.stringify(_author));
+                }
 
+                 
+                this.isLogin$.emit(_author);
+                
+                return _author;
+            }));
+              
+//         			.pipe(first())
+// //              .pipe((_authorData: Author) => {
+// ////              .then((_authorData: Author) => {
+// //        				console.log('AuthorDataService::: getById _authorData = ' + JSON.stringify(_authorData, null, 4));
+// //        				return _authorData;
+// //        			});
+//               .pipe(_author => {
+//                 //login successful if there's a jwt token in the response
+//                 console.log('getById::: _author = ' + JSON.stringify(_author, null, 4));
+//                 if (_author) {
+//                       // store author details and jwt token in local storage to keep author logged in between page refreshes
+//                     localStorage.setItem('lsCurrentAuthor', JSON.stringify(_author));
+//                 }
+//                 return _author;
+//               });
+
+        			
+        			
 //		.subscribe((response:Author) => {
 //			console.log('AuthorDataService::: response = ' + JSON.stringify(response, null, 4));
 ////			this.currentAuthor=response;
@@ -155,11 +191,27 @@ export class AuthorDataService {
     }
 
     public register(author: Author) {
-        return this.http.post(`${REST_SERVER_URL}/rest/authors/register`, author);
+      console.log('AuthorDataService::: update author = ' + JSON.stringify(author, null, 4));
+        return this.http.post<any>(`${REST_SERVER_URL}/rest/authors/register`, author)
+        .pipe(map(_authorData => {
+          console.log('AuthorDataService::: register _authorData = ' + JSON.stringify(_authorData, null, 4));
+          return true; //_authorData;
+        }));
+        
+//        .then((_authorData: Author) => {
+//          console.log('AuthorDataService::: getById _authorData = ' + JSON.stringify(_authorData, null, 4));
+//          return _authorData;
+//        });
+        
     }
 
     public update(author: Author) {
-        return this.http.put(`${REST_SERVER_URL}/rest/authors/${author.dt_header_id}`, author);
+      console.log('AuthorDataService::: update author = ' + JSON.stringify(author, null, 4));
+        return this.http.post<any>(`${REST_SERVER_URL}/rest/authors/${author.dt_header_id}`, author)
+        .pipe(map(_authorData => {
+          console.log('AuthorDataService::: update _authorData = ' + JSON.stringify(_authorData, null, 4));
+          return true; //_authorData;
+        }));
     }  
     
     public login(authorname: string, password: string, saveMe: boolean, tag: string) {
