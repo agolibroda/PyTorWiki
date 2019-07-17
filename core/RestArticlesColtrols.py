@@ -94,23 +94,10 @@ class RestArticlesListColtrolHandler(BaseHandler):
         # /rest/articles?groupId=3 
         try:
                  
-#             label=self.get_argument('label')
-#             selector=self.get_argument('selector')
-             
             artHelper = HelperArticle()
             articles = yield executor.submit(artHelper.getListArticles, groupId)
             
-#             listOut = []
-#             for article in articles:
-#                 logging.info( 'RestArticlesListColtrolHandler:: get article = ' + str(article)) 
-#                 listOut += article.__dict__
-     
-#             self.set_default_headers()
-            
-#             self.write(json.dumps(souList))
             self.write(json.dumps(articles))
-#             self.get()
-
             
 
         except Exception as e:
@@ -148,30 +135,13 @@ class RestArticleColtrolHandler(BaseHandler):
          
         try:
                  
-#             label=self.get_argument('label')
-#             selector=self.get_argument('selector')
-             
-#             if int(curentParameter) == 0:
-#                 curentParameter = config.options.main_info_template
-#                 articles = [Article(0, 'Выберите значение ')]
-#             else:
-#                 articles = []
-#             
-#             artHelper = HelperArticle()
-#             articles += yield executor.submit(artHelper.getListArticles, config.options.tpl_categofy_id)
-#             id = articleId 
-
-#             for item in souList:
-#                 if int(item["article_id"]) == int(articleId) :
-#                     foundValue = item
-#                     break
-# 
-#             logging.info( 'RestArticleColtrolHandler:: foundValue = ' + str(foundValue))
+            artHelper = HelperArticle()
+            notComposeFlag = True
+            (article, fileList) = yield executor.submit( artHelper.getArticleByName, self.curentAuthor, articleTitle)
             
-#             if foundValue == None:
-#                 self.write(dict({}))
-#             else:
-            self.write(souList[3])
+            logging.info( 'RestArticleColtrolHandler:: get article = ' + str(article))
+            
+            self.write(json.dumps(article))
 
         except Exception as e:
             logging.info( ' RestArticleColtrolHandler get  Exception as et = ' + str(e))

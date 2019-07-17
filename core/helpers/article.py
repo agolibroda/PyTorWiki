@@ -137,7 +137,7 @@ class HelperArticle():
             
 
         
-    def getArticleByName(self, spectator, articleName, notComposeFlag=True):
+    def getArticleByName(self, spectator, articleName):
         """
         получить статью по ее названию (не линка, а название!!!!! )
         хотя, по - идее, надо поредакитровать и сначала превратить навание в линку...
@@ -148,29 +148,22 @@ class HelperArticle():
         """
 #         logging.info( 'getArticleByName notComposeFlag = ' + str(notComposeFlag))
         
+        arr = articleName.lower().split()
+        articleLink = '_'.join(arr)# articleLink.lower().replace(' ','_')
+        
         fileModel = File()
-        articleLink = articleName.strip().strip(" \t\n")
+#         articleLink = articleName.strip().strip(" \t\n")
         article = self.articleModel.get( articleLink, spectator )
         
-        templateName = ''
-        targetFlag = "tmp"
-        
-        # показать статью в шаблоне нам нужно только для пользователя (НЕ для редактирования)
-        if notComposeFlag:
-            templator = Template()
-            templateName = templator.temtlatePrepareById(article.article_template_id, articleLink, targetFlag) # article_template_id
-#             logging.info( 'getArticleByName 1 templateName = ' + str(templateName))
-
         fileList =  fileModel.getFilesListForArticle( article.article_id, 
                                                     config.options.to_out_path)
         
-        if targetFlag == "tmp":
-            templateName =  os.path.join(config.options.tmpTplPath, templateName)
-        
+# сПИСОК ФАЙЛОВ ТОЖЕ НАДО БУДЕТ подгоовить к сериализации.
+         
 #         logging.info( 'getArticleByName article = ' + str(article))
 #         logging.info( 'getArticleByName fileList = ' + str(fileList))
-#         logging.info( 'getArticleByName templateName = ' + str(templateName))
-        return (article, fileList, templateName)
+# self.articleModel.preparingForDict(_item)
+        return (self.articleModel.preparingForDict(article), fileList)
 
 
     def getArticleHash(self, spectator, articleHash):
