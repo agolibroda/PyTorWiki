@@ -11,16 +11,17 @@ nocommit.txt
 
 
 # global sensitive config data
-config/base.conf
-config/dbase.conf 
-config/main.conf
-_host_configs/** 
+/torWiki/config/base.conf
+/torWiki/config/dbase.conf 
+/torWiki/config/main.conf
+/torWiki/_host_configs/** 
 
 # Uploaded files
-/static/filestorage/**
-/static/site_templates/**
-/templates/tmp/**
 
+/log
+/mediaWiki/**
+/product
+/read.me
 
-/start.sh
-/stop.sh
+/angWiki/node_modules/**
+
