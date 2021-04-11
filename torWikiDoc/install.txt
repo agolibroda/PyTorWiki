@@ -1,0 +1,67 @@
+
+ что нужно для работы системы:
+ 
+..... Redis !!!!
+
+
+ - Python
+ 
+ - торнадо 
+ 	
+ 	pip3 install tornado
+ 	pip3 install bcrypt
+
+ 	pip3 install cryptography -- Доки https://cryptography.io/en/latest/
+ 	
+ 	pip3 install psycopg2  (?????)
+ 	pip3 install psycopg2-binary
+ 	
+ 	pip3 install py-postgresql -- http://pythonhosted.org/py-postgresql/
+ 	
+ 	pip3 uninstall torndsession - уже не использую.
+ 	 
+ 	pip3 install redis    -- https://redis-py.readthedocs.io/en/latest/  
+ 	
+ 	pip3 install hiredis - Некая ускорялка для редиски - пока еще не стоит.    
+ 	
+
+необходимо проверть наличие папок и создать, если их нет
+/static/filestorage/**
+/static/site_templates/**
+/templates/tmp/**
+- в эти папки загружаются шалоны для последущего использования в клиенте системы
+
+
+ 
+ - инсталляция базы данных
+ сервер баз данных  PostgreSQL  
+ как его инсталлировать я не рассказываю, все люди взрослые... 
+
+  дока по драйверу 
+  http://pythonhosted.org/py-postgresql/
+
+ в директории "sql" лежит файл "ver_XXX.SQL" Брать самую свежую версию; 
+ его исполнить в инструментах по работе с сервером PostgreSQL  
+ Дополнительные файлы, необходимые для исправления схемы данных  
+ находятся в файлах вида "upd_XXX.SQL" применять файлы стоит последовательно,  
+ от младших номеров к старшим.
+
+psql -U <postgres_user> -d <dbname> -f <file.sql>
+
+в нашем случае:
+1:
+psql -U <postgres_user> -d <dbname> -f ver_170403.sql
+2:
+psql -U <postgres_user> -d <dbname> -f upd_170923.sql
+
+и остальные команды, может почитать отсюда:
+https://proft.me/2013/06/9/postgresql-spravochnik-po-komandam-psql-pg_dump/
+
+
+ 
+про "torndsession" - работу с сессиями - и, возможно, как сессии держать на иных средах
+Доки, в общем:
+https://pypi.org/project/torndsession/
+https://github.com/MitchellChu/torndsession/blob/master/demos/redis_session.py
+  
+  
