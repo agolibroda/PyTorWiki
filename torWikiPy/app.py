@@ -6,10 +6,13 @@
 #
 # начинаю продолжать..
 # 
-# 
+# процедура запуска сервера в исполнении выглядит так: 
+# параметры - работает только "port" :-) пока, наверное :-) 
+# python3 app.py port=8000 host=127.0.0.1 
 #
 
 
+import sys
 
 # import .BaseHandler
 import logging
@@ -29,11 +32,11 @@ import config
 
 from core.RestAuthorsControls   import *
 from core.RestArticlesControls  import *
-from core.RestGroupssControls    import *
+from core.RestGroupsControls    import *
 
 from core.RestTokenControls   import *
 
-
+from core.Helpers      import *
 
 
 hasattr(config.options, 'logFileName')
@@ -141,11 +144,37 @@ class Application(tornado.web.Application):
 def main():
 #     logging.basicConfig(filename='torViki.log', level=logging.INFO)
 
-    logging.info('Server start at .main_port = ' + str(config.options.main_port))
     logging.info('Надо сделать проверку, есть ли в системе Постгрис- сервер - и можно ли к нему прицепиться :-) ')
+    logging.info('Надо сделать проверку, есть ли в системе Редиска - сервер - и можно ли к нему прицепиться :-) ')
+    logging.info('Если их нет, тогда цепляться некчему, и стоить остановить процесс с соответствующими словами!!!! ')
     
+    #  для вызова сервера торнадо на неком определенном порту, надо сделат вот такой вызов:
+
+    #  python3 app.py port=8000
+
+# процедура разбора командной строки запуска сервера, python3 app.py port=8000 host=127.0.0.1 
+# нам надо получить пока только номер порта; если порта нет, тогда используется стандартный порт из конфига.
+
+    tmpListParams = tornado.options.parse_command_line() #  получили список параметров командной строки
+    class Param: pass
+    commandStrParam = Param() # параметры командной строки будут атрибутами экмпляра клсса..
+    for item in tmpListParams:
+        # logging.info('Server start at item: ' + str(item))
+        tmpItem = item.split('=')
+        # logging.info('Server start at tmpItem: ' + str(item))
+        commandStrParam.__setattr__(tmpItem[0], tmpItem[1])
+
+    logging.info('Server start at commandStrParam = ' + toStr(commandStrParam))
+        
+    try:
+        port = commandStrParam.port
+    except :
+        port = config.options.main_port   
+    
+    logging.info('Server start at port = ' + str(port))
+
     http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(config.options.main_port)
+    http_server.listen(port)
     tornado.ioloop.IOLoop.current().start()
 
 

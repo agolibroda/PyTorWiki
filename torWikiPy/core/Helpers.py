@@ -119,7 +119,7 @@ class RedisConnector():
         """
         Возвратим уже Де-Сериализованный параметр (скорее всего, словарь)
         
-        dump(name)[source] - получить значение для параметра, получаем сениализованную структуру
+        dump(name)[source] - получить значение для параметра, получаем сериализованную структуру
         её надо разобрать потом :-) 
         Return a serialized version of the value stored at the specified key. If key does not exist a nil bulk reply is returned.
         
