@@ -72,12 +72,21 @@ souList = [
 class RestGroupsListHandler(BaseHandler):
 # class RestGroupsListHandler(BaseHandler):
     """
-    Сервис о получении списка Авторов
+    Сервис о получении списка групп :-) 
+
+    /rest/groups/ -то там - выбрать всех авторов, у которых в ФИО будет некая фраза.
+
+    /rest/groups?serch=что -то там - выбрать всех авторов, у которых в ФИО будет некая фраза.
+     
     
     """
 
     @gen.coroutine
     def get(self):
+
+        # всегда можно получить список групп для одного автора :-) 
+        athorId = self.get_argument("athorId", False)
+        logging.info( 'RestGroupsListHandler get athorId = ' + str(athorId))
  
         self.get_current_user()
         self.curentAuthor = self.current_user

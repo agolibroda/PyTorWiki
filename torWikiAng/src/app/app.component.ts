@@ -41,7 +41,8 @@ export class AppComponent {
 		// because neither type sufficiently overlaps with the other. If this was intentional, 
 		// convert the expression to 'unknown' first.ts(2352)
 
-		this.setTitle(<Title>environment.title);
+		// this.setTitle(<Title>environment.title); - вот ЭТО коказаккоментировал... 
+		
 //		 this.metaService.addTag({[prop: "description"]: "Что - то супер-пупер!"});
 //		 и вообще, стоит поискать примеры использования метатегов !!!!
 		 

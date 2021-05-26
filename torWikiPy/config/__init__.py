@@ -61,6 +61,7 @@ define("redisMaxConnections",   default="1024",         help="redisMaxConnection
 ########################################################################
 
 define("main_port", default="8888", help="Main port 8888")
+define("main_addr", default='127.0.0.1', help="Main addr 127.0.0.1")
 define("main_title", default="Main WIKI Title", help="Main Wiki Title ")
 
 
@@ -71,7 +72,11 @@ define("adminPath", default=r"/admin", help="Path to Admin Area")
 define("adminTplPath", default=r"admin/", help="Path to Admin Area")
 
 define("projectDir", default=os.path.join(os.path.dirname(__file__), '../'), help="Path to Project")
-define("staticDir", default=r"static", help="Static Dir")
+
+# define("staticDir", default=r"static", help="Static Dir")
+
+define("staticDir", default=os.path.join(os.path.dirname(__file__), '../torWikiMedia'), help="Static Dir")
+
 define("siteDir", default=r"site_templates", help="Catalog for site files")
  
 

@@ -1,5 +1,14 @@
 
  что нужно для работы системы:
+
+Система состоит из двух частей:
+	1 - рест-сервер - работает с данными (принимает, обрабатывает и отдает)
+	2 - Пользовательский нтерфейс - реализуется на Ангуляре, клиентский доступ 
+		- через Веб- браузер, 
+
+
+
+
  
 ..... Redis !!!!
 
@@ -65,3 +74,27 @@ https://pypi.org/project/torndsession/
 https://github.com/MitchellChu/torndsession/blob/master/demos/redis_session.py
   
   
+
+
+
+
+Работа системы: 
+- сервер запускаем в тестовом режиме: 
+
+
+python3 app.py port=8888 host=127.0.0.1 (порт м.б. любым (а рамках разумного!!!!))
+
+запросы к серверу 
+http://localhost:8888/rest/hw
+
+
+Это командя для запуска серверв обесечения разработки.
+
+cd /home/alec/workhome/sites/vedogon.local/torWikiPy
+python3 app.py --port=8888 --host=127.0.0.1
+
+cd /home/alec/workhome/sites/vedogon.local/torWikiAng
+ng serve --host 127.0.0.1 --port 4200
+
+
+

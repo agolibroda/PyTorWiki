@@ -77,6 +77,47 @@ souList = [
                 ]
 
 
+
+
+class RestAnyBoduHandler(BaseHandler):
+    """
+    Сервис о пустом вызове.
+    
+    Это разбор ГЕТ - запроса вида:
+    /
+    /rest/
+
+    
+    
+    """
+
+    @gen.coroutine
+    def get(self):
+        """
+        Пустой вызов не должен давать ошибку.
+         
+        """
+ 
+        logging.info( 'RestAnyBoduHandler:: '+ str(self))
+
+        # RestAnyBoduHandler
+        # 
+        #  
+        try:
+                  
+            error = Error ('200', 'Вы ничего не хотели... :-( ')
+            self.write(json.dumps(error))
+ 
+             
+ 
+        except Exception as e:
+#             logging.info( 'commandName:: '+ str(commandName)+' Exception as et = ' + str(e))
+            error = Error ('500', 'что - то пошло не так :-( ')
+            self.write(json.dumps(error.message))
+        
+
+
+
 class RestAuthorsListHandler(BaseHandler):
 # class RestAuthorsListHandler(BaseHandler):
     """
@@ -84,9 +125,12 @@ class RestAuthorsListHandler(BaseHandler):
     
     Это разбор ГЕТ - запроса вида:
     /rest/authors 
-    ?groupId=123 - получить список Авторов в группе №№ ...
+    /rest/authors?groupId=123 - получить список Авторов в группе №№ ...
     да, и всякие остальные параметры выбоора - типа, страница, 
     количетсво на странице, сортировака, фильтрация...
+     и инй вариант
+     /rest/authors?serch=что -то там - выбрать всех авторов, у которых в ФИО будет некая фраза.
+     
 
     
     
@@ -115,16 +159,20 @@ class RestAuthorsListHandler(BaseHandler):
             authorControl = Author() # вот, надо делать сохранение данных    
             authors = yield executor.submit(authorControl.list()) # , config.options.tpl_categofy_id
              
-#             self.write(json.dumps(souList))
-            self.write(json.dumps(authors))
+            self.write(json.dumps(souList))
+            # self.write(json.dumps(authors))
 #             self.get()
  
              
  
         except Exception as e:
-#             logging.info( 'commandName:: '+ str(commandName)+' Exception as et = ' + str(e))
-            error = Error ('500', 'что - то пошло не так :-( ')
-            self.write(json.dumps(error))
+            # logging.error( 'commandName:: '+ str(commandName)+' Exception as et = ' + str(e))
+            pyTorWikiTraceback('при загрузке списка пользователей произошло что - то весьма не хорошее.')
+            #отдать из сервиса на улицу нужно внятное сообщение об ошибке!!!! :-) ну, максимально... 
+            # Да, походу, вот с такм сообщением от бэкэнда уже будет правильн разбираться фронту.. 
+            # и делать выводы... (во всяком случае "{ \n\t \"code\": \"500\" , ... " уже транспортабельно.)
+            error = Error ('500', ' при получеии списка Авторов что - то пошло не так :-( ')
+            self.write(json.dumps(toStr(error)))
         
 
 
@@ -134,6 +182,8 @@ class RestAuthorHandler(BaseHandler):
     
     Сервис для работы с данными  Автора (Карточка Автора)
     - поучить данные одного, 
+    /rest/authors/([0-9]+) - в запос передаем ИД автора!!!!
+
     - создать/ отредактировать == сохранить изменения!!!!!
     
     """
@@ -169,7 +219,7 @@ class RestAuthorHandler(BaseHandler):
         except Exception as e:
             logging.info( ' RestAuthorHandler get  Exception as et = ' + str(e))
             error = Error ('500', 'что - то пошло не так :-( ')
-            self.write(json.dumps(error))
+            self.write(json.dumps(error.message))
 
 #             self.write({"error_message": error})
     
@@ -301,3 +351,34 @@ class RestLogoutHandler(BaseHandler):
             logging.info('RestLogoutHandler:: post:: Have Error!!! '+ str(e))
             
             self.write(json.dumps("Произошло что - то печальное"))
+
+
+
+
+
+class RestHelloWorld(BaseHandler):
+    """
+    Проверка работоспособности системы, 
+    если в ответ на запрос:
+    /rest/hw
+    мы получим ответ: 
+
+
+    значит, система работает, и все нормально. 
+    """
+    
+    @gen.coroutine
+    def get(self):
+        
+
+        try:
+            body = tornado.escape.json_decode(self.request.body)
+            logging.info( 'RestHelloWorld:: body = ' + str(body))
+                
+            self.write(json.dumps({string: "Hello World!"}))
+            
+        except Exception as e:
+            logging.info('RestHelloWorld:: post:: Have Error!!! '+ str(e))
+            
+            self.write(json.dumps("Произошло что - то печальное"))
+

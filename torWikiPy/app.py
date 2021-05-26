@@ -20,6 +20,8 @@ import logging
 # import pickle
 import json
 
+import argparse
+
 
 # import tornado.web
 # import tornado.httpserver
@@ -61,8 +63,12 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
 #################################################################################################
-            (r"/rest/authors/([0-9]+)", RestAuthorHandler), # (RestAuthorss.py) все, что вызывается из клиента AJAX... 
-            (r"/rest/authors",          RestAuthorsListHandler), # (RestAuthorss.py) все, что вызывается из клиента AJAX... 
+# как  - то интересно тут работает!!!!! - надо все пересмотреть!!!!
+# - если выбор БЕЗ ИД автора, то, должен выбираться СПИСОК, но, нет.. :-( 
+    #  в общем, проблемка, разбираться надоть!!!!!
+
+            (r"/rest/authors/([0-9]+)", RestAuthorHandler), # (RestAuthorsControls.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/authors",          RestAuthorsListHandler), # (RestAuthorsControls.py) все, что вызывается из клиента AJAX... 
 
             (r"/rest/groups/([0-9]+)",  RestGroupHandler), # (RestGroupss.py) все, что вызывается из клиента AJAX... 
             (r"/rest/groups",           RestGroupsListHandler), # (RestGroupss.py) все, что вызывается из клиента AJAX... 
@@ -70,12 +76,16 @@ class Application(tornado.web.Application):
             (r"/rest/articles/([^/]+)", RestArticleHandler), # (RestArticless.py) все, что вызывается из клиента AJAX...
             (r"/rest/articles",         RestArticlesListHandler), # (RestArticless.py) все, что вызывается из клиента AJAX... 
 
-            (r"/rest/login",            RestLoginHandler), # (RestProfiles.py) все, что вызывается из клиента AJAX... 
-            (r"/rest/logout",           RestLogoutHandler), # (RestProfiles.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/login",            RestLoginHandler), # (RestAuthorsControls.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/logout",           RestLogoutHandler), # (RestAuthorsControls.py) все, что вызывается из клиента AJAX... 
+            (r"/rest/hw",               RestHelloWorld), # (RestAuthorsControls.py) просто проверка работы системы.
 
             (r"/rest/token",            RestTokenHandler), # (RestTokenControls.py) все, что ... 
             
             (r"/rest/check_token/([^/]+)",      RestCheckTokenHandler), # (RestTokenControls.py) все, что ... 
+
+            (r"/([^/]+)",      RestAnyBoduHandler), # (RestAuthorsControls.py) все, что ... 
+
              
 #################################################################################################
 
@@ -87,7 +97,9 @@ class Application(tornado.web.Application):
 #             wiki_title_admin = config.options.wikiTitleAdmin,
 # #             project_dir=projectDir,
 #             template_path=config.options.templateDir, #os.path.join(projectDir, config.options.templateDir),
-#             static_path=config.options.staticDir, #os.path.join(projectDir, config.options.staticDir),
+
+            static_path=config.options.staticDir, #os.path.join(projectDir, config.options.staticDir),
+            
 #             ui_modules={
 #                         "Article": ArticleModule, 
 #                         'Revision': RevisionModule, 
@@ -150,33 +162,26 @@ def main():
     
     #  для вызова сервера торнадо на неком определенном порту, надо сделат вот такой вызов:
 
-    #  python3 app.py port=8000
-
-# процедура разбора командной строки запуска сервера, python3 app.py port=8000 host=127.0.0.1 
-# нам надо получить пока только номер порта; если порта нет, тогда используется стандартный порт из конфига.
-
-    tmpListParams = tornado.options.parse_command_line() #  получили список параметров командной строки
-    class Param: pass
-    commandStrParam = Param() # параметры командной строки будут атрибутами экмпляра клсса..
-    for item in tmpListParams:
-        # logging.info('Server start at item: ' + str(item))
-        tmpItem = item.split('=')
-        # logging.info('Server start at tmpItem: ' + str(item))
-        commandStrParam.__setattr__(tmpItem[0], tmpItem[1])
-
-    logging.info('Server start at commandStrParam = ' + toStr(commandStrParam))
-        
-    try:
-        port = commandStrParam.port
-    except :
-        port = config.options.main_port   
+    # процедура разбора командной строки запуска сервера, 
+    # python3 app.py --port=8888 --addr=127.0.0.1
     
-    logging.info('Server start at port = ' + str(port))
+    # нам надо получить пока только номер порта; если порта нет, 
+    # тогда используется стандартный порт из конфига.
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--port', type=int, default= config.options.main_port )
+    parser.add_argument('-hh', '--host', type=str, default= config.options.main_addr) 
+    args = parser.parse_args()
+
+    logging.info('Server start at args = ' + toStr(args))
 
     http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(port)
+    # стоит проверить, а не занят ли ЭТОТ порт и адрес, и не стартовать, если что ...
+    # http_server.listen(args.port, host=args.addr) - Эта шняга почему то не работает!!!!
+    http_server.listen(args.port)
     tornado.ioloop.IOLoop.current().start()
 
 
 if __name__ == "__main__":
+    # pass
     main()

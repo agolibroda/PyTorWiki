@@ -32,6 +32,10 @@ import tornado.web
 # from torndsession.sessionhandler import SessionBaseHandler
 
 
+##################
+
+import traceback
+
 
 #####################################
 
@@ -77,6 +81,15 @@ class BaseHandler(tornado.web.RequestHandler):
     def __init__(self, *args, **kwargs):        
         super(BaseHandler, self).__init__(*args, **kwargs)
 
+
+        logging.info( ' BaseHandler __init__ args:: '+ str(args))
+
+        # for line in traceback.format_stack():
+        #     print(line.strip())
+
+       
+
+
         self.tokenControl = Token()
 
 #         self.set_header("access-control-allow-origin", "http://localhost:4200")
@@ -113,9 +126,9 @@ class BaseHandler(tornado.web.RequestHandler):
         Это Стандартный торнадовский функций, про получение данных о пользователе
         
         """
-        self.current_user = SingletonAuthor()
-#         logging.info('BaseHandler:: get_current_user:: START self.author = '+ str(self.author))
         try:
+            self.current_user = SingletonAuthor()
+            # logging.info('BaseHandler:: get_current_user:: START self.author = '+ str(self.author))
             isLogin = True
             if self.token != '':
                 

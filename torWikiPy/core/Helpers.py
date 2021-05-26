@@ -91,6 +91,10 @@ def singleton(cls):
     return getinstance
 
 
+def pyTorWikiTraceback(errorMessage):
+    logging.error( errorMessage)
+    for line in traceback.format_stack():
+        print(line.strip())
 
 
 
