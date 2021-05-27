@@ -144,18 +144,19 @@ class RestAuthorsListHandler(BaseHandler):
          
         """
  
-        self.get_current_user()
-        self.curentAuthor = self.current_user
-  
-        logging.info( 'RestAuthorsListHandler get self.curentAuthor = ' + str(self.curentAuthor))
-          
-#         groupId=0 #None
-         
-        groupId = self.get_argument("groupId", False)
-        logging.info( 'RestAuthorsListHandler get groupId = ' + str(groupId))
-         
         try:
                   
+  
+            self.get_current_user()
+            self.curentAuthor = self.current_user
+    
+            logging.info( 'RestAuthorsListHandler get self.curentAuthor = ' + str(self.curentAuthor))
+            
+#         groupId=0 #None
+         
+            groupId = self.get_argument("groupId", False)
+            logging.info( 'RestAuthorsListHandler get groupId = ' + str(groupId))
+         
             authorControl = Author() # вот, надо делать сохранение данных    
             authors = yield executor.submit(authorControl.list()) # , config.options.tpl_categofy_id
              
