@@ -7,12 +7,15 @@
 
 export const REST_SERVER_URL: string =  'http://localhost:8888';
 
+export const MAIN_SITE_TITLE: string =  'Vedogon';
+
 export const MAIN_MENU = {
-		groups: {title: "Безопасность в ...", icon: "dashboard"}, // Види І Форми Дозвілля
-		authors: {title:"Авторы", icon: "group"},
-		newArticle: {title:"Добавить статью", icon: "tab"}, // 'Нова Стаття'
-		newGroup: {title:"Добавить раздел", icon: "list_alt"} // Вид Або Форма Дозвілля
+		groups: {path: '/groups', title: "Безопасность в ...", icon: "dashboard"}, // Види І Форми Дозвілля
+		authors: {path: '/authors', title:"Авторы", icon: "group"},
+		newArticle: {path: '/article', title:"Добавить статью", icon: "tab"}, // 'Нова Стаття'
+		newGroup: {path: '/group', title:"Добавить раздел", icon: "list_alt"} // Вид Або Форма Дозвілля
 
 		
 		
 }
+

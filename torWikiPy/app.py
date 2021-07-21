@@ -163,7 +163,7 @@ def main():
     #  для вызова сервера торнадо на неком определенном порту, надо сделат вот такой вызов:
 
     # процедура разбора командной строки запуска сервера, 
-    # python3 app.py --port=8888 --addr=127.0.0.1
+    # $ python3 app.py --port=8888 --host=127.0.0.1
     
     # нам надо получить пока только номер порта; если порта нет, 
     # тогда используется стандартный порт из конфига.
@@ -177,8 +177,9 @@ def main():
 
     http_server = tornado.httpserver.HTTPServer(Application())
     # стоит проверить, а не занят ли ЭТОТ порт и адрес, и не стартовать, если что ...
-    # http_server.listen(args.port, host=args.addr) - Эта шняга почему то не работает!!!!
-    http_server.listen(args.port)
+    # http_server.listen(args.port, address=args.host) #- Эта шняга почему то не работает!!!!
+    http_server.listen(args.port, args.host) #- Эта шняга почему то не работает!!!!
+    # http_server.listen(args.port)
     tornado.ioloop.IOLoop.current().start()
 
 

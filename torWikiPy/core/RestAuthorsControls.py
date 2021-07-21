@@ -141,21 +141,29 @@ class RestAuthorsListHandler(BaseHandler):
         """
         Получим список Авторов, возможно, список прикрутим к Группе - 
         может, попробуем забрать ещё какие  - то параметры...
-         
+
+        /rest/authors 
+        /rest/authors?groupId=12
+        /rest/authors?str=кусок_Имя-Фаилия 
         """
  
         try:
-                  
-  
-            self.get_current_user()
-            self.curentAuthor = self.current_user
+            
+            # да, похоже, мне всегда надо знать, что за чел тут залогиненый, 
+            # возможно с назными челами будет связана и область видимостей..
+            # self.get_current_user()
+            # self.curentAuthor = self.current_user
     
-            logging.info( 'RestAuthorsListHandler get self.curentAuthor = ' + str(self.curentAuthor))
+            # logging.info( 'RestAuthorsListHandler get self.curentAuthor = ' + str(self.curentAuthor))
             
 #         groupId=0 #None
          
             groupId = self.get_argument("groupId", False)
             logging.info( 'RestAuthorsListHandler get groupId = ' + str(groupId))
+
+            serchStr = self.get_argument("str", '')
+            logging.info( 'RestAuthorsListHandler get serchStr = ' + str(serchStr))
+            # если строка не нулевая, то стоит искать группу авторов по кусочку ИМЯРЕК ???
          
             authorControl = Author() # вот, надо делать сохранение данных    
             authors = yield executor.submit(authorControl.list()) # , config.options.tpl_categofy_id
