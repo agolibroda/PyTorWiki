@@ -29,7 +29,7 @@ export const ROUTES: RouteInfo[] = [
 
 export class SidebarComponent implements OnInit {
   menuItems: any[];
-  mainSiteTitle: string;
+  mainSiteTitle: string; // определим переменную, в которой будем передавать название сайта из "config/main" в шблон
 
   constructor() { }
 
@@ -37,7 +37,7 @@ export class SidebarComponent implements OnInit {
   
   ngOnInit() {
     this.menuItems = ROUTES.filter(menuItem => menuItem);
-    this.mainSiteTitle = MAIN_SITE_TITLE;
+    this.mainSiteTitle = MAIN_SITE_TITLE; // вот теперь тут передается константа в шаблон
   }
   isMobileMenu() {
       if ($(window).width() > 991) {
