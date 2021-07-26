@@ -41,6 +41,9 @@ import json
 # from tornado.web import Application, RequestHandler
 # from tornado.ioloop import IOLoop
 
+from tornado.concurrent import run_on_executor
+from concurrent.futures import ThreadPoolExecutor
+
 
 import unicodedata
 
@@ -58,8 +61,11 @@ from core.models.author     import Author
 from core.models.token      import Token
 
 
+MAX_WORKERS = 4
+
 # A thread pool to be used for password hashing with bcrypt.
-executor = concurrent.futures.ThreadPoolExecutor(2)
+# executor = concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS)
+executor = concurrent.futures.ThreadPoolExecutor(MAX_WORKERS)
 
 #  пока  - затычка, потом включу базу данных.
 souList = [
@@ -136,7 +142,8 @@ class RestAuthorsListHandler(BaseHandler):
     
     """
 
-    @gen.coroutine
+    # @gen.coroutine
+    @tornado.gen.coroutine
     def get(self):
         """
         Получим список Авторов, возможно, список прикрутим к Группе - 
@@ -165,17 +172,21 @@ class RestAuthorsListHandler(BaseHandler):
             logging.info( 'RestAuthorsListHandler get serchStr = ' + str(serchStr))
             # если строка не нулевая, то стоит искать группу авторов по кусочку ИМЯРЕК ???
          
-            authorControl = Author() # вот, надо делать сохранение данных    
-            authors = yield executor.submit(authorControl.list()) # , config.options.tpl_categofy_id
-             
-            self.write(json.dumps(souList))
-            # self.write(json.dumps(authors))
-#             self.get()
- 
-             
+            authorControl = Author() # вот, надо делать сохранение данных   
+            authorControl.setSearchParams(groupId, serchStr) 
+            result = yield executor.submit(authorControl.makeSerch) # , config.options.tpl_categofy_id
+            authors =  authorControl.getList()
+            for oneAuthor in authors:
+                logging.info( 'RestAuthorsListHandler oneAuthor = ' + str(oneAuthor)) 
+
+            # # authors = yield authorControl.getList(groupId, serchStr) # , config.options.tpl_categofy_id
+            # logging.info( 'RestAuthorsListHandler get authors = ' + toStr(authors)) 
+            # self.write(json.dumps(authorControl.getList()))
+            # self.write(json.dumps(authors)) toJson
+            self.write(toJson(authors)) 
  
         except Exception as e:
-            # logging.error( 'commandName:: '+ str(commandName)+' Exception as et = ' + str(e))
+            logging.error( 'commandName:: RestAuthorsListHandler get  Exception as et = ' + str(e))
             pyTorWikiTraceback('при загрузке списка пользователей произошло что - то весьма не хорошее.')
             #отдать из сервиса на улицу нужно внятное сообщение об ошибке!!!! :-) ну, максимально... 
             # Да, походу, вот с такм сообщением от бэкэнда уже будет правильн разбираться фронту.. 

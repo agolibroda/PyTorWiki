@@ -506,7 +506,7 @@ class Model: #Connector:
             if str(anyParams.get('orderStr', ''))    != '':  sqlStr += ' ORDER BY ' + str(anyParams.get('orderStr'))
             if str(anyParams.get('limitStr', ''))    != '':  sqlStr += ' LIMIT ' + str(anyParams.get('limitStr'))
 
-            logging.error(' select :: sqlStr =  ' + str (sqlStr) )
+            logging.info(' select :: sqlStr =  ' + str (sqlStr) )
 
             _loDb.execute(sqlStr)
             sourse = _loDb.fetchall()

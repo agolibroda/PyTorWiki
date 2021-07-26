@@ -68,18 +68,66 @@ def splitAttributes(objOne):
     return out
 
 
+
 def toStr(objOne): 
+    """
+    вот.... превращение сложных данных (списка объектов, допустим,) в строку. 
+    """
     try:
         attribList = splitAttributes(objOne) # dir(objOne) #
-    #     logging.info( ' TemplateParams::__str__ attribList = ' + str(attribList))
+        logging.info( ' toStr TemplateParams::__str__ attribList = ' + str(attribList))
         className = str(objOne.__class__)
+        # logging.info( ' toStr className = ' + str(className))
         itemsList = map(lambda x, y: ' "' + str(x) + '"' + ': "' + str(y) + '" ', attribList.listAttrNames, attribList.listAttrValues) 
+        # logging.info( ' toStr itemsList = ' + str(itemsList))
         objValuesNameList = '\n'+ className + ': { \n\t' + ', \n\t'.join(itemsList) + '\n}'
+        # logging.info( ' toStr TemplateParams:: objValuesNameList = ' + str(objValuesNameList))
         return objValuesNameList
     except Exception as e:
-#         logging.info( 'Get:: Exception as et = ' + toStr(e))
+        # logging.info( 'Helpers::: toStr:: Exception as et = ' + toStr(e))
 #         logging.info( 'Get:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
         return str(objOne)
+
+
+def toJson(objList): 
+    """
+    вот.... превращение сложных данных (списка объектов, допустим,) в Json. 
+
+    Сначала проверим, что входное ОНО списк, если да, тогда к каждому элементу списка  
+    применим ... 
+ 
+
+         _public_key = bytes(newAuthor.public_key)
+        if _public_key != b'' and _public_key != None:
+            newAuthor.unserializePyblicKey(_public_key)
+
+
+    """
+    try:
+
+        for oneOb in objList:
+            logging.info( 'toJson oneOb = ' + str(oneOb)) 
+
+        if type(objList) is list:
+            json_list = []
+            for ob in objList:
+                logging.info( ' toJson::_ ob = ' + str(ob)) 
+                # attribList = splitAttributes(ob) # dir(objOne) #
+                # logging.info( ' toJson::__str__ attribList = ' + str(attribList.__dict__)) 
+                # logging.info( ' toJson::__str__ ob = ' + str(ob.__dict__)) 
+                # для каждого автора надо сериализовать его публичный ключ. для отдачи в клиента!!!!
+                # public_key
+                ob.serializePyblicKey()
+                json_list.append(json.dumps(ob.__dict__)) 
+            logging.info( ' toJson::json_list = ' + toStr(json_list)) 
+            return json.dumps(json_list)
+        elif type(objList) is object:
+            return json.dumps(objList.__dict__)
+
+    except Exception as e:
+        logging.info( 'Helpers::: toJson:: Что - то не получилось превратить в Json : Exception as et = ' + toStr(e))
+#         logging.info( 'Get:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
+        return str(objList)
 
 
 def singleton(cls):

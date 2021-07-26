@@ -34,6 +34,8 @@ import tornado.options
 import config
 from core.WikiException import *
 
+from core.Helpers      import *
+
 from . import Model, CipherWrapper
 from ..constants.data_base import *
 
@@ -75,24 +77,173 @@ class Author(Model):
         
         self.dt_header_id = 0
 #         author_create = datetime.now()
-        self.author_login = ''
-        self.author_pass = ''
-#         self.authorPass = None
         self.author_name  = '' 
         self.author_surname = ''
         self.author_role = ''
         self.author_phon = '' 
         self.author_email = ''
+        # если параметр "труй", то контакт 
+        self.author_is_publick_contakt = False # (author_phon, author_email) доступен для просмотра.
         
         self.author_yourself_story = '' #  просто аннотация к автору, не архивим, не закрываем, отдаём как есть :-) 
         
         self.dt_header_type ='author'
-        self.public_key = None
-        self.private_key = None
-        self.private_key_hash = None
-        self._openPublicKey = None
-        self._openPrivateKey = None
+        self.public_key = None # текст публичного ключа, так, как он хранится в БАЗЕ - нужно для передачи в клиента.
+        self._wrkPublicKey = None # объект -для работы с публичным ключем на стороне бэкЕнда.
         
+        
+
+        # #############################
+        # # Всякие нужные штуки....
+
+        # self.autorsList = []
+
+        Model.__init__(self)  
+        self.setDataStruct(Model.TableDef( tabName='authors', 
+                                      idFieldName=None,
+                                      mainPrimaryList =['dt_header_id'],
+                                      listAttrNames=['dt_header_id', 'author_name','author_surname','author_role','author_phon','author_email', 'author_is_publick_contakt']))
+        
+        self.setHeadStruct(Model.TableDef( tabName='dt_headers', 
+                                      idFieldName='dt_header_id',
+                                      mainPrimaryList =['dt_header_id'],
+                                      listAttrNames=['dt_header_type','public_key']))
+
+#         logging.info(' __init__:: After self = ' + str(self))
+        
+        
+        #####################
+        # END
+        
+
+
+    def setSearchParams(self, groupId, serchStr):
+        """
+        Добавить поисковых параметров.
+
+        self.groupId,  - Грппа, всех авторов которой  хочу найти
+        self.serchStr - просто кусок имени автора.... - если эт параметры не "нулевые", тада надо править 
+
+        """
+        self.groupId = groupId
+        self.serchStr = serchStr
+        
+
+
+    def makeSerch(self):
+        """
+        Выбрать список всех авторов в системе 
+        мы загружаем публичный ключ авторов для возможного дальнейшего использования.
+        
+        self.groupId,  - Грппа, всех авторов которой  хочу найти
+        self.serchStr - просто кусок имени автора.... - если эт параметры не "нулевые", тада надо править 
+        "whereStr" - ну, как  - то так....
+
+        """
+        selectStr = 'dt_headers.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email, author_is_publick_contakt, author_create, dt_headers.public_key '
+        fromStr = 'dt_headers' #'authors'
+        anyParams = {
+                    'whereStr': "  dt_headers.dt_header_id = authors.dt_header_id  AND actual_flag = 'A' ",
+                    'orderStr': ' dt_header_id', # строка порядок строк
+                     }
+
+        self.autorsList = []
+        count = 0
+        resList = self.select(selectStr, fromStr, anyParams)
+        for oneAuthor in resList:
+            logging.info( 'Author:: list::  oneAuthor = ' + str(oneAuthor)) 
+            self.autorsList.append(self.parsingAuthor(oneAuthor))
+            count += 1
+
+        # logging.info( 'Author:: list::  self.autorsList = ' + str(self.autorsList))
+
+        # return count
+        return self.autorsList;
+
+
+
+    def getList(self):
+        return self.autorsList;
+
+    def parsingAuthor(self, autorStruct):
+        """
+        Разобрать структуру, которая приходит из селекта, (словарь)
+        и сделать полноценный ОБЪЕКТ  - Автора.
+        (Выкинуть все скрытые аттрибуты!!!! - а вот ЭТО делать НЕ БУДУ!!!!)
+        """
+        newAuthor = Author()
+        objValuesNameList = list(autorStruct.__dict__.keys())
+        for objValue in objValuesNameList:
+            newAuthor.__setattr__(objValue, autorStruct.__getattribute__(objValue) )
+            _public_key = bytes(newAuthor.public_key)
+            if _public_key != b'' and _public_key != None:
+                newAuthor.unserializePyblicKey(_public_key)
+            # if objValue.find('_') != 0:
+            #     newAuthor.__setattr__(objValue, autorStruct.__getattribute__(objValue) )
+            # else:
+            #     del newAuthor.__dict__[objValue] 
+            #     # pass
+        
+             
+        return newAuthor                  
+
+
+    def unserializePyblicKey(self, _public_key):
+        """
+        сделать из текстового публичного ключа объект "публичный ключ" для последующей работы
+
+        """
+        try:
+            logging.info(' unserializePyblicKey lockPublic_key = ' + str(_public_key ))
+            cip = CipherWrapper()
+            self._wrkPublicKey = cip.rsaPubUnSerialiation(_public_key)
+        except Exception as e:
+            logging.error(' unserializePyblicKey exception::  = ' + str(e) )
+            self._wrkPublicKey = None
+
+
+
+class AuthorizedAuthor (Author):
+    """
+    
+     Автор, прошедший авторизацию - 
+    
+     Наследник от Автора. 
+     вся работа по Авторизации, Сохранении параметров выолняется именно тут.
+    
+    стоило бы перечислить все роли.
+    author_role - 'admin','volunteer' 
+    
+    при регистрации или редактировании пароля 
+    (операция сохранить - эти поля надо обрабатывать отдельно и специально.)
+    
+    """
+
+#         mainPrimaryList = {'dt_header_id': self.dt_header_id } - стоит отправить в инициализвцию!!!!
+#         sha_hash_sou =  self.author_login + self.author_name + self.author_surname + self.author_role +self.author_phon + self.author_email  
+#         
+#         
+# #             mainPrimaryList = {'article_id': self.article_id }
+# #             self.article_id = Model.save(self, authorId, operationFlag, mainPrimaryList, sha_hash_sou, 'article_id')
+
+
+    def __init__ (self): 
+        Author.__init__(self)     
+
+        self.author_login = ''
+        self.author_pass = ''
+
+        self._private_key = None # закрытый приватный ключ (текст, взятый и базы.)
+        self._private_key_hash = None # ????
+        self._wrkPrivateKey = None #
+
+        #############################
+        #############################
+        # конец описания объекта.
+        #############################
+
+
+
         
         ########################
         # -сюда приходит пароль из формы, или, после логина - именно с ним и работаем - делаем сначала из него байты,
@@ -105,7 +256,7 @@ class Author(Model):
         self.setDataStruct(Model.TableDef( tabName='authors', 
                                       idFieldName=None,
                                       mainPrimaryList =['dt_header_id'],
-                                      listAttrNames=['dt_header_id', 'author_login','author_pass', 'author_name','author_surname','author_role','author_phon','author_email', 'private_key', 'private_key_hash']))
+                                      listAttrNames=['dt_header_id', 'author_login','author_pass', 'author_name','author_surname','author_role','author_phon','author_email', 'author_is_publick_contakt', 'private_key', 'private_key_hash']))
         
         self.setHeadStruct(Model.TableDef( tabName='dt_headers', 
                                       idFieldName='dt_header_id',
@@ -156,7 +307,7 @@ class Author(Model):
             bArrKey = cip.rsaPrivateSerialiation(self._openPrivateKey)
             self.private_key_hash = bcrypt.hashpw( bArrKey, bbsalt ).decode('utf-8') # получим ХЕш приватного ключа - для последуюей проверки при восстановлении пароля
             # закрыть приватный ключ на пароле автора.
-            self.private_key = cip.symmetricEncrypt(self._pass_source, bArrKey)
+            self._private_key = cip.symmetricEncrypt(self._pass_source, bArrKey)
             self.public_key = cip.rsaPubSerialiation(self._openPublicKey)
             
             self._isHeaderEdit = True
@@ -180,7 +331,7 @@ class Author(Model):
 #                 if tmpHash == self.private_key_hash:
                     # все орм, мы нормально открыли приватный ключ, теперб его можно закрытьна новый пароль!
 #                 cip.setKey(self._pass_source)
-                self.private_key = cip.symmetricEncrypt(self._pass_source, bArrKey)
+                self._private_key = cip.symmetricEncrypt(self._pass_source, bArrKey)
                 # на и запомним новый Хеш пароля!!!!!
                 self.author_pass = bcrypt.hashpw( self._pass_source, bbsalt ).decode('utf-8') 
             else:
@@ -203,7 +354,7 @@ class Author(Model):
         self.dt_header_id = Model.save(self, self.dt_header_id, operationFlag, sha_hash_sou)
         return True
         
-        
+
 
     def login(self, loginMailStr, pwdStr):
         """
@@ -241,17 +392,17 @@ class Author(Model):
                 cip = CipherWrapper()
 #                 .decode('utf-8')
                 self.public_key = bytes(self.public_key)#.decode(encoding="utf-8") #.decode('utf-8') 
-                self.private_key = bytes(self.private_key)#.decode(encoding="utf-8") #.decode('utf-8') 
+                self._private_key = bytes(self._private_key)#.decode(encoding="utf-8") #.decode('utf-8') 
                 self.private_key_hash = bytes(self.private_key_hash)#.decode(encoding="utf-8") #.decode('utf-8') 
 
                 if self.public_key != b'' or self.public_key != None:
                     self._openPublicKey = cip.rsaPubUnSerialiation(self.public_key)
                     
                 # пока мы знаем пароль, надо получить и положить в данные пользователя, в сессию, его АСКРЫТЫЙ приватный ключик!!!!
-                if self.private_key != b'' or self.private_key != None:
-                    strKey = cip.symmetricDecrypt( tornado.escape.utf8(pwdStr), self.private_key) 
+                if self._private_key != b'' or self._private_key != None:
+                    strKey = cip.symmetricDecrypt( tornado.escape.utf8(pwdStr), self._private_key) 
                     tmpHash = bcrypt.hashpw( strKey, bbsalt )
-                    if tmpHash == bytes(self.private_key_hash):
+                    if tmpHash == bytes(self._private_key_hash):
                         self._openPrivateKey = cip.rsaPrivateUnSerialiation( strKey )
                     else:
                         # если ключи прочитались не верно, наверное х стоит переписать, 
@@ -259,13 +410,13 @@ class Author(Model):
                         # и автор должен идти в настройки профиля и редактировать из, и генерить сее новые ключи.
                         self._openPrivateKey = None
                         self._openPublicKey = None
-                        self.private_key = None
+                        self._private_key = None
                         self.public_key = None
                 logging.info(' login:: END self = ' + str(self))
             except Exception as err:
                 logging.error(' login:: END:: err = ' + str(err) )
-                self.private_key_hash = None
-                self.private_key = None
+                self._private_key_hash = None
+                self._private_key = None
                 self.public_key = None
                 self._openPrivateKey = None
                 self._openPublicKey = None
@@ -322,33 +473,25 @@ class Author(Model):
             raise WikiException(LOAD_ONE_VALUE_ERROR)
 
 
-    def list(self):
+   def parsingAuthor(self, autorStruct):
         """
-        Выбрать список всех авторов в системе 
-        мы загружаем публичный ключ авторов для возможного дальнейшего использования.
+        Разобрать структуру, которая приходит из селекта, (словарь)
+        и сделать полноценный ОБЪЕКТ  - Автора.
+        (Выкинуть все скрытые аттрибуты!!!! - а вот ЭТО делать НЕ БУДУ!!!!)
+        """
+        newAuthor = AuthorizedAuthor()
+        objValuesNameList = list(autorStruct.__dict__.keys())
+        for objValue in objValuesNameList:
+            newAuthor.__setattr__(objValue, autorStruct.__getattribute__(objValue) )
+            _public_key = bytes(newAuthor.public_key)
+            if _public_key != b'' and _public_key != None:
+                newAuthor.unserializePyblicKey(_public_key)
+            _private_key = bytes(newAuthor.private_key)
+            if _private_key != b'' and _private_key != None:
+                newAuthor.unserializePrivateKey(_private_key)
         
-        """
-        selectStr = 'dt_headers.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email, author_create, dt_headers.public_key '
-        fromStr = 'dt_headers' #'authors'
-        anyParams = {
-                    'whereStr': "  dt_headers.dt_header_id = authors.dt_header_id  AND actual_flag = 'A' ",
-                    'orderStr': ' dt_header_id', # строка порядок строк
-                     }
-
-        res = []
-        resList = self.select(selectStr, fromStr, anyParams)
-        for oneAuthor in resList:
-            res.append(self.parsingAuthor(oneAuthor))
-        return res
- 
-    def unserializePyblicKey(self, _public_key):
-        try:
-            del self._openPublicKey
-            cip = CipherWrapper()
-            self._openPublicKey = cip.rsaPubUnSerialiation(_public_key)
-        except :
-#             logging.error(' insert exception:: sqlStr = ' + sqlStr )
-            self._openPublicKey = None
+             
+        return newAuthor                  
 
 
     def unserializePrivateKey(self, _private_key):
@@ -362,7 +505,8 @@ class Author(Model):
             del self._openPrivateKey
             cip = CipherWrapper()
             self._openPrivateKey =  cip.rsaPrivateUnSerialiation( _private_key )
-        except :
+        except Exception as e:
+            logging.error(' unserializePrivateKey exception::  = ' + str(e) )
             self._openPrivateKey =  None
             
 
@@ -387,21 +531,6 @@ class Author(Model):
 #             return ''
         
 
-    def parsingAuthor(self, autorStruct):
-        """
-        Разобрать структуру, которая приходит из селекта,
-        и сделать полноценный ОБЪЕКТ  - Автора.
-        """
-        newAuthor = Author()
-        objValuesNameList = list(autorStruct.__dict__.keys())
-        for objValue in objValuesNameList:
-             if objValue.find('_') != 0:
-                newAuthor.__setattr__(objValue, autorStruct.__getattribute__(objValue) )
-        _public_key = bytes(newAuthor.public_key)
-        if _public_key != b'' and _public_key != None:
-            newAuthor.unserializePyblicKey(_public_key)
-             
-        return newAuthor                  
 
 
     def publicKey(self):
