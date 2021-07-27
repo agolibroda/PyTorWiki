@@ -152,6 +152,9 @@ class RestAuthorsListHandler(BaseHandler):
         /rest/authors 
         /rest/authors?groupId=12
         /rest/authors?str=кусок_Имя-Фаилия 
+        /rest/authors?authorId=123
+        /rest/authors?authorHash=asda12amdasd89asd8as9d
+
         """
  
         try:
@@ -165,17 +168,27 @@ class RestAuthorsListHandler(BaseHandler):
             
 #         groupId=0 #None
          
-            groupId = self.get_argument("groupId", False)
-            logging.info( 'RestAuthorsListHandler get groupId = ' + str(groupId))
+            _groupId = self.get_argument("groupId", False)
+            logging.info( 'RestAuthorsListHandler get groupId = ' + str(_groupId))
 
-            serchStr = self.get_argument("str", '')
-            logging.info( 'RestAuthorsListHandler get serchStr = ' + str(serchStr))
+            _serchStr = self.get_argument("str", '')
+            logging.info( 'RestAuthorsListHandler get serchStr = ' + str(_serchStr))
             # если строка не нулевая, то стоит искать группу авторов по кусочку ИМЯРЕК ???
-         
+
+            _authorId = self.get_argument("authorId", '')
+            logging.info( 'RestAuthorsListHandler get authorId = ' + str(_authorId))
+
+            _authorHash = self.get_argument("authorHash", '')
+            logging.info( 'RestAuthorsListHandler get authorHash = ' + str(_authorHash))
+
+
             authorControl = Author() # вот, надо делать сохранение данных   
-            authorControl.setSearchParams(groupId, serchStr) 
-            result = yield executor.submit(authorControl.makeSerch) # , config.options.tpl_categofy_id
-            authors =  authorControl.getList()
+            # authorControl.setSearchParams(groupId, serchStr) 
+            authorControl.setSearchParams(groupId=_groupId, serchStr=_serchStr, authorId=_authorId, authorHash=_authorHash)
+
+            # result 
+            authors = yield executor.submit(authorControl.makeSerch) # , config.options.tpl_categofy_id
+            # authors =  authorControl.getList()
             for oneAuthor in authors:
                 logging.info( 'RestAuthorsListHandler oneAuthor = ' + str(oneAuthor)) 
 

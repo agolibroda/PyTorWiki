@@ -1,6 +1,3 @@
--- добрался до изменений... 
--- нуно добавить "флаг публичности" для параметров типа почт и телефон.
-
 
 ALTER TABLE authors
 	ADD COLUMN author_is_publick_contakt boolean false; -- Автор разрешает показывать свои персональные данные (почту и телефон)
@@ -8,6 +5,10 @@ ALTER TABLE authors
 
 -- Добавил работу с диалогами.. 
 
+DROP SEQUENCE IF EXISTS dialogs_id_seq CASCADE;
+CREATE SEQUENCE IF NOT EXISTS dialogs_id_seq;
+
+DROP TABLE IF EXISTS dialogs CASCADE;
 
 CREATE TABLE IF NOT EXISTS dialogs (
 	dialog_id integer NOT NULL primary key, -- ИД..
@@ -50,7 +51,9 @@ END;
 $$ LANGUAGE  plpgsql;
 
 -- Создание триггера
-CREATE TRIGGER author_bi 
+DROP TRIGGER IF EXISTS dialog_bi ON dialogs  CASCADE;
+
+CREATE TRIGGER dialogs_bi 
 BEFORE INSERT ON dialogs FOR EACH ROW 
 EXECUTE PROCEDURE trigger_dialogs_before_lns ();
 
@@ -80,8 +83,10 @@ CREATE INDEX dialog_2_author_id_ind
 --  походу, пожалуй пришло время сделать табличку для Сообщений, 
 
 
+DROP SEQUENCE IF EXISTS message_id_seq CASCADE;
+CREATE SEQUENCE IF NOT EXISTS message_id_id_seq;
 
-
+DROP TABLE IF EXISTS messages CASCADE;
 CREATE TABLE IF NOT EXISTS messages (
 	message_id integer NOT NULL primary key, -- ИД..
 
@@ -94,25 +99,47 @@ CREATE TABLE IF NOT EXISTS messages (
 
 	message_answer_to_message_id integer, -- в отет на сообщение..
 
-	message_subject varying(256) NOT NULL, -- тема сообщеия всегда открыта!!!!! 
+	message_subject varchar(254) NOT NULL, -- тема сообщеия всегда открыта!!!!! 
 	message_text bytea NOT NULL, -- текст сообщеия ВСЕГДА закрыт!!!!!
 
 	CONSTRAINT dialog_1_author_id_fk FOREIGN KEY (dialog_id)
         REFERENCES public.dialogs (dialog_id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
+        ON DELETE NO ACTION
 );
   
 ALTER TABLE messages
     OWNER to wiki_user;
 
 
+DROP SEQUENCE IF EXISTS message_id_seq CASCADE;
+CREATE SEQUENCE IF NOT EXISTS message_id_seq;
+
+CREATE OR REPLACE FUNCTION trigger_messages_before_lns () RETURNS trigger AS $$ 
+BEGIN 
+      If  NEW.message_id = 0 OR NEW.message_id IS NULL then 
+	      NEW.message_id = nextval('message_id_seq');
+      end if;
+
+return NEW;
+END; 
+$$ LANGUAGE  plpgsql;
+
+-- Создание триггера
+DROP TRIGGER IF EXISTS messages_bi ON messages CASCADE;
+CREATE TRIGGER messages_bi 
+BEFORE INSERT ON messages FOR EACH ROW 
+EXECUTE PROCEDURE trigger_messages_before_lns ();
+
+
+-- добавим индексов
+
 CREATE INDEX message_id_ind
     ON messages USING btree
     (message_id ASC NULLS LAST)
     TABLESPACE pg_default;
 
-CREATE INDEX dialog_id_ind
+CREATE INDEX messages_dialog_id_ind
     ON messages USING btree
     (dialog_id ASC NULLS LAST)
     TABLESPACE pg_default;

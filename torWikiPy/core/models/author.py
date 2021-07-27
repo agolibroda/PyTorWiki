@@ -117,18 +117,38 @@ class Author(Model):
         
 
 
-    def setSearchParams(self, groupId, serchStr):
+    def setSearchParams(self, **serchParams):
         """
         Добавить поисковых параметров.
 
+        надо передаь набор поисковых параметров как список. уу=11....
+
+        serchParams = 
+        {'groupId': 12, 'serchParams': 'lec', 'authorId': 123, 'authorHash': 'asdasd..asdsa'}
+        
         self.groupId,  - Грппа, всех авторов которой  хочу найти
         self.serchStr - просто кусок имени автора.... - если эт параметры не "нулевые", тада надо править 
+        self.authorId
+        self.authorHash
 
-        """
-        self.groupId = groupId
-        self.serchStr = serchStr
+        вызов выглядит:
+
+        setSearchParams(groupId=12, serchParams='lec', authorId=123, authorHash='asdasd..asdsa')
         
+        """
+        
+        if 'groupId' in serchParams:
+            self.groupId = serchParams['groupId']
 
+        if 'serchStr' in serchParams:
+            self.serchStr = serchParams['serchStr']
+
+        if 'authorId' in serchParams:
+            self.authorId = serchParams['authorId']
+
+        if 'authorHash' in serchParams:
+            self.authorHash = serchParams['authorHash']
+        
 
     def makeSerch(self):
         """
@@ -140,12 +160,32 @@ class Author(Model):
         "whereStr" - ну, как  - то так....
 
         """
+
         selectStr = 'dt_headers.dt_header_id,  author_login, author_name, author_surname, author_role, author_phon, author_email, author_is_publick_contakt, author_create, dt_headers.public_key '
         fromStr = 'dt_headers' #'authors'
         anyParams = {
                     'whereStr': "  dt_headers.dt_header_id = authors.dt_header_id  AND actual_flag = 'A' ",
                     'orderStr': ' dt_header_id', # строка порядок строк
                      }
+                     
+        if hasattr(self, 'serchStr') ]:
+            anyParams['whereStr'] += ' AND serchStr'
+
+        if hasattr(self, 'authorId') ]:
+            anyParams['whereStr'] += ' AND dt_headers.dt_header_id' + str(self.authorId)
+
+        if hasattr(self, 'authorHash') ]:
+            anyParams['whereStr'] += " AND authors.sha_hash = '" + self.authorHash + "'"
+
+        if hasattr(self, 'serchStr') ]:
+            anyParams['whereStr'] += " AND ( authors.author_name = '" + self.serchStr + "'" + " OR  authors.author_surname = '" + self.serchStr + "' )" +
+
+
+        # if hasattr(self, 'groupId') ]:
+        #     anyParams['whereStr'] += ' AND groupId'
+        #  тут надохорошо подумать, группы ищем через списки групп. - селект силно меняется!!!
+
+
 
         self.autorsList = []
         count = 0
@@ -164,6 +204,8 @@ class Author(Model):
 
     def getList(self):
         return self.autorsList;
+
+
 
     def parsingAuthor(self, autorStruct):
         """
@@ -233,8 +275,8 @@ class AuthorizedAuthor (Author):
         self.author_login = ''
         self.author_pass = ''
 
-        self._private_key = None # закрытый приватный ключ (текст, взятый и базы.)
-        self._private_key_hash = None # ????
+        self.private_key = None # закрытый приватный ключ (текст, взятый и базы.)
+        self.private_key_hash = None # ????
         self._wrkPrivateKey = None #
 
         #############################
@@ -428,52 +470,8 @@ class AuthorizedAuthor (Author):
             raise WikiException(LOGIN_ERROR)
 
 
-    def unloadRsa(self, loginMailStr, pwdStr):
-        """
-        Процедура - выгрузить приватный и публичный ключи поьзователя в НЕЗАКРЫТОМ виде в некую структуру, в файл на диске 
-        Приватный и публичный ключи хранятся в сессии Автора, 
-        при исполнении операции стоит получить данные их как - то упаковать, и выложить в файл.
-        
-        """
-        pass
-        
 
-    def get(self, authorId):
-        """
-        загрузить ОДНО описание Автора - по его ИД
-        Это загрузка ИСКЛЮЧИТЕЛЬНО не "себя". 
-        Себя мы загружаем ТОЛЬКО при логине, и тянем в сессии!!!!!!
-        мы загружаем публичный ключ автора для возможного дальнейшего использования.
-         
-        """
-
-        resList = self.select(
-                    'dt_headers.dt_header_id, author_login, author_name,  author_surname, author_pass, author_role, author_phon, author_email, author_create, dt_headers.public_key', # строка - чего хотим получить из селекта
-                    'dt_headers', #'authors',  # строка - список таблиц 
-                    {
-                     'whereStr': "  dt_headers.dt_header_id = authors.dt_header_id  AND  dt_headers.dt_header_id = " + str(authorId) + \
-                     " AND actual_flag = 'A' " 
-                     } #  все остальные секции селекта
-                    )
-#         logging.info('Author:: get:: resList = ' + str(resList))
-        # от ут надо будет разкрыть приватный ключ????? 
-        if len(resList) == 1:
-#             return resList[0]
-            objValuesNameList = list(resList[0].__dict__.keys())
-            for objValue in objValuesNameList:
-                 if objValue.find('_') != 0:
-                    self.__setattr__(objValue,resList[0].__getattribute__(objValue) )
-                    
-#             self.author_pass =  bytes(self.author_pass, 'utf-8')                  
-            _public_key = bytes(self.public_key)
-            if _public_key != b'' and _public_key != None:
-                self.unserializePyblicKey(_public_key)
-            return self
-        else:
-            raise WikiException(LOAD_ONE_VALUE_ERROR)
-
-
-   def parsingAuthor(self, autorStruct):
+    def parsingAuthor(self, autorStruct):
         """
         Разобрать структуру, которая приходит из селекта, (словарь)
         и сделать полноценный ОБЪЕКТ  - Автора.
@@ -490,7 +488,7 @@ class AuthorizedAuthor (Author):
             if _private_key != b'' and _private_key != None:
                 newAuthor.unserializePrivateKey(_private_key)
         
-             
+            
         return newAuthor                  
 
 
@@ -502,123 +500,92 @@ class AuthorizedAuthor (Author):
         
         """
         try:
-            del self._openPrivateKey
             cip = CipherWrapper()
-            self._openPrivateKey =  cip.rsaPrivateUnSerialiation( _private_key )
+            self._wrkPrivateKey =  cip.rsaPrivateUnSerialiation( _private_key )
         except Exception as e:
             logging.error(' unserializePrivateKey exception::  = ' + str(e) )
-            self._openPrivateKey =  None
+            self._wrkPrivateKey =  None
             
 
-#     def serializeKeys(self):
-#         """
-#         Сделать из РАБОЧЕГО приватного ключа строковеое предствление, 
-#         Для последующего хранения в сесии, допустим.
-#         :param _private_key - ОБЪЕКТ класса "....openssl.rsa._RSAPrivateKey"  
-#         :Return: отдаем текстовый вариант приватного ключа (НЕ ЗАКРЫТ!!!!) 
-#         
-#         """
-#         try:
-#             cip = CipherWrapper()
-#             tmp = cip.rsaPrivateSerialiation( self.public_key )
-#             del self.public_key
-#             self.public_key = tmp
-#             tmp = cip.rsaPrivateSerialiation( self._openPrivateKey )
-#             del self.public_key
-#             del self.public_key
-#         except :
-#             
-#             return ''
-        
 
-
-
-    def publicKey(self):
-        return self._openPublicKey       
-
-
-    def privateKey(self):
-        return self._openPrivateKey       
-    
-
-    def parsing(self, picledAutor):
-        """
-        на входе у нас строка - сериализованный автор, который, пока лежит в сесии,
-        Главное, у этого автор  - открытый приватный ключ, в текстовом виде.  
-        его надо разобрать, и превратить в полноценного автора, с которым РАБОТАТЬ.
-        ну, и, естественно, загрузить его в "селф"
-        
-        """
-        newAuthor = Author()
-        newAuthor = pickle.loads(picledAutor)
-        self =  self.parsingAuthor() #  разберем все поля, кроме приватного ключа       
-
-        _private_key = bytes(newAuthor.private_key)
-        del newAuthor.private_key
-        if _private_key != b'' and _private_key != None:
-            newAuthor.unserializePrivateKey(_private_key)
-
+    #     def parsing(self, picledAutor):
+    #         """
+    #         на входе у нас строка - сериализованный автор, который, пока лежит в сесии,
+    #         Главное, у этого автор  - открытый приватный ключ, в текстовом виде.  
+    #         его надо разобрать, и превратить в полноценного автора, с которым РАБОТАТЬ.
+    #         ну, и, естественно, загрузить его в "селф"
             
+    #         """
+    #         newAuthor = Author()
+    #         newAuthor = pickle.loads(picledAutor)
+    #         self =  self.parsingAuthor() #  разберем все поля, кроме приватного ключа       
 
-            
-    def serializationAuthor(self):
-        """
-        Подготовить к сериализации - унас 2 поля  - private_key и public_key 
-        являются объектами, 
-        вот их и надо превратить в текст.
-        :Return: отдаем СТРОКУ с сериализованным объектом 
-        """
-        # pickle.dumps(_authorLoc.prepareForSerialization())
+    #         _private_key = bytes(newAuthor.private_key)
+    #         del newAuthor.private_key
+    #         if _private_key != b'' and _private_key != None:
+    #             newAuthor.unserializePrivateKey(_private_key)
 
-#         logging.info( 'serializationAuthor  self = ' + str(self))
-
-        newAuthor = Author()
-        cip = CipherWrapper()
-        newAuthor = self.preparingForPicked (self)
-        if self._openPrivateKey != None and self._openPrivateKey != b'' and cip.isInstancePrivateKey(self._openPrivateKey): 
-            newAuthor._openPrivateKey = cip.rsaPrivateSerialiation(self._openPrivateKey)
-#         logging.info( 'serializationAuthor  newAuthor.public_key = ' + str(newAuthor.public_key))
-#         if newAuthor.public_key != None and newAuthor.public_key != b'' and cip.isInstancePublicKey(newAuthor.public_key):
-#             _public_key = newAuthor.public_key
-#             del newAuthor.public_key 
-#             newAuthor.public_key = cip.rsaPubSerialiation(_public_key)
-#         logging.info( 'serializationAuthor  newAuthor = ' + str(newAuthor))
-#         logging.info( 'serializationAuthor END newAuthor = ' + str(newAuthor))
-
-        return pickle.dumps(newAuthor.__dict__)    
- 
- 
-    def getPublicProfile(self, authorModel):
-        newAuthor = Author()
-        newAuthor = self.preparingForPicked(authorModel)
-        newAuthor.author_pass = None
-        newAuthor.public_key = None
-        newAuthor.private_key = None
-        newAuthor.private_key_hash = None
-        return newAuthor
-        
-        
- 
-    def unSerializationAuthor(self, authorPicle):
-        """
-        Получить строку, и сделать из нее Объект - Автора.
-        Это делаем при вынимании автора из сессии.
-        :param Строку с Сериализованым автором 
-        :Return: отдаем ОБЪЕКТ Автора.
-        """
-#         logging.info( 'unSerializationAuthor  self = ' + str(self))
-
-        cip = CipherWrapper()
-        authorDict = pickle.loads(authorPicle)
-        self.parsingOfPicked(authorDict) 
-        
-        if self._openPrivateKey != None and self._openPrivateKey != b'': 
-            _openPrivateKey = cip.rsaPrivateUnSerialiation(self._openPrivateKey)
-            del self._openPrivateKey
-            self._openPrivateKey = _openPrivateKey
                 
-        if self.public_key != None and self.public_key != b'':
-            self._openPublicKey = cip.rsaPubUnSerialiation(self.public_key)
 
-#         logging.info(' unSerializationAuthor:: END self = ' + str(self))   
+                
+    #     def serializationAuthor(self):
+    #         """
+    #         Подготовить к сериализации - унас 2 поля  - private_key и public_key 
+    #         являются объектами, 
+    #         вот их и надо превратить в текст.
+    #         :Return: отдаем СТРОКУ с сериализованным объектом 
+    #         """
+    #         # pickle.dumps(_authorLoc.prepareForSerialization())
+
+    # #         logging.info( 'serializationAuthor  self = ' + str(self))
+
+    #         newAuthor = Author()
+    #         cip = CipherWrapper()
+    #         newAuthor = self.preparingForPicked (self)
+    #         if self._openPrivateKey != None and self._openPrivateKey != b'' and cip.isInstancePrivateKey(self._openPrivateKey): 
+    #             newAuthor._openPrivateKey = cip.rsaPrivateSerialiation(self._openPrivateKey)
+    # #         logging.info( 'serializationAuthor  newAuthor.public_key = ' + str(newAuthor.public_key))
+    # #         if newAuthor.public_key != None and newAuthor.public_key != b'' and cip.isInstancePublicKey(newAuthor.public_key):
+    # #             _public_key = newAuthor.public_key
+    # #             del newAuthor.public_key 
+    # #             newAuthor.public_key = cip.rsaPubSerialiation(_public_key)
+    # #         logging.info( 'serializationAuthor  newAuthor = ' + str(newAuthor))
+    # #         logging.info( 'serializationAuthor END newAuthor = ' + str(newAuthor))
+
+    #         return pickle.dumps(newAuthor.__dict__)    
+    
+    
+    #     def getPublicProfile(self, authorModel):
+    #         newAuthor = Author()
+    #         newAuthor = self.preparingForPicked(authorModel)
+    #         newAuthor.author_pass = None
+    #         newAuthor.public_key = None
+    #         newAuthor.private_key = None
+    #         newAuthor.private_key_hash = None
+    #         return newAuthor
+            
+            
+    
+    #     def unSerializationAuthor(self, authorPicle):
+    #         """
+    #         Получить строку, и сделать из нее Объект - Автора.
+    #         Это делаем при вынимании автора из сессии.
+    #         :param Строку с Сериализованым автором 
+    #         :Return: отдаем ОБЪЕКТ Автора.
+    #         """
+    # #         logging.info( 'unSerializationAuthor  self = ' + str(self))
+
+    #         cip = CipherWrapper()
+    #         authorDict = pickle.loads(authorPicle)
+    #         self.parsingOfPicked(authorDict) 
+            
+    #         if self._openPrivateKey != None and self._openPrivateKey != b'': 
+    #             _openPrivateKey = cip.rsaPrivateUnSerialiation(self._openPrivateKey)
+    #             del self._openPrivateKey
+    #             self._openPrivateKey = _openPrivateKey
+                    
+    #         if self.public_key != None and self.public_key != b'':
+    #             self._openPublicKey = cip.rsaPubUnSerialiation(self.public_key)
+
+    # #         logging.info(' unSerializationAuthor:: END self = ' + str(self))   
 
