@@ -4,6 +4,12 @@
 
 # test_get_one_list_autors.py
 
+# Запускаем эту шнягу в консоли ВИРТУАЛЬНОЙ машины!!!!! 
+
+# cd /home/alec/workhome/sites/vedogon.local/torWikiPy/test
+# python3 -m tornado.test.runtests test_get_one_list_autors
+
+
 
 import logging
 

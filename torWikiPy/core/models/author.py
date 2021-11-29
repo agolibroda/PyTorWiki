@@ -168,17 +168,17 @@ class Author(Model):
                     'orderStr': ' dt_header_id', # строка порядок строк
                      }
                      
-        if hasattr(self, 'serchStr') ]:
+        if hasattr(self, 'serchStr'):
             anyParams['whereStr'] += ' AND serchStr'
 
-        if hasattr(self, 'authorId') ]:
-            anyParams['whereStr'] += ' AND dt_headers.dt_header_id' + str(self.authorId)
+        if hasattr(self, 'authorId'):
+            anyParams['whereStr'] += ' AND dt_headers.dt_header_id = ' + str(self.authorId)
 
-        if hasattr(self, 'authorHash') ]:
+        if hasattr(self, 'authorHash'):
             anyParams['whereStr'] += " AND authors.sha_hash = '" + self.authorHash + "'"
 
-        if hasattr(self, 'serchStr') ]:
-            anyParams['whereStr'] += " AND ( authors.author_name = '" + self.serchStr + "'" + " OR  authors.author_surname = '" + self.serchStr + "' )" +
+        if hasattr(self, 'serchStr'):
+            anyParams['whereStr'] += " AND ( authors.author_name = '" + self.serchStr + "'" + " OR  authors.author_surname = '" + self.serchStr + "' ) " 
 
 
         # if hasattr(self, 'groupId') ]:

@@ -47,7 +47,17 @@ export class LoginComponent implements OnInit {
 			  			localStorage.getItem('token')
 			  			)
 		 .subscribe((_afterLoginRezult) => {
-       console.log('makeLogin _afterLoginRezult =  ' + JSON.stringify(_afterLoginRezult, null, 4));
+			console.log('makeLogin _afterLoginRezult =  ' + JSON.stringify(_afterLoginRezult, null, 4));
+
+			// $cookies.put('token', response.token);
+			// $cookies.put('user', response.user);
+			// localStorage.getItem('__t');
+			// localStorage.removeItem('__t');
+			// localStorage.setItem('__t', session.object.token);
+			// localStorage.getItem('ключ')
+			// localStorage.setItem('ключ', 'значение')
+			// localStorage.removeItem('ключ')
+			// localStorage.clear()
 			 // А, вот тут надо перепрыгнуть на какую - то другую страницу!!!!
 			 // и, кстати, надо поменять ленку в шиблоне - с "логина" на мой профиль!!!!
 			 // 	и, кстати, стоит перекинуть на главную. 
