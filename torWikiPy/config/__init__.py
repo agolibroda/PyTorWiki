@@ -106,6 +106,7 @@ define("main_page_id", default=6, help="Id of Main User Page")
 # postgrePwd = '?'
 parse_config_file(os.path.join( os.path.dirname(__file__), "dbase.conf"))
 
+parse_config_file(os.path.join( os.path.dirname(__file__), "redis.conf"))
 
 # Эти параметры переопределим на "боевые" в файле main.conf
 # main_port = '8888' 

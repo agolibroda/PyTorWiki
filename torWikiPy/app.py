@@ -112,6 +112,21 @@ class Application(tornado.web.Application):
             debug=True,
         )
         
+# вот тут похоже.... 
+
+
+        # if not hasattr(options, 'redis_host'):
+        #     define("redis_host", default="localhost", help="Redis host")
+        # if not hasattr(options, 'redis_port'):
+        #     define("redis_port", default=6379, help="Redis port number")
+        # if not hasattr(options, 'redis_session_db'):
+        #     try:
+        #         default_db = options.redis_db
+        #     except AttributeError:
+        #         default_db = 0
+        #     define("redis_session_db", default=default_db, help="Redis sessions database")
+        # if not hasattr(options, 'session_length'):
+
         # sid_name, lifetime added in 1.1.5.0
         # sid_name: the name of session id in cookies.
         # lifetime: session default expires seconds.
