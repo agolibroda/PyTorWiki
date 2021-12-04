@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 # Copyright 2014 Cole Maclean
+
 """Tornado sessions, stored in Redis.
 """
 import datetime
@@ -29,8 +30,8 @@ if not hasattr(options, 'redis_session_db'):
     except AttributeError:
         default_db = 0
     define("redis_session_db", default=default_db, help="Redis sessions database")
-if not hasattr(options, 'session_length'):
-    define("session_length", default=14, help="Session length in days")
+if not hasattr(options, 'session_length_sec'):
+    define("session_length_sec", default=1800, help="Session length in seconds")
 
 
 class Session(MutableMapping):
@@ -46,7 +47,7 @@ class Session(MutableMapping):
     """
     store = redis.StrictRedis(host=options.redis_host,
                 port=options.redis_port, db=options.redis_session_db)
-    length = options.session_length * 86400 # in seconds
+    length = options.session_length_sec # * 86400 # in seconds
  
     def __init__(self, id, *args, **kwargs):
         self._id = id

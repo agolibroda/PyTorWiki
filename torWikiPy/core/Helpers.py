@@ -6,17 +6,25 @@
 # from core.Helpers      import *
 #
 
+import os
+import os.path
+################
+import logging
+
+dirModule = os.path.dirname(__file__)
+nameModule = __file__
+logger = logging.getLogger(nameModule)
+logger.setLevel(logging.DEBUG)
+###################################
 
 
 import bcrypt
 import concurrent.futures
 
-import os.path
 import re
 import subprocess
 import unicodedata
 
-import logging
 import traceback
 
 import json
@@ -24,18 +32,12 @@ import pickle
 
 from datetime import datetime
 
-import redis
+# import redis
 
-
-
-
-##############################
+import uuid
 import config
 
-
-
-# from core.models.group      import Group
-
+from core.systems.sessions import *
 
 
 def splitAttributes(objOne):
@@ -75,7 +77,7 @@ def toStr(objOne):
     """
     try:
         attribList = splitAttributes(objOne) # dir(objOne) #
-        logging.info( ' toStr TemplateParams::__str__ attribList = ' + str(attribList))
+        # logging.info( ' toStr TemplateParams::__str__ attribList = ' + str(attribList))
         className = str(objOne.__class__)
         # logging.info( ' toStr className = ' + str(className))
         itemsList = map(lambda x, y: ' "' + str(x) + '"' + ': "' + str(y) + '" ', attribList.listAttrNames, attribList.listAttrValues) 
@@ -105,8 +107,8 @@ def toJson(objList):
     """
     try:
 
-        for oneOb in objList:
-            logging.info( 'toJson oneOb = ' + str(oneOb)) 
+        # for oneOb in objList:
+        #     logging.info( 'toJson oneOb = ' + str(oneOb)) 
 
         if type(objList) is list:
             json_list = []
@@ -146,62 +148,29 @@ def pyTorWikiTraceback(errorMessage):
 
 
 
-# r = redis.Redis( url='rediss://:password@hostname:port/0',
-#     password='password',
-#     ssl_keyfile='path_to_keyfile',
-#     ssl_certfile='path_to_certfile',
-#     ssl_cert_reqs='required',
-#     ssl_ca_certs='path_to_ca_certfile')
-
-# r.set('foo', 'bar')
-# value = r.get('foo')
-# print(value)
-
-class RedisConnector():
-    
-    def __init__(self):
-        self._connectInstans = redis.Redis(
-                                        host=config.options.redisHost, #'localhost',   
-                                        port=config.options.redisPort, #6379, 
-                                        db=config.options.redisDb  #0
-                                        )
-        # redisMaxConnections     = "1024"
-
-    def get(self, paramName):
-        """
-        Возвратим уже Де-Сериализованный параметр (скорее всего, словарь)
-        
-        dump(name)[source] - получить значение для параметра, получаем сериализованную структуру
-        её надо разобрать потом :-) 
-        Return a serialized version of the value stored at the specified key. If key does not exist a nil bulk reply is returned.
-        
-        """
-        return pickle.loads(self._connectInstans.get(paramName))
 
 
-    def set(self, paramName, value):
-        """
-        Получаем объект (словарь) и прячем его в параметр 
-        
-        """
-        self._connectInstans.set(paramName, pickle.dumps(value))
-        
-        
-    def expire(self, paramName, timeValue):
-        """
-        Поставить параметру время жизни!
-        
-        """
-        self._connectInstans.expire(paramName, timeValue)
-        
+def redisCheck():
+    """
+    # проверим, работает ли сервер, заодно почистим его.
+    ТО есть, надо прочистить ВСЮ рабочую базу!!!!!!
 
-    def delete(self, paramName):
-        """
-        Удалим параметр (Допустим, при логауте)
+    """
+    # logger.info(" redisCheck :: config.options.redis_db = " + str(config.options.redis_db) ) 
+    # logger.info(" redisCheck :: config.options.redis_session_db = " + str(config.options.redis_session_db) ) 
+
+    try:
         
-        """
-        self._connectInstans.delete(paramName)
+        # logger.info(" redisCheck :: new_id = " + str(new_id) ) 
+        new_id = uuid.uuid4().hex
+        session = Session(new_id)
+        session['session_id'] = str(new_id)
+        session.save()
 
-
+        session.store.flushdb()
+        
+    except Exception:
+        logger.info('Печально, Редиска не откликается, может упала? (работать дальше нииизя!!) :-(  ')
+        raise 
 
 

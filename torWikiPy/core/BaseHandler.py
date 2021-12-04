@@ -7,6 +7,17 @@
 # from core.BaseHandler       import *
 #
 
+import os
+import os.path
+################
+import logging
+
+dirModule = os.path.dirname(__file__)
+nameModule = __file__
+logger = logging.getLogger(nameModule)
+logger.setLevel(logging.DEBUG)
+###################################
+
 
 import bcrypt
 import concurrent.futures
@@ -15,7 +26,6 @@ import os.path
 import re
 import subprocess
 import unicodedata
-import logging
 import json
 import pickle
 
@@ -51,6 +61,8 @@ from core.models.author     import Author
 
 from core.models.token      import Token
 
+from core.systems.sessions import *
+
 
 @singleton
 class SingletonAuthor(Author):
@@ -80,15 +92,13 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def __init__(self, *args, **kwargs):        
         super(BaseHandler, self).__init__(*args, **kwargs)
+        # logger.info( ' BaseHandler __init__ args:: '+ str(args))
 
+        setup_session(BaseHandler)
 
-        logging.info( ' BaseHandler __init__ args:: '+ str(args))
+        logger.info('BaseHandler:: __init__:: handler.session = '+ str(handler.session))
 
-        # for line in traceback.format_stack():
-        #     print(line.strip())
-
-       
-
+        # define("session_id",  default=session_id,    help="Рабочий ИД сессии.")
 
         self.tokenControl = Token()
 
@@ -114,7 +124,7 @@ class BaseHandler(tornado.web.RequestHandler):
 #         Надо забрать ТОКЕН - на всякий случай, вдруг ОН есть, а если нету, тогда 
 #         надо создать  
 #         """
-#         logging.info('BaseHandler:: get:: self.get_query_argument '+ str(self.get_query_argument('token', False)))
+#         logger.info('BaseHandler:: get:: self.get_query_argument '+ str(self.get_query_argument('token', False)))
 #         self.token = self.get_query_argument('token', False)
 #              
         
@@ -128,23 +138,23 @@ class BaseHandler(tornado.web.RequestHandler):
         """
         try:
             self.current_user = SingletonAuthor()
-            # logging.info('BaseHandler:: get_current_user:: START self.author = '+ str(self.author))
+            # logger.info('BaseHandler:: get_current_user:: START self.author = '+ str(self.author))
             isLogin = True
             if self.token != '':
                 
                 pickleAuthor = self.tokenControl.get('currentAuthor')
-                logging.info('BaseHandler:: get_current_user:: pickleAuthor'+ str(pickleAuthor))
+                logger.info('BaseHandler:: get_current_user:: pickleAuthor'+ str(pickleAuthor))
                 author = Author()
                 author.unSerializationAuthor(picledAutor)
                 self.current_user = author
-                logging.info('BaseHandler:: get_current_user:: self.current_user '+ str(self.current_user))
+                logger.info('BaseHandler:: get_current_user:: self.current_user '+ str(self.current_user))
             
                 if self.current_user.dt_header_id == 0:
                     isLogin = False
                     self.current_user = None
             return isLogin
         except Exception as e:
-            logging.info('BaseHandler:: get_current_user:: Have Error!!! '+ str(e))
+            logger.info('BaseHandler:: get_current_user:: Have Error!!! '+ str(e))
             return False
 
 
