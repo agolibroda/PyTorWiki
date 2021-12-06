@@ -15,9 +15,17 @@
 
 # from __future__ import print_function
 
-# import sys, os, 
 
+import os
+import os.path
+################
 import logging
+
+dirModule = os.path.dirname(__file__)
+nameModule = __file__
+logger = logging.getLogger(nameModule)
+logger.setLevel(logging.DEBUG)
+###################################
 
 import base64
 from datetime import datetime
@@ -228,6 +236,21 @@ class Author(Model):
         
              
         return newAuthor                  
+
+
+# 
+    def countAutors(self):
+        """
+        Получить количество Авторов, зарегистрированных в системе.
+        """
+        selectStr = " count (dt_header_id) AS cnt "
+
+        resList = self.select(selectStr)
+        for oneAuthor in resList:
+            pass
+            # logger.info( ' countAutors::  oneAuthor.cnt = ' + str(oneAuthor.cnt)) 
+
+        return oneAuthor.cnt;
 
 
     def unserializePyblicKey(self, _public_key):

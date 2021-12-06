@@ -11,15 +11,21 @@
 
 from __future__ import print_function
 
-import sys, os
+import sys
+import os
+import os.path
+################
+import logging
+
+dirModule = os.path.dirname(__file__)
+nameModule = __file__
+logger = logging.getLogger(nameModule)
+logger.setLevel(logging.DEBUG)
+###################################
 
 import hashlib
 import base64
 from datetime import datetime
-
-
-import logging
-
 
 import json
 import pickle
@@ -89,11 +95,11 @@ class Connector:
         """
         # Connect to an existing database
         """
-#         logging.info('Connector postgreBase = ' + str(config.options.postgreBase))
-#         logging.info('Connector postgreHost = ' + str(config.options.postgreHost))
-#         logging.info('Connector postgrePort = ' + str(config.options.postgrePort))
-#         logging.info('Connector postgreUser = ' + str(config.options.postgreUser))
-#         logging.info('Connector postgrePwd = ' + str(config.options.postgrePwd))
+#         logger.info('Connector postgreBase = ' + str(config.options.postgreBase))
+#         logger.info('Connector postgreHost = ' + str(config.options.postgreHost))
+#         logger.info('Connector postgrePort = ' + str(config.options.postgrePort))
+#         logger.info('Connector postgreUser = ' + str(config.options.postgreUser))
+#         logger.info('Connector postgrePwd = ' + str(config.options.postgrePwd))
         
         self._connectInstans = psycopg2.connect(
                                                 database= config.options.postgreBase, 
@@ -263,7 +269,7 @@ class Model: #Connector:
 #         
 #         """
 #         try:
-# #             logging.info(' insert:: requestParamName = ' + str(requestParamName))
+# #             logger.info(' insert:: requestParamName = ' + str(requestParamName))
 #             lCurs = self.cursor()
 #             if requestParamName != '':
 #                 del self.__dict__[requestParamName]
@@ -272,22 +278,22 @@ class Model: #Connector:
 #             
 #             if requestParamName != '':
 #                 sqlStr = "INSERT INTO " + self._tabName +" ( " + paramsObj.strListAttrNames + " ) VALUES ( " + paramsObj.strListAttrValues + " )  returning " + requestParamName
-# #                 logging.info(' insert:: sqlStr = ' + sqlStr)
+# #                 logger.info(' insert:: sqlStr = ' + sqlStr)
 #                 lCurs.execute(sqlStr)
 #                 sourse = lCurs.fetchone()
-# #                 logging.info(' insert:: sourse = ' + str(sourse))
-# #                 logging.info(' insert:: sourse[requestParamName] = ' + str(sourse[requestParamName]))
+# #                 logger.info(' insert:: sourse = ' + str(sourse))
+# #                 logger.info(' insert:: sourse[requestParamName] = ' + str(sourse[requestParamName]))
 #                 self.__dict__[requestParamName] = sourse[requestParamName]
 #                 return  sourse[requestParamName]
 #             else:
 #                 sqlStr = "INSERT INTO " + self._tabName +" ( " + paramsObj.strListAttrNames + " ) VALUES ( " + paramsObj.strListAttrValues + " )"
-# #                 logging.info(' insert:: sqlStr = ' + sqlStr)
+# #                 logger.info(' insert:: sqlStr = ' + sqlStr)
 #                 lCurs.execute(sqlStr)
 #             
 #         except psycopg2.Error as error:
 #             
-#             logging.error (' insert exception:: ' + str (error) )
-#             logging.error(' insert exception:: sqlStr = ' + sqlStr )
+#             logger.error (' insert exception:: ' + str (error) )
+#             logger.error(' insert exception:: sqlStr = ' + sqlStr )
 #             lCurs.rollback()
 #             raise WikiException(error)
 
@@ -304,13 +310,13 @@ class Model: #Connector:
 #             listSet = map(lambda x, y: str(x) + " = '" + str(y) + "'", paramsObj.listAttrNames, paramsObj.listAttrValues)
 #             strSet =  ", ".join(listSet)
 #             sqlStr = "UPDATE "+ self._tabName +" SET " + strSet + " WHERE " + whereSection
-# #             logging.info(' update:: sqlStr = ' + sqlStr)
+# #             logger.info(' update:: sqlStr = ' + sqlStr)
 #             lCurs.execute(sqlStr)
 # 
 # #             self.commit()
 #         except psycopg2.Error as error:
-#             logging.error(' update exception:: ' + str (error) )
-#             logging.error(' update exception:: sqlStr = ' + sqlStr )
+#             logger.error(' update exception:: ' + str (error) )
+#             logger.error(' update exception:: sqlStr = ' + sqlStr )
 #             lCurs.rollback()
 #             raise WikiException(error)
 
@@ -409,7 +415,7 @@ class Model: #Connector:
                         whtreStr  = ' AND '.join(list)    
                         # Все ревизии ЭТОЙ записи - устарели!!!! - проабдейтим список ревизий
                         sqlStr = "UPDATE " + self._dataStruct.getTableName() + " SET actual_flag = 'O' WHERE " + whtreStr
-                        logging.info(' SAVE:: sqlStr = ' + str(sqlStr))  
+                        logger.info(' SAVE:: sqlStr = ' + str(sqlStr))  
                         _loDb.execute(sqlStr)
             
             operation_timestamp = datetime.now() 
@@ -430,34 +436,34 @@ class Model: #Connector:
             
             dataValue = self.getToInsertValue( self._dataStruct.getLisAttr())
             dataValue += ['A', autorId, operationFlag, sha_hash, operation_timestamp]
-            logging.info(' SAVE:: 2 sqlStr = ' + str(sqlStr))  
-            logging.info(' SAVE:: 2 dataValue = ' + str(dataValue))  
+            logger.info(' SAVE:: 2 sqlStr = ' + str(sqlStr))  
+            logger.info(' SAVE:: 2 dataValue = ' + str(dataValue))  
             _loDb.execute(sqlStr, tuple(dataValue))
-#             logging.error(' save AFTER SAVE self:: ' + str (self) )
+#             logger.error(' save AFTER SAVE self:: ' + str (self) )
             # если Это статьи, тогда нам нужнео сохранить статью, и получить ее ИД!
             if returningStr != '':
                 sourse = _loDb.fetchone()
                 self.__dict__[self._dataStruct.getIdFieldName()] = sourse[self._dataStruct.getIdFieldName()]
 #                 self.commit()
             self.commit()
-#             logging.info(' SAVE:: 2 self._dataStruct.getIdFieldName() = ' + str(self._dataStruct.getIdFieldName()))  
-#             logging.info(' SAVE:: 2 self._headStruct.getIdFieldName() = ' + str(self._headStruct.getIdFieldName()))  
+#             logger.info(' SAVE:: 2 self._dataStruct.getIdFieldName() = ' + str(self._dataStruct.getIdFieldName()))  
+#             logger.info(' SAVE:: 2 self._headStruct.getIdFieldName() = ' + str(self._headStruct.getIdFieldName()))  
             if self._dataStruct.getIdFieldName():
                 return self.__dict__[self._dataStruct.getIdFieldName()]
             elif self._headStruct.getIdFieldName():
                 return self.__dict__[self._headStruct.getIdFieldName()]
 
         except psycopg2.Error as error:
-            logging.error(' save exception:: ' + str (error) )
-            logging.error(' save exception:: sqlStr = ' + sqlStr )
-            logging.error("Exception occurred", exc_info=True)
+            logger.error(' save exception:: ' + str (error) )
+            logger.error(' save exception:: sqlStr = ' + sqlStr )
+            logger.error("Exception occurred", exc_info=True)
 #             _loDb.rollback()
             self.rollback()
             raise WikiException(error)
 
     def select(self, 
                selectStr, # строка - чего хотим получить из селекта
-               addTables,  # строка - список ДОПОЛНИТЕЛЬНЫХ таблиц (основную таблизу для объекта указываем при инициализации) 
+               addTables = None,  # строка - список ДОПОЛНИТЕЛЬНЫХ таблиц (основную таблизу для объекта указываем при инициализации) 
                anyParams = {} #  все остальные секции селекта
                ):
         """
@@ -496,8 +502,8 @@ class Model: #Connector:
         try:
             _loDb = self.cursor()
             sqlStr = 'SELECT '+ selectStr
+            sqlStr += ' FROM ' + self._dataStruct.getTableName() 
             if addTables != None:
-                sqlStr += ' FROM ' + self._dataStruct.getTableName() 
                 if addTables  != '':  sqlStr += ', ' + str(addTables)
             
             if str(anyParams.get('joinStr', ''))     != '':  sqlStr += ' ' + str(anyParams.get('joinStr'))
@@ -506,7 +512,7 @@ class Model: #Connector:
             if str(anyParams.get('orderStr', ''))    != '':  sqlStr += ' ORDER BY ' + str(anyParams.get('orderStr'))
             if str(anyParams.get('limitStr', ''))    != '':  sqlStr += ' LIMIT ' + str(anyParams.get('limitStr'))
 
-            logging.info(' select :: sqlStr =  ' + str (sqlStr) )
+            logger.info(' select :: sqlStr =  ' + str (sqlStr) )
 
             _loDb.execute(sqlStr)
             sourse = _loDb.fetchall()
@@ -514,7 +520,7 @@ class Model: #Connector:
             return outListObj
 
         except psycopg2.Error as error:
-            logging.error(' select exception:: sqlStr = ' + sqlStr )
+            logger.error(' select exception:: sqlStr = ' + sqlStr )
             self.rollback()
             raise WikiException(error)
 
@@ -529,7 +535,7 @@ class Model: #Connector:
         """
         try:
             _loDb = self.cursor()
-            logging.info('select:: list:: selectRow = ' + str (selectRow) )
+            logger.info('select:: list:: selectRow = ' + str (selectRow) )
             _loDb.execute(selectRow)
             sourse = _loDb.fetchall()
             outListObj = self.dict2obj(sourse)    
@@ -537,7 +543,7 @@ class Model: #Connector:
             return outListObj
 
         except psycopg2.Error as error:
-            logging.error(' rowSelect exception:: sqlStr = ' + sqlStr )
+            logger.error(' rowSelect exception:: sqlStr = ' + sqlStr )
             self.rollback()
             raise WikiException(error)
 
@@ -628,13 +634,13 @@ class Model: #Connector:
         oList = []
         if len(dictSou) == 0: return oList
         for row in dictSou:
-#             logging.info(' dict2obj:: row = ' + str(row))
-#             logging.info(' dict2obj:: type(row) = ' + str(type(row)))
+#             logger.info(' dict2obj:: row = ' + str(row))
+#             logger.info(' dict2obj:: type(row) = ' + str(type(row)))
             rowDict = dict(row)
-#             logging.info(' dict2obj:: rowDict = ' + str(rowDict))
+#             logger.info(' dict2obj:: rowDict = ' + str(rowDict))
             oneObj = self.__class__()
             for key in rowDict.items(): #.__getattribute__(name):
-#                 logging.info(' dict2obj:: key = ' + str(key))
+#                 logger.info(' dict2obj:: key = ' + str(key))
                 oneObj.__setattr__(key[0], key[1])
             oList.append(oneObj)
                 
@@ -717,17 +723,17 @@ class Model: #Connector:
         for objValue in objValuesNameList:
             if objValue.find('_') != 0:
                 dict2Picled[objValue] = modelObject.__getattribute__(objValue) 
-#         logging.info( 'preparingForDict:: dict2Picled = ' + str(dict2Picled))        
+#         logger.info( 'preparingForDict:: dict2Picled = ' + str(dict2Picled))        
         return dict2Picled
 
     def parsingOfPicked (self, modelDict):
         """
         ????  
         """
-#         logging.info(' parsingOfPicked:: modelDict = ' + str(modelDict))   
+#         logger.info(' parsingOfPicked:: modelDict = ' + str(modelDict))   
              
         objValuesNameList = list(modelDict.keys())
-#         logging.info(' parsingOfPicked:: objValuesNameList = ' + str(objValuesNameList))   
+#         logger.info(' parsingOfPicked:: objValuesNameList = ' + str(objValuesNameList))   
         for objValue in objValuesNameList:
             self.__setattr__(objValue, modelDict[objValue] )
 
@@ -757,7 +763,7 @@ class CipherWrapper:
         self.setKey(key) # .encode('utf-8')
         iv = os.urandom(12)
         associated_data = os.urandom(24)
-#         logging.info(' Model:: symmetricEncrypt data = ' + str(data))
+#         logger.info(' Model:: symmetricEncrypt data = ' + str(data))
 
         # Construct an AES-GCM Cipher object with the given key and a
         # randomly generated IV.
@@ -790,10 +796,10 @@ class CipherWrapper:
         self.setKey(key)
         cipherData = pickle.loads(cipherPickle)
 
-#         logging.info(' symmetricDecrypt:: key = ' + str(key))
-#         logging.info(' symmetricDecrypt:: self._key = ' + str(self._key))
-#         logging.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))        
-#         logging.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))
+#         logger.info(' symmetricDecrypt:: key = ' + str(key))
+#         logger.info(' symmetricDecrypt:: self._key = ' + str(self._key))
+#         logger.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))        
+#         logger.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))
         
         # Construct a Cipher object, with the key, iv, and additionally the
         # GCM tag used for authenticating the message.
@@ -932,14 +938,14 @@ class CipherWrapper:
         """
         Прекратить сериализованный ключ в нормальный.
         """
-#         logging.info(' rsaPubUnSerialiation :::: strKey = ' + str(strKey))
+#         logger.info(' rsaPubUnSerialiation :::: strKey = ' + str(strKey))
 
         pkey = serialization.load_pem_public_key(
                                     strKey,
                                     backend=default_backend()
                                     )
-#         logging.info(' rsaPubUnSerialiation :::: pkey = ' + str(pkey))
-#         logging.info(' rsaPubUnSerialiation :::: isinstance(pkey, rsa.RSAPublicKey) = ' + str(isinstance(pkey, rsa.RSAPublicKey)))
+#         logger.info(' rsaPubUnSerialiation :::: pkey = ' + str(pkey))
+#         logger.info(' rsaPubUnSerialiation :::: isinstance(pkey, rsa.RSAPublicKey) = ' + str(isinstance(pkey, rsa.RSAPublicKey)))
         
         return pkey
     

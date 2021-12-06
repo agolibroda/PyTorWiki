@@ -35,6 +35,7 @@ import argparse
 # import tornado.ioloop
 # import torndsession
 
+
 from tornado.options import define, options
 
 import config
@@ -52,7 +53,9 @@ from core.RestGroupsControls    import *
 
 from core.RestTokenControls   import *
 
-from core.Helpers      import *
+# from core.Helpers      import *
+
+from core.systems import *
 
 
 # hasattr(config.options, 'logFileName')
@@ -122,10 +125,12 @@ class Application(tornado.web.Application):
 def main():
     
 
-    logger.info('Проверить наличие Сереров: Постгри и Редиса; \n ' +
+    logger.info('Проверить наличие Серверов: Постгри и Редиса; \n ' +
                     ' и если их нет, стоит остановить процесс с соответствующими словами!!!! ')
   
     redisCheck() # проверим, работает ли сервер, заодно почистим его.
+
+    postgreeCheck() 
 
     #  для вызова сервера торнадо на неком определенном порту, надо сделат вот такой вызов:
 

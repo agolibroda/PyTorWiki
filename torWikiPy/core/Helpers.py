@@ -37,7 +37,6 @@ from datetime import datetime
 import uuid
 import config
 
-from core.systems.sessions import *
 
 
 def splitAttributes(objOne):
@@ -145,32 +144,5 @@ def pyTorWikiTraceback(errorMessage):
     logging.error( errorMessage)
     for line in traceback.format_stack():
         print(line.strip())
-
-
-
-
-
-def redisCheck():
-    """
-    # проверим, работает ли сервер, заодно почистим его.
-    ТО есть, надо прочистить ВСЮ рабочую базу!!!!!!
-
-    """
-    # logger.info(" redisCheck :: config.options.redis_db = " + str(config.options.redis_db) ) 
-    # logger.info(" redisCheck :: config.options.redis_session_db = " + str(config.options.redis_session_db) ) 
-
-    try:
-        
-        # logger.info(" redisCheck :: new_id = " + str(new_id) ) 
-        new_id = uuid.uuid4().hex
-        session = Session(new_id)
-        session['session_id'] = str(new_id)
-        session.save()
-
-        session.store.flushdb()
-        
-    except Exception:
-        logger.info('Печально, Редиска не откликается, может упала? (работать дальше нииизя!!) :-(  ')
-        raise 
 
 
