@@ -4,11 +4,25 @@
 """Tornado sessions, stored in Redis.
 """
 
+import os
+import os.path
+################
+import logging
+
+dirModule = os.path.dirname(__file__)
+nameModule = __file__
+logger = logging.getLogger(nameModule)
+logger.setLevel(logging.DEBUG)
+###################################
+
 
 import datetime
 import uuid
 import json
 from functools import wraps
+
+import config
+
 try:
     from collections import MutableMapping #py2
 except ImportError:
@@ -166,8 +180,14 @@ class Session(MutableMapping):
         return Session(self._id, **self._data.copy())
 
 def setup_session(handler):
-    """Setup a new session (or retrieve the existing one)"""
-    session_id = handler.get_secure_cookie('session')
+    """
+    Setup a new session (or retrieve the existing one)
+    
+    """
+    cookieName = config.options.cookieName
+    logger.info( ' Session setup_session cookieName :: '+ str(cookieName))
+    # session_id = handler.get_secure_cookie("pyTorWikiCookie")
+    session_id = handler.get_secure_cookie(setup_session)
 
     if session_id is not None:
         session_id = session_id.decode('utf-8')
@@ -175,13 +195,13 @@ def setup_session(handler):
     else:
         new_id = uuid.uuid4().hex
         handler.session = Session(new_id)
-        handler.set_secure_cookie('session', new_id)
+        handler.set_secure_cookie(config.options.cookieName, new_id)
 
     handler.session.touch(remote_ip=handler.request.remote_ip)
 
 def save_session(handler):
     """Store the session to redis."""
-    if hasattr(handler, 'session') and handler.session is not None:
+    if hasattr(handler, config.options.cookieName) and handler.session is not None:
         handler.session.save()
 
 class SessionHandler(RequestHandler):
@@ -195,7 +215,7 @@ class SessionHandler(RequestHandler):
         
     def clear_session(self):
         self.session.clear()
-        self.clear_cookie('session')
+        self.clear_cookie(config.options.cookieName)
             
 def session(method):
     """Decorator for handler methods. Loads the session prior to method

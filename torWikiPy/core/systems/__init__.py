@@ -32,11 +32,10 @@ def redisCheck():
 
     try:
         
-        # logger.info(" redisCheck :: new_id = " + str(new_id) ) 
         new_id = uuid.uuid4().hex
         session = Session(new_id)
-        session['session_id'] = str(new_id)
-        session.save()
+        # session['session_id'] = str(new_id)
+        # session.save()
 
         session.store.flushdb()
         logger.info(" redisCheck: \n All fine! Redis is working! " ) 

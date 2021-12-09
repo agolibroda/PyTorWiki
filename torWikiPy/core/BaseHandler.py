@@ -18,11 +18,11 @@ logger = logging.getLogger(nameModule)
 logger.setLevel(logging.DEBUG)
 ###################################
 
+import uuid
 
 import bcrypt
 import concurrent.futures
 
-import os.path
 import re
 import subprocess
 import unicodedata
@@ -59,9 +59,9 @@ import core.models
 
 from core.models.author     import Author
 
-from core.models.token      import Token
+# from core.models.token      import Token
 
-from core.systems.sessions import *
+from core.systems.sessions import * #session, Session, SessionHandler
 
 
 @singleton
@@ -69,8 +69,8 @@ class SingletonAuthor(Author):
     pass
 
 
-
 class BaseHandler(tornado.web.RequestHandler):
+# class BaseHandler(SessionHandler):
     """
     нужен классный токен 
     его как впердолим... 
@@ -92,15 +92,15 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def __init__(self, *args, **kwargs):        
         super(BaseHandler, self).__init__(*args, **kwargs)
-        # logger.info( ' BaseHandler __init__ args:: '+ str(args))
 
-        setup_session(BaseHandler)
+        # new_id = uuid.uuid4().hex
+        # logger.info(" __init__ :: new_id = " + str(new_id) ) 
+        # self.session = Session(new_id)
 
-        logger.info('BaseHandler:: __init__:: handler.session = '+ str(handler.session))
+        setup_session(self) # Вот и создадим сессию. (или, прицепимся к существующей??)
 
-        # define("session_id",  default=session_id,    help="Рабочий ИД сессии.")
+        logger.info('BaseHandler:: __init__:: self.session = '+ str(self.session))
 
-        self.tokenControl = Token()
 
 #         self.set_header("access-control-allow-origin", "http://localhost:4200")
         self.set_header("access-control-allow-origin", "*")
@@ -127,13 +127,23 @@ class BaseHandler(tornado.web.RequestHandler):
 #         logger.info('BaseHandler:: get:: self.get_query_argument '+ str(self.get_query_argument('token', False)))
 #         self.token = self.get_query_argument('token', False)
 #              
-        
+    # @session
+    # def get(self):
+    #     logger.info( ' BaseHandler get config.options.cookieName :: '+ str(config.options.cookieName))
+    #     if not self.get_secure_cookie(config.options.cookieName):
+    #         new_id = uuid.uuid4().hex
+    #         self.set_secure_cookie(config.options.cookieName, new_id)
+    #         self.write("Your cookie was not set yet!")
+    #     else:
+    #         self.write("Your cookie was set!")        
 
 
 #     @gen.coroutine
+    # @session
     def get_current_user(self):
         """
         Это Стандартный торнадовский функций, про получение данных о пользователе
+        Его мы немного поменяем, для того, что бы честно получать данные о Авторе!!!
         
         """
         try:
@@ -157,7 +167,7 @@ class BaseHandler(tornado.web.RequestHandler):
             logger.info('BaseHandler:: get_current_user:: Have Error!!! '+ str(e))
             return False
 
-
+    # @session
     def any_author_exists(self):
         return bool(self.get_current_user())
 

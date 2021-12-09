@@ -840,7 +840,7 @@ class CipherWrapper:
 
     def rsaSet(self, publicKey, openPrivateKey):
         """
-        Откуда  - то у меня ключи взлисЮ и их просто надо пережать в объект.
+        Откуда  - то у меня ключи взлись и их просто надо пережать в объект.
         
         """
         self.public_key = publicKey

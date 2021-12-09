@@ -10,12 +10,10 @@
 
 # from __future__ import absolute_import, division, print_function, with_statement
 
-import os
-import os.path
-
-
 from tornado.options import define, options, parse_config_file 
 
+import os
+import os.path
 import logging
 dirModule = os.path.dirname(__file__)
 nameModule = __file__
@@ -121,6 +119,8 @@ define("mediaDir", default=os.path.join(options.projectDir, 'torWikiMedia'), hel
 # define("main_page_id", default=6, help="Id of Main User Page")
 
 define("salt", default= 'super_Salt', help="Main salt")
+
+define("cookieName", default= 'pyTorWikiCookie', help="Main cookie name")
 define("cookieSecret", default= 'cookieSecretBy_pyTorWiki', help="Main cookie secret")
 
 define("sessionLifetime", default= 1800, help="Session Lifetime")

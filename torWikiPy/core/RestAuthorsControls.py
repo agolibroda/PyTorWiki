@@ -31,6 +31,10 @@ import subprocess
 
 import json
 
+import datetime
+
+
+
 # import tornado.escape
 # from tornado import gen
 # # import tornado.httpserver
@@ -58,7 +62,8 @@ from core.WikiException     import *
 
 from core.models.author     import Author
 
-from core.models.token      import Token
+from core.models.token      import Token # Велосипед по имени токен я поменяю на сесссиии!!!!
+from core.models      import CipherWrapper
 
 
 MAX_WORKERS = 4
@@ -400,18 +405,78 @@ class RestHelloWorld(BaseHandler):
     значит, система работает, и все нормально. 
     """
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        dateNow = datetime.datetime.now()
+        logging.info( 'RestHelloWorld:: dateNow = ' + str(dateNow))
+
+        self.session['dateNow'] = dateNow
+
+        try:
+            _someText = self.session['someText']
+        except:
+            someText = format(dateNow) + "_ and some my text _" + uuid.uuid4().hex
+            self.session['someText'] =  CipherWrapper.symmetricEncrypt( config.options.instanceKey, someText)
+
+
+        
+        self.session.touch()
+        self.session.save()
+
+        logging.info( 'RestHelloWorld __init__::  session = ' + str( self.session))
+
+
+
     @gen.coroutine
+    # @session
     def get(self):
         
 
         try:
-            body = tornado.escape.json_decode(self.request.body)
-            logging.info( 'RestHelloWorld:: body = ' + str(body))
+            # body = tornado.escape.json_decode(self.request.body)
+            # logging.info( 'RestHelloWorld:: body = ' + str(body))
                 
-            self.write(json.dumps({string: "Hello World!"}))
-            
-        except Exception as e:
-            logging.info('RestHelloWorld:: post:: Have Error!!! '+ str(e))
-            
-            self.write(json.dumps("Произошло что - то печальное"))
+            # dateNow = datetime.datetime.now()
+            # logging.info( 'RestHelloWorld:: dateNow = ' + str(dateNow))
 
+            # oldTime = self.session['dateNow'] = dateNow
+            # self.session.touch()
+
+            # logging.info( 'RestHelloWorld get::  oldTime = ' + str( self.session))
+
+            logging.info( 'RestHelloWorld __init__::  session = ' + str( self.session))
+
+            # dateNow = self.session['dateNow']
+            dateNow = self.session.get('dateNow', [])
+
+            _someText = CipherWrapper.symmetricDecrypt( config.options.instanceKey, self.session['someText'] )
+
+            self.write(json.dumps({"header": "Hello World!", 
+                                    "requestTime": format(dateNow), 
+                                    "someText": _someText}))
+            # self.write("Hello World!")
+            self.session.save()
+
+
+        except Exception as e:
+            logging.error('RestHelloWorld:: post:: Have Error!!! '+ str(e))
+            
+            self.write(json.dumps({"header": 'error', 'body': "Произошло что - то печальное"}))
+
+    @gen.coroutine
+    def post(self):
+
+        try:
+
+            dateNow = datetime.datetime.now() 
+            logging.info( 'RestHelloWorld post::  self.session = ' + str( self.session))
+
+            self.session['dateNow'] = dateNow
+            self.session.touch()
+
+        except Exception as e:
+            logging.error('RestHelloWorld:: post:: Have Error!!! '+ str(e))
+            
+            self.write(json.dumps({"header": 'error', 'body': "Произошло что - то печальное"}))
+    

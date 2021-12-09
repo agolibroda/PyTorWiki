@@ -27,8 +27,12 @@ logger.setLevel(logging.DEBUG)
 
 # import pickle
 import json
+import uuid
+
 
 import argparse
+from cryptography.fernet import Fernet
+
 
 # import tornado.web
 # import tornado.httpserver
@@ -90,7 +94,7 @@ class Application(tornado.web.Application):
             (r"/rest/logout",           RestLogoutHandler), # (RestAuthorsControls.py) все, что вызывается из клиента AJAX... 
             (r"/rest/hw",               RestHelloWorld), # (RestAuthorsControls.py) просто проверка работы системы.
 
-            (r"/rest/token",            RestTokenHandler), # (RestTokenControls.py) все, что ... 
+            # (r"/rest/token",            RestTokenHandler), # (RestTokenControls.py) все, что ... 
             
             (r"/rest/check_token/([^/]+)",      RestCheckTokenHandler), # (RestTokenControls.py) все, что ... 
 
@@ -106,8 +110,9 @@ class Application(tornado.web.Application):
 
             mediaDir=config.options.mediaDir, #путь к кртинкам текстам..
                         
-#             xsrf_cookies=True,
-            cookie_secret=config.options.cookieSecret, #  "64d1c3defc5f9e829010881cfae22db38732",
+            # xsrf_cookies=True,
+            # cookie_secret=config.options.cookieSecret, #  "64d1c3defc5f9e829010881cfae22db38732",
+            cookie_secret=uuid.uuid4().hex,
             debug=True,
         )
         
@@ -131,6 +136,12 @@ def main():
     redisCheck() # проверим, работает ли сервер, заодно почистим его.
 
     postgreeCheck() 
+
+    # symmetricEncrypt(self, key, data):
+    _instanceKey = Fernet.generate_key()
+    define("instanceKey",   default=_instanceKey,        help="instanceKey")
+
+    logger.info('Server start at config.options.instanceKey = ' + toStr(config.options.instanceKey))
 
     #  для вызова сервера торнадо на неком определенном порту, надо сделат вот такой вызов:
 
