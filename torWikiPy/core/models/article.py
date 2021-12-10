@@ -268,7 +268,7 @@ class Article(Model):
                 cip = CipherWrapper() 
                 outArt.article_source = cip.rsaDecrypt(readerMan._openPrivateKey, unZipText ).decode("utf-8")
             except Exception as error: # cip.CipherErorr as error:
-                logging.info( 'Decode:: Exception as et = ' + str(error))
+                logging.info( 'articleDecode:: Exception as et = ' + str(error))
 #                 logging.info( 'Decode:: Exception as traceback.format_exc() = ' + toStr(traceback.format_exc()))
                 outArt.article_source = '403 -  у Вас нет доступа к данным! '
 

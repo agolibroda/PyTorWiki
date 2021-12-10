@@ -763,7 +763,6 @@ class CipherWrapper:
         self.setKey(key) # .encode('utf-8')
         iv = os.urandom(12)
         associated_data = os.urandom(24)
-#         logger.info(' Model:: symmetricEncrypt data = ' + str(data))
 
         # Construct an AES-GCM Cipher object with the given key and a
         # randomly generated IV.
@@ -780,6 +779,7 @@ class CipherWrapper:
         # Encrypt the plaintext and get the associated ciphertext.
         # GCM does not require padding.
         ciphertext = encryptor.update(data) + encryptor.finalize()
+
         return  pickle.dumps({'ciphertext': ciphertext, 
                               'iv': iv, 
                               'tag': encryptor.tag, 
@@ -796,10 +796,10 @@ class CipherWrapper:
         self.setKey(key)
         cipherData = pickle.loads(cipherPickle)
 
-#         logger.info(' symmetricDecrypt:: key = ' + str(key))
-#         logger.info(' symmetricDecrypt:: self._key = ' + str(self._key))
-#         logger.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))        
-#         logger.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))
+        # logger.info(' symmetricDecrypt:: key = ' + str(key))
+        # logger.info(' symmetricDecrypt:: self._key = ' + str(self._key))
+        # logger.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))        
+        # logger.info(' symmetricDecrypt:: cipherData = ' + str(cipherData))
         
         # Construct a Cipher object, with the key, iv, and additionally the
         # GCM tag used for authenticating the message.

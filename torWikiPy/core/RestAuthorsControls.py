@@ -408,57 +408,70 @@ class RestHelloWorld(BaseHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+   # if not hasattr(self.session, 'someText'):
+        _txt = """
+         A naive object does not contain enough information to unambiguously locate
+         itself relative to other date/time objects. Whether a naive object represents 
+         Coordinated Universal Time (UTC), 
+         local time, or time in some other timezone is purely up to the program, 
+         just like it is up to the program whether a particular number represents metres, miles, or mass. 
+         Naive objects are easy to understand and to work with, at the cost of ignoring some aspects of 
+         reality
+         =====
+         Список дел.
+            вот, чего то написал, придумал, теперь, похоже, стоит сделать список дел чего надо сделать, 
+            для того что бы то, что придумал стал рЭальностью :-) 
+
+            и так, "спринт" - добавить в ятро работу с сесиями, реализованными на "редиске"
+         =====
+
+        """
+
         dateNow = datetime.datetime.now()
+        logging.info( 'RestHelloWorld:: self.session = ' + str(self.session))
         logging.info( 'RestHelloWorld:: dateNow = ' + str(dateNow))
 
         self.session['dateNow'] = dateNow
+        self.session.setCrpt('dateNowCrpt', dateNow)
+     
+        _someText = format(dateNow) + "_ and some my text _" + uuid.uuid4().hex  + "; " + _txt
+    
+        self.session.setCrpt('someText', _someText)  #_encriptStruct
 
-        try:
-            _someText = self.session['someText']
-        except:
-            someText = format(dateNow) + "_ and some my text _" + uuid.uuid4().hex
-            self.session['someText'] =  CipherWrapper.symmetricEncrypt( config.options.instanceKey, someText)
-
-
-        
         self.session.touch()
         self.session.save()
 
-        logging.info( 'RestHelloWorld __init__::  session = ' + str( self.session))
-
+        # logging.info( 'RestHelloWorld __init__::  session = ' + str( self.session))
 
 
     @gen.coroutine
-    # @session
     def get(self):
         
 
         try:
-            # body = tornado.escape.json_decode(self.request.body)
-            # logging.info( 'RestHelloWorld:: body = ' + str(body))
-                
-            # dateNow = datetime.datetime.now()
-            # logging.info( 'RestHelloWorld:: dateNow = ' + str(dateNow))
+            # logging.info( 'RestHelloWorld get::  session = ' + str( self.session))
+            # logging.info( 'RestHelloWorld get::  session[dateNow] = ' + str( format(self.session['dateNow'])))
 
-            # oldTime = self.session['dateNow'] = dateNow
-            # self.session.touch()
+            if not hasattr(self.session, 'dateNow'):
+                dateNow = self.session['dateNow']
+            else:
+                dateNow = datetime.datetime.now()
 
-            # logging.info( 'RestHelloWorld get::  oldTime = ' + str( self.session))
-
-            logging.info( 'RestHelloWorld __init__::  session = ' + str( self.session))
-
-            # dateNow = self.session['dateNow']
-            dateNow = self.session.get('dateNow', [])
-
-            _someText = CipherWrapper.symmetricDecrypt( config.options.instanceKey, self.session['someText'] )
+            dateNowCrpt = self.session.getCrpt('dateNowCrpt')
+            _someText_2 = "Some-Some" #self.session['someText']
+            if not hasattr(self.session, 'someText'):
+                # _encriptStrct 
+                _someText = self.session.getCrpt('someText')
+                # cip = CipherWrapper()
+                # _someText = cip.symmetricDecrypt( config.options.instanceKey, _encriptStrct).decode("utf-8")
+            else:
+                _someText = 'ничего не получилось :-( - нет в сессииии ниччего!!!!'
 
             self.write(json.dumps({"header": "Hello World!", 
-                                    "requestTime": format(dateNow), 
-                                    "someText": _someText}))
-            # self.write("Hello World!")
-            self.session.save()
-
-
+                                    "dateNow": format(dateNow), 
+                                    "someText": _someText,
+                                    "_someText_2": _someText_2,
+                                    "dateNowCrpt": format(dateNowCrpt) }))
         except Exception as e:
             logging.error('RestHelloWorld:: post:: Have Error!!! '+ str(e))
             

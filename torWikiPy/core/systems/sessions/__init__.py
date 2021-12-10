@@ -22,6 +22,7 @@ import json
 from functools import wraps
 
 import config
+from core.models      import CipherWrapper
 
 try:
     from collections import MutableMapping #py2
@@ -128,6 +129,7 @@ class Session(MutableMapping):
         self._dirty = False
  
     def __getitem__(self, key):
+        logging.info( '__getitem__:: self._load_data(key=' + str(key)+') = ' + str(self._load_data(key=key)))
         try:
             return self._data[key]
         except KeyError:
@@ -137,6 +139,7 @@ class Session(MutableMapping):
     def __setitem__(self, key, value):
         self._dirty = True
         self._pipe.hset(self.id, key, pickle.dumps(value))
+        logging.info( '__setitem__:: value = ' + str(value))
         self._data[key] = value
  
     def __delitem__(self, key):
@@ -178,6 +181,35 @@ class Session(MutableMapping):
     def copy(self):
         self._load_data()
         return Session(self._id, **self._data.copy())
+
+    def getCrpt(self, key):
+        try:
+            if config.options.usedCryptoSessions:
+                cip = CipherWrapper()
+                _value = cip.symmetricDecrypt( config.options.instanceKey, self._data[key]).decode("utf-8")
+                return _value
+            else:
+                return self._data[key]
+        except KeyError:
+            self._load_data(key=key)
+            return self._data[key]
+
+
+    def setCrpt(self, key, value):
+        self._dirty = True
+        self._pipe.hset(self.id, key, pickle.dumps(value))
+        # logging.info( 'set:: config.options.usedCryptoSessions = ' + str(config.options.usedCryptoSessions))
+        if config.options.usedCryptoSessions:
+            cip = CipherWrapper()
+            _encriptStruct =  cip.symmetricEncrypt( config.options.instanceKey,  bytes(str(value), 'utf-8'))
+            # logging.info( 'set:: _encriptStruct = ' + str(_encriptStruct))
+            # self._data[key] = _encriptStruct
+            self.__setitem__(key, _encriptStruct)
+        else:
+            self._data[key] = value
+        # logging.info( 'set:: self._data = ' + str(self._data))
+
+             
 
 def setup_session(handler):
     """

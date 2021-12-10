@@ -120,6 +120,9 @@ define("mediaDir", default=os.path.join(options.projectDir, 'torWikiMedia'), hel
 
 define("salt", default= 'super_Salt', help="Main salt")
 
+# Если хотим использовать механилм шифрования данных, котрые хранятся в сессиях пользователей == True
+define("usedCryptoSessions", default= 0, help="Is Like used Crypto Session") 
+
 define("cookieName", default= 'pyTorWikiCookie', help="Main cookie name")
 define("cookieSecret", default= 'cookieSecretBy_pyTorWiki', help="Main cookie secret")
 
